@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resultados — Detección de Sargazo · TFG ULPGC 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Source Serif 4', Georgia, serif; background: #fff; color: #111; line-height: 1.7; font-weight: 300; }
+.container { max-width: 720px; margin: 0 auto; padding: 0 2rem; }
+
+header { border-bottom: 1px solid #111; padding: 2rem 0 1.5rem; margin-bottom: 3rem; }
+.header-inner { max-width: 720px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
+.site-title { font-size: 0.8rem; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; color: #111; }
+nav { display: flex; gap: 1.5rem; }
+nav a { font-size: 0.85rem; font-weight: 300; color: #555; text-decoration: none; transition: color 0.15s; }
+nav a:hover { color: #111; }
+nav a.active { color: #111; border-bottom: 1px solid #111; }
+
+.page-title { margin-bottom: 3rem; }
+.breadcrumb { font-family: 'Source Code Pro', monospace; font-size: 0.75rem; color: #999; margin-bottom: 0.75rem; }
+.breadcrumb a { color: #777; text-decoration: none; }
+.breadcrumb a:hover { color: #111; }
+.page-title h1 { font-size: 1.6rem; font-weight: 600; margin-bottom: 0.5rem; }
+.page-title p { color: #555; font-weight: 300; }
+
+section { margin-bottom: 4rem; }
+h2 { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+p { margin-bottom: 1rem; color: #222; font-weight: 300; }
+
+/* ── METRICS ── */
+.metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid #ddd; margin-bottom: 1.5rem; }
+.metric { padding: 1.2rem 1rem; border-right: 1px solid #ddd; text-align: center; }
+.metric:last-child { border-right: none; }
+.metric:nth-child(3) { border-right: none; }
+.metric:nth-child(4), .metric:nth-child(5), .metric:nth-child(6) { border-top: 1px solid #ddd; }
+.metric-val { font-family: 'Source Code Pro', monospace; font-size: 1.5rem; font-weight: 500; display: block; margin-bottom: 0.25rem; }
+.metric-val.primary { color: #111; }
+.metric-val.pending { color: #bbb; }
+.metric-lbl { font-size: 0.75rem; color: #777; font-weight: 300; }
+.metric-sub { font-size: 0.7rem; color: #aaa; font-family: 'Source Code Pro', monospace; margin-top: 0.15rem; }
+
+.metrics-note {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.78rem;
+  color: #888;
+  padding: 0.75rem 1rem;
+  border: 1px solid #eee;
+  background: #fafafa;
+  margin-bottom: 2rem;
+}
+
+/* ── COMPARE TABLE ── */
+.compare-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.88rem; }
+.compare-table thead tr { border-bottom: 2px solid #111; }
+.compare-table th { text-align: left; padding: 0.5rem 0.75rem; font-family: 'Source Code Pro', monospace; font-size: 0.72rem; font-weight: 500; color: #555; letter-spacing: 0.05em; text-transform: uppercase; }
+.compare-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid #eee; vertical-align: middle; color: #333; font-weight: 300; }
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table tr:hover td { background: #fafafa; }
+.tag-main { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; padding: 0.1rem 0.4rem; border: 1px solid #aaa; color: #555; margin-left: 0.4rem; vertical-align: middle; }
+.tag-pending { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; color: #aaa; }
+.val-running { font-family: 'Source Code Pro', monospace; font-size: 0.8rem; color: #999; font-style: italic; }
+
+/* ── GALLERY ── */
+.gallery-note {
+  font-size: 0.85rem;
+  color: #777;
+  font-style: italic;
+  padding: 1.5rem;
+  border: 1px dashed #ccc;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+.gallery-note code { font-family: 'Source Code Pro', monospace; font-size: 0.8rem; color: #555; background: #f5f5f5; padding: 0.1rem 0.3rem; }
+.gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.gallery-item { border: 1px solid #ddd; }
+.gallery-img { width: 100%; aspect-ratio: 3/2; background: #f5f5f5; display: flex; align-items: center; justify-content: center; }
+.gallery-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery-img .placeholder { font-size: 0.8rem; color: #aaa; font-family: 'Source Code Pro', monospace; text-align: center; padding: 1rem; }
+.gallery-caption { padding: 0.6rem 0.75rem; border-top: 1px solid #eee; }
+.gallery-caption h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.15rem; }
+.gallery-caption p { font-size: 0.78rem; color: #777; margin: 0; font-family: 'Source Code Pro', monospace; }
+
+/* ── CLASSES ── */
+.classes-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.classes-table tr { border-bottom: 1px solid #f0f0f0; }
+.classes-table tr:last-child { border-bottom: none; }
+.classes-table td { padding: 0.45rem 0.5rem; vertical-align: middle; }
+.classes-table td:first-child { font-family: 'Source Code Pro', monospace; font-size: 0.75rem; color: #999; width: 30px; }
+.classes-table td:nth-child(2) { width: 14px; }
+.class-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+.classes-table tr.target td { font-weight: 400; }
+.target-mark { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; color: #555; margin-left: 0.4rem; }
+
+footer { border-top: 1px solid #ddd; padding: 1.5rem 0; margin-top: 4rem; }
+.footer-inner { max-width: 720px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+footer p { font-size: 0.8rem; color: #999; margin: 0; }
+footer a { color: #777; text-decoration: none; }
+footer a:hover { color: #111; }
+
+@media (max-width: 640px) {
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .metric:nth-child(2) { border-right: none; }
+  .metric:nth-child(3) { border-top: 1px solid #ddd; border-right: 1px solid #ddd; }
+  .metric:nth-child(4) { border-right: none; }
+  .gallery-grid { grid-template-columns: 1fr; }
+  nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="site-title">TFG · ULPGC · 2026</a>
+    <nav>
+      <a href="index.html">Inicio</a>
+      <a href="results.html" class="active">Resultados</a>
+      <a href="monitor.html">Monitorización</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="page-title">
+    <p class="breadcrumb"><a href="index.html">Inicio</a> / Resultados</p>
+    <h1>Resultados del modelo</h1>
+    <p>Métricas de evaluación sobre el conjunto de test del dataset MADOS, ejemplos de inferencia y comparativa entre arquitecturas.</p>
+  </div>
+
+  <section>
+    <h2>Métricas del mejor checkpoint</h2>
+    <div class="metrics-grid">
+      <div class="metric">
+        <span class="metric-val primary" id="iou-sarg">—</span>
+        <span class="metric-lbl">IoU sargazo combinado</span>
+        <span class="metric-sub">clases 2 + 3</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val primary" id="iou-dense">—</span>
+        <span class="metric-lbl">IoU Dense Sargassum</span>
+        <span class="metric-sub">clase 2</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val primary" id="iou-sparse">—</span>
+        <span class="metric-lbl">IoU Sparse Algae</span>
+        <span class="metric-sub">clase 3</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val" id="miou">—</span>
+        <span class="metric-lbl">mIoU global</span>
+        <span class="metric-sub">16 clases</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val" id="best-epoch">—</span>
+        <span class="metric-lbl">Mejor época</span>
+        <span class="metric-sub">early stopping</span>
+      </div>
+      <div class="metric">
+        <span class="metric-val" id="val-loss">—</span>
+        <span class="metric-lbl">Val loss</span>
+        <span class="metric-sub">CE + Dice</span>
+      </div>
+    </div>
+    <div class="metrics-note" id="metrics-note">
+      Métricas pendientes de entrenamiento. Actualizar con: python scripts/export_results.py
+    </div>
+  </section>
+
+  <section>
+    <h2>Comparativa de modelos</h2>
+    <p>Todos los modelos se evalúan con la misma configuración base (lr=5e-5, AdamW, CrossEntropy+Dice, dataset MADOS) para garantizar comparabilidad.</p>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Modelo</th>
+          <th>Épocas</th>
+          <th>LR</th>
+          <th>IoU sargazo</th>
+          <th>mIoU</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Swin Transformer Tiny <span class="tag-main">principal</span></td>
+          <td>50</td>
+          <td><span style="font-family:'Source Code Pro',monospace;font-size:0.8rem;">5e-5</span></td>
+          <td><span class="val-running" id="table-swin-iou">entrenando...</span></td>
+          <td><span class="val-running" id="table-swin-miou">entrenando...</span></td>
+        </tr>
+        <tr>
+          <td>UNet</td>
+          <td>—</td>
+          <td>—</td>
+          <td><span class="tag-pending">pendiente</span></td>
+          <td><span class="tag-pending">pendiente</span></td>
+        </tr>
+        <tr>
+          <td>SegFormer</td>
+          <td>—</td>
+          <td>—</td>
+          <td><span class="tag-pending">pendiente</span></td>
+          <td><span class="tag-pending">pendiente</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Ejemplos de inferencia</h2>
+    <p>Visualización de la predicción del modelo sobre imágenes del split de test. Cada ejemplo muestra la imagen en falso color NIR-R-G, el ground truth MADOS y la predicción con post-procesado (FAI + suavizado gaussiano σ=2 + limpieza morfológica).</p>
+    <div class="gallery-note" id="gallery-note">
+      Las imágenes se generan al ejecutar <code>python inference.py --split test --n 6 --guardar</code>
+      y se colocan en <code>docs/assets/img/</code>.
+    </div>
+    <div class="gallery-grid" id="gallery">
+      <div class="gallery-item">
+        <div class="gallery-img"><div class="placeholder">inferencia pendiente</div></div>
+        <div class="gallery-caption"><h4>Scene · Dense Sargassum</h4><p>IoU: — · px detectados: —</p></div>
+      </div>
+      <div class="gallery-item">
+        <div class="gallery-img"><div class="placeholder">inferencia pendiente</div></div>
+        <div class="gallery-caption"><h4>Scene · Sin sargazo</h4><p>Verdadero negativo</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Clases del dataset MADOS</h2>
+    <p>16 clases de materiales marinos etiquetadas manualmente sobre imágenes Sentinel-2. Las clases 2 y 3 constituyen el objetivo principal del sistema.</p>
+    <table class="classes-table">
+      <tr><td>0</td><td><span class="class-dot" style="background:#ccc;"></span></td><td>Non-annotated</td></tr>
+      <tr><td>1</td><td><span class="class-dot" style="background:#e74c3c;"></span></td><td>Marine Debris</td></tr>
+      <tr class="target"><td>2</td><td><span class="class-dot" style="background:#1e8449;"></span></td><td>Dense Sargassum <span class="target-mark">★ objetivo</span></td></tr>
+      <tr class="target"><td>3</td><td><span class="class-dot" style="background:#58d68d;"></span></td><td>Sparse Floating Algae <span class="target-mark">★ objetivo</span></td></tr>
+      <tr><td>4</td><td><span class="class-dot" style="background:#f39c12;"></span></td><td>Natural Organic Material</td></tr>
+      <tr><td>5</td><td><span class="class-dot" style="background:#8e44ad;"></span></td><td>Ship</td></tr>
+      <tr><td>6</td><td><span class="class-dot" style="background:#555;"></span></td><td>Oil Spill</td></tr>
+      <tr><td>7</td><td><span class="class-dot" style="background:#2e86c1;"></span></td><td>Marine Water</td></tr>
+      <tr><td>8</td><td><span class="class-dot" style="background:#d4ac0d;"></span></td><td>Sediment-Laden Water</td></tr>
+      <tr><td>9</td><td><span class="class-dot" style="background:#ccc;border:1px solid #aaa;"></span></td><td>Foam</td></tr>
+      <tr><td>10</td><td><span class="class-dot" style="background:#5499c7;"></span></td><td>Turbid Water</td></tr>
+      <tr><td>11</td><td><span class="class-dot" style="background:#a9cce3;"></span></td><td>Shallow Water</td></tr>
+      <tr><td>12</td><td><span class="class-dot" style="background:#abebc6;"></span></td><td>Waves & Wakes</td></tr>
+      <tr><td>13</td><td><span class="class-dot" style="background:#922b21;"></span></td><td>Oil Platform</td></tr>
+      <tr><td>14</td><td><span class="class-dot" style="background:#f1948a;"></span></td><td>Jellyfish</td></tr>
+      <tr><td>15</td><td><span class="class-dot" style="background:#b7950b;"></span></td><td>Sea Snot</td></tr>
+    </table>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <p>© 2026 Jorge Lorenzo Lorenzo · ULPGC</p>
+    <p><a href="index.html">← Volver al inicio</a></p>
+  </div>
+</footer>
+
+<script>
+fetch('assets/metrics.json')
+  .then(r => r.json())
+  .then(data => {
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val !== null && val !== undefined) el.textContent = val;
+    };
+    set('iou-sarg',    data.iou_sargassum?.toFixed(3));
+    set('iou-dense',   data.iou_dense?.toFixed(3));
+    set('iou-sparse',  data.iou_sparse?.toFixed(3));
+    set('miou',        data.mIoU?.toFixed(3));
+    set('best-epoch',  data.best_epoch);
+    set('val-loss',    data.best_val_loss?.toFixed(4));
+    set('table-swin-iou',  data.iou_sargassum?.toFixed(3));
+    set('table-swin-miou', data.mIoU?.toFixed(3));
+    if (data.saved_at) {
+      const note = document.getElementById('metrics-note');
+      if (note) note.style.display = 'none';
+    }
+  })
+  .catch(() => {});
+</script>
+
+</body>
+</html>

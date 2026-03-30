@@ -1,0 +1,59 @@
+# ── Credenciales — NUNCA subir ──────────────────────────────────────
+.env
+*.env
+secrets.yaml
+
+# ── Python ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Entornos virtuales ───────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Datos crudos — demasiado grandes para GitHub ────────────────────
+datasets/data/MADOS/
+datasets/data/Sargassum_Ready_Dataset/
+datasets/data/sentinel_downloads/
+datasets/data/sentinel_caribbean/
+
+# ── Modelos entrenados — demasiado grandes ──────────────────────────
+# Los checkpoints van en experiments/runs/ pero los .pth son muy grandes
+experiments/runs/*/weights.pth
+
+# Excepción: sí queremos subir el metadata.json y el metrics.csv
+# (ya están excluidos del patrón anterior porque no son .pth)
+
+# ── Archivos temporales y de sistema ────────────────────────────────
+*.tiff
+*.tif
+mega_*.tiff
+test_sentinel_output.png
+bandas_*.png
+muestras_*.png
+sargazo_*.png
+estadisticas_globales.png
+
+# ── IDEs ─────────────────────────────────────────────────────────────
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Jupyter ──────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ── Logs ─────────────────────────────────────────────────────────────
+*.log
+logs/

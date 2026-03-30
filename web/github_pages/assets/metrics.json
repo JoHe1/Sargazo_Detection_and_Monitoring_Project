@@ -1,0 +1,12 @@
+{
+  "model": "swin_transformer",
+  "dataset": "mados",
+  "iou_sargassum": null,
+  "iou_dense": null,
+  "iou_sparse": null,
+  "mIoU": null,
+  "best_epoch": null,
+  "best_val_loss": null,
+  "saved_at": null,
+  "note": "Actualizar con: python scripts/export_results.py"
+}

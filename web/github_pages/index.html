@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Detección y Monitorización de Sargazo — TFG ULPGC 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+
+body {
+  font-family: 'Source Serif 4', Georgia, serif;
+  background: #fff;
+  color: #111;
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+/* ── LAYOUT ── */
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* ── HEADER ── */
+header {
+  border-bottom: 1px solid #111;
+  padding: 2rem 0 1.5rem;
+  margin-bottom: 3rem;
+}
+.header-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.site-title {
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #111;
+}
+nav { display: flex; gap: 1.5rem; }
+nav a {
+  font-size: 0.85rem;
+  font-weight: 300;
+  color: #555;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+nav a:hover { color: #111; }
+nav a.active { color: #111; border-bottom: 1px solid #111; }
+
+/* ── HERO ── */
+.hero { margin-bottom: 4rem; }
+.hero-meta {
+  font-size: 0.8rem;
+  color: #888;
+  letter-spacing: 0.04em;
+  margin-bottom: 1rem;
+  font-family: 'Source Code Pro', monospace;
+}
+.hero h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.25;
+  margin-bottom: 1.25rem;
+  max-width: 600px;
+}
+.hero-abstract {
+  font-size: 1rem;
+  color: #333;
+  line-height: 1.75;
+  max-width: 640px;
+  margin-bottom: 2rem;
+  font-style: italic;
+  font-weight: 300;
+  padding-left: 1rem;
+  border-left: 2px solid #ddd;
+}
+.hero-links { display: flex; gap: 1rem; flex-wrap: wrap; }
+.btn {
+  font-size: 0.85rem;
+  font-weight: 400;
+  font-family: 'Source Code Pro', monospace;
+  padding: 0.5rem 1rem;
+  text-decoration: none;
+  border: 1px solid #111;
+  color: #111;
+  background: #fff;
+  transition: background 0.15s, color 0.15s;
+  display: inline-block;
+}
+.btn:hover { background: #111; color: #fff; }
+.btn.secondary { border-color: #ccc; color: #555; }
+.btn.secondary:hover { background: #f5f5f5; color: #111; border-color: #999; }
+
+/* ── STATS ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border: 1px solid #ddd;
+  margin-bottom: 4rem;
+}
+.stat {
+  padding: 1.2rem 1rem;
+  border-right: 1px solid #ddd;
+  text-align: center;
+}
+.stat:last-child { border-right: none; }
+.stat-val {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 1.4rem;
+  font-weight: 500;
+  display: block;
+  margin-bottom: 0.2rem;
+}
+.stat-lbl { font-size: 0.75rem; color: #777; font-weight: 300; }
+
+/* ── SECTIONS ── */
+section { margin-bottom: 4rem; }
+h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+p { margin-bottom: 1rem; color: #222; font-weight: 300; }
+p:last-child { margin-bottom: 0; }
+
+/* ── INFO TABLE ── */
+.info-table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+.info-table tr { border-bottom: 1px solid #eee; }
+.info-table tr:last-child { border-bottom: none; }
+.info-table td { padding: 0.6rem 0; font-size: 0.9rem; vertical-align: top; }
+.info-table td:first-child {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.8rem;
+  color: #777;
+  width: 160px;
+  padding-right: 1.5rem;
+}
+
+/* ── PHASES ── */
+.phases { border: 1px solid #ddd; }
+.phase-row {
+  display: grid;
+  grid-template-columns: 120px 60px 1fr;
+  gap: 0;
+  border-bottom: 1px solid #eee;
+  align-items: stretch;
+}
+.phase-row:last-child { border-bottom: none; }
+.phase-row > div { padding: 0.9rem 1rem; }
+.phase-num {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.75rem;
+  color: #777;
+  border-right: 1px solid #eee;
+  display: flex; align-items: center;
+}
+.phase-hours {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.8rem;
+  color: #999;
+  border-right: 1px solid #eee;
+  display: flex; align-items: center;
+}
+.phase-desc { font-size: 0.9rem; font-weight: 300; }
+.phase-desc strong { font-weight: 600; display: block; margin-bottom: 0.2rem; font-size: 0.85rem; }
+
+/* ── TECH ── */
+.tech-list {
+  display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.5rem;
+}
+.tech-tag {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid #ccc;
+  color: #555;
+  background: #fafafa;
+}
+
+/* ── TEAM ── */
+.team-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem; }
+.team-member h3 { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.2rem; }
+.team-member .role {
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.72rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+.team-member p { font-size: 0.85rem; color: #555; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid #ddd;
+  padding: 1.5rem 0;
+  margin-top: 4rem;
+}
+.footer-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+footer p { font-size: 0.8rem; color: #999; margin: 0; }
+footer a { color: #777; text-decoration: none; }
+footer a:hover { color: #111; }
+
+@media (max-width: 640px) {
+  .stats-row { grid-template-columns: 1fr 1fr; }
+  .stat:nth-child(2) { border-right: none; }
+  .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid #ddd; }
+  .team-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .phase-row { grid-template-columns: 1fr; }
+  .phase-num, .phase-hours { border-right: none; border-bottom: 1px solid #eee; }
+  nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="site-title">TFG · ULPGC · 2026</a>
+    <nav>
+      <a href="index.html" class="active">Inicio</a>
+      <a href="results.html">Resultados</a>
+      <a href="monitor.html">Monitorización</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <div class="hero">
+    <p class="hero-meta">Grado en Ciencia e Ingeniería de Datos · Plan 41 · Las Palmas de Gran Canaria</p>
+    <h1>Detección y Monitorización de Sargazo mediante Imágenes Satelitales y Aprendizaje Profundo</h1>
+    <p class="hero-abstract">
+      Desarrollo e implementación de un sistema de segmentación semántica basado en el Swin Transformer
+      para la detección automática de sargazo a partir de imágenes Sentinel-2 de la constelación Copernicus,
+      integrando información multiespectral RGB+NIR y validado sobre el dataset MADOS.
+    </p>
+    <div class="hero-links">
+      <a href="results.html" class="btn">Ver resultados →</a>
+      <a href="monitor.html" class="btn secondary">App monitorización</a>
+      <a href="https://github.com/tu-usuario/Sargazo_Detection_and_Monitoring_Project" class="btn secondary" target="_blank">GitHub</a>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat"><span class="stat-val">2.803</span><span class="stat-lbl">Tiles de entrenamiento</span></div>
+    <div class="stat"><span class="stat-val">16</span><span class="stat-lbl">Clases semánticas</span></div>
+    <div class="stat"><span class="stat-val">4</span><span class="stat-lbl">Bandas espectrales</span></div>
+    <div class="stat"><span class="stat-val">34M</span><span class="stat-lbl">Parámetros del modelo</span></div>
+  </div>
+
+  <section id="descripcion">
+    <h2>Descripción del proyecto</h2>
+    <p>
+      La creciente llegada masiva de sargazo a las costas del Atlántico representa una problemática
+      ambiental y económica para el turismo y los ecosistemas costeros. La monitorización actual,
+      a menudo manual o por avistamiento, requiere una modernización que permita alertas tempranas
+      fiables y un análisis en tiempo casi real.
+    </p>
+    <p>
+      Este trabajo implementa un sistema de detección automática basado en arquitecturas de redes
+      neuronales del estado del arte. Se emplea el Swin Transformer con un decoder UNet-like y
+      técnicas de Transfer Learning sobre pesos pre-entrenados en ImageNet, adaptando la capa de
+      entrada para aceptar 4 canales espectrales (RGB + NIR) en lugar de los 3 estándar.
+    </p>
+    <p>
+      El canal Infrarrojo Cercano (NIR, 833 nm) es clave para maximizar la detectabilidad de la
+      biomasa flotante, aprovechando el índice FAI (Floating Algae Index = NIR − Rojo) como
+      filtro físico complementario a la predicción del modelo.
+    </p>
+  </section>
+
+  <section id="datos">
+    <h2>Datos del trabajo</h2>
+    <table class="info-table">
+      <tr><td>Institución</td><td>Universidad de Las Palmas de Gran Canaria · Escuela de Ingeniería Informática</td></tr>
+      <tr><td>Titulación</td><td>Grado en Ciencia e Ingeniería de Datos · Plan 41</td></tr>
+      <tr><td>Fecha</td><td>Febrero 2026</td></tr>
+      <tr><td>Dataset</td><td>MADOS (Marine Debris and Oil Spill) · 2.803 tiles · 16 clases</td></tr>
+      <tr><td>Datos satelitales</td><td>Sentinel-2 L2A · Copernicus Data Space · Bandas 492, 560, 665, 833 nm</td></tr>
+      <tr><td>Metodología</td><td>CRISP-DM / TDSP</td></tr>
+      <tr><td>Competencias</td><td>ED1, ED2, ED3, ED6</td></tr>
+    </table>
+  </section>
+
+  <section id="metodologia">
+    <h2>Plan de trabajo</h2>
+    <div class="phases">
+      <div class="phase-row">
+        <div class="phase-num">Fase 1</div>
+        <div class="phase-hours">80 h</div>
+        <div class="phase-desc">
+          <strong>Comprensión del negocio y los datos</strong>
+          Revisión del estado del arte en detección de macroalgas. Estudio de la API Copernicus y selección de zonas de interés filtrando por nubosidad y fechas de arribazones conocidos.
+        </div>
+      </div>
+      <div class="phase-row">
+        <div class="phase-num">Fase 2</div>
+        <div class="phase-hours">140 h</div>
+        <div class="phase-desc">
+          <strong>Preparación de los datos</strong>
+          Corrección atmosférica L2A, tiling en parches 224×224, land masking. Generación de ground truth con Segment Anything Model (SAM) para sargazo/agua.
+        </div>
+      </div>
+      <div class="phase-row">
+        <div class="phase-num">Fase 3</div>
+        <div class="phase-hours">200 h</div>
+        <div class="phase-desc">
+          <strong>Modelado</strong>
+          Implementación del Swin Transformer con entrada 4 canales. Transfer Learning con pesos ImageNet. Ajuste de hiperparámetros y funciones de pérdida para segmentación desbalanceada.
+        </div>
+      </div>
+      <div class="phase-row">
+        <div class="phase-num">Fase 4</div>
+        <div class="phase-hours">120 h</div>
+        <div class="phase-desc">
+          <strong>Evaluación y despliegue</strong>
+          Evaluación con IoU sobre el conjunto de test. Desarrollo de interfaz web con descarga NRT de Sentinel-2 e inferencia en mapa interactivo.
+        </div>
+      </div>
+      <div class="phase-row">
+        <div class="phase-num">Fase 5</div>
+        <div class="phase-hours">60 h</div>
+        <div class="phase-desc">
+          <strong>Documentación y defensa</strong>
+          Elaboración de la memoria, justificación metodológica, resultados experimentales y preparación de la exposición oral.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tecnologia">
+    <h2>Herramientas y tecnologías</h2>
+    <div class="tech-list">
+      <span class="tech-tag">Python 3.13</span>
+      <span class="tech-tag">PyTorch</span>
+      <span class="tech-tag">HuggingFace Transformers</span>
+      <span class="tech-tag">Swin Transformer</span>
+      <span class="tech-tag">Copernicus API</span>
+      <span class="tech-tag">Sentinel-2 L2A</span>
+      <span class="tech-tag">Rasterio</span>
+      <span class="tech-tag">GeoPandas</span>
+      <span class="tech-tag">Streamlit</span>
+      <span class="tech-tag">Folium</span>
+      <span class="tech-tag">MADOS Dataset</span>
+      <span class="tech-tag">CrossEntropy + Dice Loss</span>
+      <span class="tech-tag">Transfer Learning</span>
+      <span class="tech-tag">WeightedRandomSampler</span>
+      <span class="tech-tag">FAI · IoU · mIoU</span>
+    </div>
+  </section>
+
+  <section id="equipo">
+    <h2>Autoría y tutores</h2>
+    <div class="team-grid">
+      <div class="team-member">
+        <h3>Jorge Lorenzo Lorenzo</h3>
+        <span class="role">Autor · DNI 42420837M</span>
+        <p>Grado en Ciencia e Ingeniería de Datos, plan 41. Responsable del desarrollo completo del sistema.</p>
+      </div>
+      <div class="team-member">
+        <h3>Javier Sánchez Pérez</h3>
+        <span class="role">Tutor académico</span>
+        <p>Profesor de la ULPGC. Supervisión académica y metodológica.</p>
+      </div>
+      <div class="team-member">
+        <h3>Giovanny A. Cuervo Londoño</h3>
+        <span class="role">Tutor colaborador · Doctorando</span>
+        <p>Especialista en aprendizaje profundo aplicado a oceanografía.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <p>© 2026 Jorge Lorenzo Lorenzo · Universidad de Las Palmas de Gran Canaria</p>
+    <p>Datos: <a href="https://dataspace.copernicus.eu" target="_blank">Copernicus Data Space</a> · Dataset: MADOS</p>
+  </div>
+</footer>
+
+</body>
+</html>
