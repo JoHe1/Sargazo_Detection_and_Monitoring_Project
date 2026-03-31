@@ -248,7 +248,7 @@ def parse_args() -> argparse.Namespace:
 
 
 if __name__ == "__main__":
-    check_paths()
+    # check_paths()
     args = parse_args()
 
     if args.config:
