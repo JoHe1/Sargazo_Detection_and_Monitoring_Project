@@ -25,6 +25,10 @@ datasets/data/Sargassum_Ready_Dataset/
 datasets/data/sentinel_downloads/
 datasets/data/sentinel_caribbean/
 
+# ── Modelos preentrenados — demasiado grandes para GitHub ───────────────
+models/external/echevarria2025/models_4bands/
+models/external/echevarria2025/sargassum_data.csv
+
 # ── Modelos entrenados — demasiado grandes ──────────────────────────
 # Los checkpoints van en experiments/runs/ pero los .pth son muy grandes
 experiments/runs/*/weights.pth

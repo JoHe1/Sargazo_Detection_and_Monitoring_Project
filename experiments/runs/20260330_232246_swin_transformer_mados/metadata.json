@@ -1,6 +1,6 @@
 {
   "model_class": "SwinSegmenter",
-  "saved_at": "2026-03-31T00:04:34",
+  "saved_at": "2026-03-31T00:58:52",
   "num_parameters": 34083594,
   "model_name": "swin_transformer",
   "dataset_name": "mados",
@@ -20,9 +20,9 @@
   "checkpoint_dir": "experiments\\runs\\20260330_232246_swin_transformer_mados",
   "use_amp": false,
   "seed": 42,
-  "best_epoch": 21,
-  "best_val_loss": 1.61075,
-  "iou_sargassum": 0.01939,
-  "iou_algas": 0.00042,
-  "mIoU": 0.0048
+  "best_epoch": 47,
+  "best_val_loss": 1.18053,
+  "iou_sargassum": 0.01051,
+  "iou_algas": 0.00067,
+  "mIoU": 0.0058
 }
