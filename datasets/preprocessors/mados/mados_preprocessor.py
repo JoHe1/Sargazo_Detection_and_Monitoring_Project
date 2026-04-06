@@ -8,7 +8,7 @@ Se ejecuta UNA SOLA VEZ antes de entrenar. No se llama durante
 el entrenamiento, solo en la fase de preparación de datos.
 
 Estructura esperada de MADOS en disco:
-    datasets/raw_data/MADOS/MADOS/
+    datasets/data/MADOS/MADOS/
     ├── splits/
     │   ├── train_X.txt
     │   ├── val_X.txt
@@ -22,7 +22,7 @@ Estructura esperada de MADOS en disco:
             └── Scene_XXX_L2R_rhorc_833_YY.tif  ← banda NIR
 
 Estructura generada en disco:
-    datasets/raw_data/Sargassum_Ready_Dataset/
+    datasets/data/Sargassum_Ready_Dataset/
     ├── train/
     │   ├── images/  ← arrays .npy (H, W, 4) en orden (B, G, R, NIR)
     │   └── masks/   ← arrays .npy (H, W) con IDs de clase 0-15
