@@ -45,6 +45,7 @@ bandas_*.png
 muestras_*.png
 sargazo_*.png
 estadisticas_globales.png
+/experiments/results
 
 # ── IDEs ─────────────────────────────────────────────────────────────
 .vscode/settings.json

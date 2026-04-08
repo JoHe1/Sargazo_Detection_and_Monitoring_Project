@@ -24,6 +24,7 @@ import argparse
 import glob
 import random
 from pathlib import Path
+from xml.parsers.expat import model
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -254,6 +255,7 @@ def visualizar(
     prob_sarg_filtrada:np.ndarray,
     prob_sarg_suave:   np.ndarray,
     mascara_limpia:    np.ndarray,
+    mascara_swin_pura: np.ndarray,   # <--- AÑADIR ESTA LÍNEA
     mapa_fai:          np.ndarray,
     nombre:            str,
     umbral:            float,
@@ -283,8 +285,16 @@ def visualizar(
 
     iou2 = metricas.get(2, float("nan"))
     iou3 = metricas.get(3, float("nan"))
+    
+    # Pre-calculamos los textos 
     iou2_str = f"{iou2:.4f}" if not np.isnan(iou2) else "n/a"
     iou3_str = f"{iou3:.4f}" if not np.isnan(iou3) else "n/a"
+
+    # EL ÚNICO PRINT QUE DEBE HABER (Asegúrate de que no haya otro debajo)
+    print(f"  P_max: {prob_sarg_raw.max()*100:.1f}%  |  "
+          f"IoU Denso: {iou2_str}  |  "
+          f"IoU Escaso: {iou3_str}  |  "
+          f"Px: {mascara_limpia.sum()}")
 
     fig, axes = plt.subplots(1, 6, figsize=(32, 5.5))
     fig.suptitle(
@@ -315,12 +325,13 @@ def visualizar(
     axes[2].axis("off")
     fig.colorbar(im3, ax=axes[2], fraction=0.046, pad=0.04)
 
-    im4 = axes[3].imshow(prob_sarg_suave, cmap="YlGn", vmin=0, vmax=1)
-    axes[3].contour((prob_sarg_suave >= umbral).astype(float),
-                    levels=[0.5], colors="blue", linewidths=0.8)
-    axes[3].set_title(f"P(sargazo) suavizada\nUmbral {umbral:.0%} (sigma={sigma})", fontsize=8)
+# Cambiamos el panel de calor por la Visión Pura de la IA
+    mascara_pura_rgba = np.zeros((*shape, 4), dtype=np.float32)
+    mascara_pura_rgba[mascara_swin_pura == 1] = [1.0, 0.0, 0.0, 0.7] # Rojo translúcido
+    axes[3].imshow(rgb)
+    axes[3].imshow(mascara_pura_rgba, interpolation="nearest")
+    axes[3].set_title(f"Swin Puro (>{umbral:.0%})\n¡Ignorando el FAI!", fontsize=8)
     axes[3].axis("off")
-    fig.colorbar(im4, ax=axes[3], fraction=0.046, pad=0.04)
 
     mascara_rgba = np.zeros((*shape, 4), dtype=np.float32)
     mascara_rgba[mascara_limpia == 1] = [0.12, 0.52, 0.29, 0.82]
@@ -439,6 +450,10 @@ def main() -> None:
 
         clase_pred, prob_sarg_raw, _ = inferir(model, tensor, usar_tta=usar_tta)
 
+        # --- AÑADIR ESTA LÍNEA AQUÍ ---
+        mascara_swin_pura = (prob_sarg_raw >= args.umbral).astype(np.float32)
+        # ------------------------------
+
         if args.umbral_fai > 0:
             mascara_fai, mapa_fai = calcular_fai_mask(ip, umbral_fai=args.umbral_fai)
             prob_sarg_filtrada    = prob_sarg_raw * mascara_fai.astype(np.float32)
@@ -462,20 +477,25 @@ def main() -> None:
         iou2 = metricas.get(2, float("nan"))
         iou3 = metricas.get(3, float("nan"))
 
+        # --- ESTAS SON LAS DOS LÍNEAS QUE FALTABAN ---
+        iou2_str = f"{iou2:.4f}" if not np.isnan(iou2) else "n/a"
+        iou3_str = f"{iou3:.4f}" if not np.isnan(iou3) else "n/a"
+        # ---------------------------------------------
+
         print(f"  P_max: {prob_sarg_raw.max()*100:.1f}%  |  "
-              f"IoU Denso: {iou2:.4f if not np.isnan(iou2) else 'n/a'}  "
-              f"IoU Escaso: {iou3:.4f if not np.isnan(iou3) else 'n/a'}  "
+              f"IoU Denso: {iou2_str}  |  "
+              f"IoU Escaso: {iou3_str}  |  "
               f"Px: {mascara_limpia.sum()}")
 
         if not np.isnan(iou2): iou2_global.append(iou2)
         if not np.isnan(iou3): iou3_global.append(iou3)
 
         visualizar(
-            img_norm, mascara_gt, clase_pred,
-            prob_sarg_raw, prob_sarg_filtrada, prob_sarg_suave,
-            mascara_limpia, mapa_fai,
-            nombre, args.umbral, args.umbral_fai, args.sigma, metricas,
-        )
+                    img_norm, mascara_gt, clase_pred,
+                    prob_sarg_raw, prob_sarg_filtrada, prob_sarg_suave,
+                    mascara_limpia, mascara_swin_pura, mapa_fai,  # <--- AÑADIDA AQUÍ
+                    nombre, args.umbral, args.umbral_fai, args.sigma, metricas,
+                )
 
     print("\n" + "=" * 55)
     print("  RESUMEN")
