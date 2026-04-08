@@ -46,6 +46,7 @@ muestras_*.png
 sargazo_*.png
 estadisticas_globales.png
 /experiments/results
+/datasets/data/Sargassum_Ready_Dataset.zip
 
 # ── IDEs ─────────────────────────────────────────────────────────────
 .vscode/settings.json

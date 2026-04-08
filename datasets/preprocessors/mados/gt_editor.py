@@ -156,10 +156,33 @@ class GTEditorApp:
         body = tk.Frame(self.root, bg="#111827")
         body.pack(fill="both", expand=True)
 
-        # Panel izquierdo: referencias
-        left = tk.Frame(body, bg="#111827", width=250)
-        left.pack(side="left", fill="y", padx=4, pady=4)
-        left.pack_propagate(True) # Para que no corte el contenido verticalmente
+        # Panel izquierdo con scrollbar
+        left_outer = tk.Frame(body, bg="#111827", width=260)
+        left_outer.pack(side="left", fill="y", padx=4, pady=4)
+        left_outer.pack_propagate(False)
+
+        left_canvas = tk.Canvas(left_outer, bg="#111827", width=245, highlightthickness=0)
+        left_scrollbar = tk.Scrollbar(left_outer, orient="vertical", command=left_canvas.yview)
+        left_canvas.configure(yscrollcommand=left_scrollbar.set)
+        left_scrollbar.pack(side="right", fill="y")
+        left_canvas.pack(side="left", fill="both", expand=True)
+
+        left = tk.Frame(left_canvas, bg="#111827", width=240)
+        left_canvas.create_window((0, 0), window=left, anchor="nw")
+
+        def _update_scroll(event):
+            left_canvas.configure(scrollregion=left_canvas.bbox("all"))
+        left.bind("<Configure>", _update_scroll)
+
+        def _on_left_wheel(event):
+            if event.num == 4 or (hasattr(event, "delta") and event.delta > 0):
+                left_canvas.yview_scroll(-1, "units")
+            else:
+                left_canvas.yview_scroll(1, "units")
+        left_canvas.bind("<MouseWheel>", _on_left_wheel)
+        left_canvas.bind("<Button-4>", _on_left_wheel)
+        left_canvas.bind("<Button-5>", _on_left_wheel)
+        left.bind("<MouseWheel>", _on_left_wheel)
 
         tk.Label(left, text="RGB", bg="#111827", fg="#9ca3af",
                  font=("Courier", 8)).pack()
@@ -333,10 +356,10 @@ class GTEditorApp:
 
         # Paneles pequeños (112x112)
         self._ph_rgb  = ImageTk.PhotoImage(
-            Image.fromarray(self.img_rgb).resize((112, 112), Image.NEAREST)
+            Image.fromarray(self.img_rgb).resize((90, 90), Image.Resampling.NEAREST)
         )
         self._ph_fai  = ImageTk.PhotoImage(
-            Image.fromarray(self.img_fai).resize((112, 112), Image.NEAREST)
+            Image.fromarray(self.img_fai).resize((90, 90), Image.Resampling.NEAREST)
         )
         self.lbl_rgb.config(image=self._ph_rgb)
         self.lbl_fai.config(image=self._ph_fai)
@@ -353,7 +376,7 @@ class GTEditorApp:
         comp = base.convert("RGBA")
         comp.paste(overlay, mask=overlay.split()[3])
         self._ph_orig = ImageTk.PhotoImage(
-            comp.resize((112, 112), Image.NEAREST)
+            Image.fromarray(self.img_rgb).resize((90, 90), Image.Resampling.NEAREST)
         )
         self.lbl_orig.config(image=self._ph_orig)
 
@@ -381,7 +404,7 @@ class GTEditorApp:
 
         w_zoom = TARGET * z
         h_zoom = TARGET * z
-        img_zoom = comp.resize((w_zoom, h_zoom), Image.NEAREST)
+        img_zoom = comp.resize((w_zoom, h_zoom), Image.Resampling.NEAREST)
 
         # Offset base (centrado) + pan del usuario
         base_x = max(0, (cw - w_zoom) // 2)
@@ -623,7 +646,7 @@ def main() -> None:
     print(f"[GT Editor] {len(tiles)} tiles · split='{args.split}'")
 
     root = tk.Tk()
-    root.geometry("1400x860")
+    root.geometry("1500x900")
     app  = GTEditorApp(root, tiles, mask_dir, backup_dir)
     root.mainloop()
 
