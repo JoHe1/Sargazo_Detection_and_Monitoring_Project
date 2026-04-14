@@ -325,6 +325,18 @@ def main(csv_path: Path, modelos: list[str], usar_gridsearch: bool) -> None:
     dump(le,     OUTPUT_DIR / "label_encoder_4b.joblib")
     print(f"\n[guardado] scaler_4b.joblib | label_encoder_4b.joblib")
 
+    # Cargar resultados previos si existen (para acumular con --solo)
+    out_json = OUTPUT_DIR / "resultados_4b.json"
+    resultados_previos = {}
+    if out_json.exists():
+        import json as _json
+        try:
+            prev = _json.loads(out_json.read_text())
+            resultados_previos = {r["modelo"]: r for r in prev}
+            print(f"[info] Resultados previos cargados: {list(resultados_previos.keys())}")
+        except Exception:
+            pass
+
     resultados = []
     param_grids  = get_param_grids(spw)
     base_models  = get_base_models(spw)
@@ -385,17 +397,21 @@ def main(csv_path: Path, modelos: list[str], usar_gridsearch: bool) -> None:
         print(f"[guardado] {out_path.name}")
         resultados.append(evaluar("1D-CNN", cnn, X_te_cnn, y_test, le, es_keras=True))
 
-    # ── Resumen final ─────────────────────────────────────────────────────────
+    # ── Resumen final — acumular con resultados previos ─────────────────────
     out_json = OUTPUT_DIR / "resultados_4b.json"
+    # Fusionar: los nuevos resultados sobreescriben los previos del mismo modelo
+    for r in resultados:
+        resultados_previos[r["modelo"]] = r
+    todos_resultados = list(resultados_previos.values())
     with open(out_json, "w") as f:
-        json.dump(resultados, f, indent=2, ensure_ascii=False)
+        json.dump(todos_resultados, f, indent=2, ensure_ascii=False)
 
     print(f"\n{'='*65}")
     print(f"  RESUMEN — reentrenamiento con {len(FEATURE_COLUMNS)} bandas ({', '.join(FEATURE_COLUMNS)})")
     print(f"{'='*65}")
     print(f"  {'Modelo':15}  {'Accuracy':>10}  {'F1 macro':>10}  {'F1 weighted':>12}")
     print(f"  {'-'*55}")
-    for r in resultados:
+    for r in todos_resultados:
         print(f"  {r['modelo']:15}  {r['accuracy']:>10.4f}  "
               f"{r['f1_macro']:>10.4f}  {r['f1_weighted']:>12.4f}")
     print(f"\n  Modelos en : {OUTPUT_DIR}")

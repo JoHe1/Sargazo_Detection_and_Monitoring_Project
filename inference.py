@@ -19,6 +19,7 @@ Uso:
 """
 
 from __future__ import annotations
+import json
 
 import argparse
 import glob
@@ -386,6 +387,8 @@ def main() -> None:
     parser.add_argument("--dataset",    type=str,   default=str(SARGASSUM_READY))
     parser.add_argument("--modelo",     type=str,   default=None,
                         help="Carpeta del checkpoint (contiene weights.pth)")
+    parser.add_argument("--evaluar",    action="store_true",
+                        help="Modo evaluación: sin gráficas, genera JSON comparable con Echevarría")
     args = parser.parse_args()
 
     usar_tta = not args.sin_tta
@@ -439,6 +442,8 @@ def main() -> None:
     print(f"\n[inference] Procesando {len(img_paths)} imágenes...\n")
 
     iou2_global, iou3_global = [], []
+    tp_total, fp_total, fn_total = 0, 0, 0
+    resultados_tiles = []
 
     for i, ip in enumerate(img_paths):
         nombre = Path(ip).name
@@ -449,10 +454,7 @@ def main() -> None:
         mascara_gt = np.load(mp) if Path(mp).exists() else np.zeros((224, 224), dtype=np.int32)
 
         clase_pred, prob_sarg_raw, _ = inferir(model, tensor, usar_tta=usar_tta)
-
-        # --- AÑADIR ESTA LÍNEA AQUÍ ---
         mascara_swin_pura = (prob_sarg_raw >= args.umbral).astype(np.float32)
-        # ------------------------------
 
         if args.umbral_fai > 0:
             mascara_fai, mapa_fai = calcular_fai_mask(ip, umbral_fai=args.umbral_fai)
@@ -477,34 +479,87 @@ def main() -> None:
         iou2 = metricas.get(2, float("nan"))
         iou3 = metricas.get(3, float("nan"))
 
-        # --- ESTAS SON LAS DOS LÍNEAS QUE FALTABAN ---
         iou2_str = f"{iou2:.4f}" if not np.isnan(iou2) else "n/a"
         iou3_str = f"{iou3:.4f}" if not np.isnan(iou3) else "n/a"
-        # ---------------------------------------------
+
+        # TP/FP/FN para modo --evaluar
+        gt_sarg   = np.isin(gt_crop, list(CLASES_SARGASSUM))
+        pred_sarg = mascara_limpia.astype(bool)
+        tp = int(( pred_sarg &  gt_sarg).sum())
+        fp = int(( pred_sarg & ~gt_sarg).sum())
+        fn = int((~pred_sarg &  gt_sarg).sum())
+        tp_total += tp
+        fp_total += fp
+        fn_total += fn
+
+        prec_tile = tp / (tp + fp) if (tp + fp) > 0 else float("nan")
+        rec_tile  = tp / (tp + fn) if (tp + fn) > 0 else float("nan")
+        iou_tile  = tp / (tp + fp + fn) if (tp + fp + fn) > 0 else float("nan")
+        resultados_tiles.append({"iou": iou_tile, "prec": prec_tile, "rec": rec_tile})
 
         print(f"  P_max: {prob_sarg_raw.max()*100:.1f}%  |  "
-              f"IoU Denso: {iou2_str}  |  "
-              f"IoU Escaso: {iou3_str}  |  "
-              f"Px: {mascara_limpia.sum()}")
+              f"IoU Denso: {iou2_str}  |  IoU Escaso: {iou3_str}  |  "
+              f"Prec: {prec_tile:.2f}  Rec: {rec_tile:.2f}  |  Px: {mascara_limpia.sum()}")
 
         if not np.isnan(iou2): iou2_global.append(iou2)
         if not np.isnan(iou3): iou3_global.append(iou3)
 
-        visualizar(
-                    img_norm, mascara_gt, clase_pred,
-                    prob_sarg_raw, prob_sarg_filtrada, prob_sarg_suave,
-                    mascara_limpia, mascara_swin_pura, mapa_fai,  # <--- AÑADIDA AQUÍ
-                    nombre, args.umbral, args.umbral_fai, args.sigma, metricas,
-                )
+        if not args.evaluar:
+            visualizar(
+                img_norm, mascara_gt, clase_pred,
+                prob_sarg_raw, prob_sarg_filtrada, prob_sarg_suave,
+                mascara_limpia, mascara_swin_pura, mapa_fai,
+                nombre, args.umbral, args.umbral_fai, args.sigma, metricas,
+            )
+
+    # ── Resumen ────────────────────────────────────────────────────────
+    prec_g = tp_total / (tp_total + fp_total) if (tp_total + fp_total) > 0 else 0.0
+    rec_g  = tp_total / (tp_total + fn_total) if (tp_total + fn_total) > 0 else 0.0
+    f1_g   = 2 * prec_g * rec_g / (prec_g + rec_g) if (prec_g + rec_g) > 0 else 0.0
+    iou_g  = tp_total / (tp_total + fp_total + fn_total) if (tp_total + fp_total + fn_total) > 0 else 0.0
+    ious_v = [r["iou"] for r in resultados_tiles if not np.isnan(r["iou"])]
+    iou_medio = float(np.mean(ious_v)) if ious_v else 0.0
 
     print("\n" + "=" * 55)
     print("  RESUMEN")
-    print(f"  Imágenes procesadas: {len(img_paths)}")
+    print(f"  Imágenes procesadas : {len(img_paths)}")
+    print(f"  Precision           : {prec_g:.4f}")
+    print(f"  Recall              : {rec_g:.4f}")
+    print(f"  F1                  : {f1_g:.4f}")
+    print(f"  IoU sargazo global  : {iou_g:.4f}")
+    print(f"  IoU sargazo medio   : {iou_medio:.4f}")
     if iou2_global:
         print(f"  IoU medio Dense Sarg.  : {np.mean(iou2_global):.4f}")
     if iou3_global:
         print(f"  IoU medio Sparse Algae : {np.mean(iou3_global):.4f}")
     print("=" * 55)
+
+    if args.evaluar:
+        resultado_json = {
+            "Swin Transformer": {
+                "precision":          round(prec_g, 4),
+                "recall":             round(rec_g,  4),
+                "f1":                 round(f1_g,   4),
+                "iou_sargazo_global": round(iou_g,  4),
+                "iou_sargazo_medio":  round(iou_medio, 4),
+                "tp_total":           tp_total,
+                "fp_total":           fp_total,
+                "fn_total":           fn_total,
+                "tiles_evaluados":    len(img_paths),
+                "config": {
+                    "umbral":     args.umbral,
+                    "umbral_fai": args.umbral_fai,
+                    "min_pixels": args.min_pixels,
+                    "sigma":      args.sigma,
+                    "split":      args.split,
+                }
+            }
+        }
+        out_path = Path("experiments") / f"evaluacion_swin_{args.split}.json"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(out_path, "w") as f:
+            json.dump(resultado_json, f, indent=2, ensure_ascii=False)
+        print(f"\n[guardado] {out_path}")
 
 
 if __name__ == "__main__":
