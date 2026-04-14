@@ -316,7 +316,7 @@ def visualizar(
         axes[1].legend(handles=ley_gt, fontsize=5.5, loc="lower right",
                        framealpha=0.85, title="Clases GT", title_fontsize=5.5)
 
-    vmax_fai = max(abs(mapa_fai.min()), abs(mapa_fai.max()), 0.05)
+    vmax_fai = max(abs(mapa_fai.min()), abs(mapa_fai.max()), 0.001)
     im3 = axes[2].imshow(mapa_fai, cmap="RdYlGn", vmin=-vmax_fai, vmax=vmax_fai)
     if umbral_fai > 0:
         axes[2].contour((mapa_fai >= umbral_fai).astype(float),
