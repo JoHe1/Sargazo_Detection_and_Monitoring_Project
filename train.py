@@ -41,8 +41,8 @@ from core.config.experiment_config import ExperimentConfig
 from core.config.paths import check_paths, SARGASSUM_READY
 from core.utils.metrics import compute_metrics, iou_per_class
 from datasets.sources.mados_dataset import MADOSDataset
-#from models.losses.cross_entropy_dice import CrossEntropyDiceLoss
-from models.losses.focal_dice import FocalDiceLoss
+from models.losses.cross_entropy_dice import CrossEntropyDiceLoss
+#from models.losses.focal_dice import FocalDiceLoss
 from models.registry import ModelRegistry
 
 
@@ -96,14 +96,18 @@ def train(config: ExperimentConfig) -> None:
     # ── Optimizer y scheduler ────────────────────────────────────────
     optimizer = model.configure_optimizers(config)
     scheduler = ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=3
+        optimizer, mode="min", factor=0.5, patience=8
     )
 
     # ── Loss ──────────────────────────────────────────────────────────
-    criterion = FocalDiceLoss(
-        num_classes=config.num_classes,
-        gamma=2.0,
-        device=device,
+    #criterion = FocalDiceLoss(
+    #    num_classes=config.num_classes,
+    #    gamma=2.0,
+    #    device=device,
+    #).to(device)
+
+    criterion = CrossEntropyDiceLoss(
+        num_classes=config.num_classes, device=device
     ).to(device)
 
     # ── Preparar directorio de checkpoint ────────────────────────────
