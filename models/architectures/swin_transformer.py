@@ -132,7 +132,7 @@ class SwinSegmenter(BaseModel):
                            # logits: (B, 16, 224, 224)
     """
 
-    BACKBONE_NAME = "microsoft/swin-base-patch4-window7-224"
+    BACKBONE_NAME = "microsoft/swin-tiny-patch4-window7-224"
 
     def __init__(self, num_classes: int = 16) -> None:
         """
@@ -151,11 +151,11 @@ class SwinSegmenter(BaseModel):
 
         # ── Decoder ───────────────────────────────────────────────────
         # dec1: bottleneck (7×7, 768ch) → 14×14,  skip etapa 2 (384ch)
-        self.dec1 = DecoderBlock(in_channels=1024, skip_channels=512, out_channels=256)
+        self.dec1 = DecoderBlock(in_channels=768, skip_channels=384, out_channels=256)
         # dec2: 14×14 → 28×28,  skip etapa 1 (192ch)
-        self.dec2 = DecoderBlock(in_channels=256,  skip_channels=256, out_channels=128)
+        self.dec2 = DecoderBlock(in_channels=256, skip_channels=192, out_channels=128)
         # dec3: 28×28 → 56×56,  skip etapa 0 (96ch)
-        self.dec3 = DecoderBlock(in_channels=128,  skip_channels=128, out_channels=64)
+        self.dec3 = DecoderBlock(in_channels=128, skip_channels=96,  out_channels=64)
         # dec4: 56×56 → 112×112 (sin skip — el backbone ya no tiene features aquí)
         self.dec4 = nn.Sequential(
             nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
