@@ -32,6 +32,7 @@ models/external/echevarria2025/sargassum_data.csv
 # ── Modelos entrenados — demasiado grandes ──────────────────────────
 # Los checkpoints van en experiments/runs/ pero los .pth son muy grandes
 experiments/runs/*/weights.pth
+docs/assets/data/runs/*/weights.pth
 
 # Excepción: sí queremos subir el metadata.json y el metrics.csv
 # (ya están excluidos del patrón anterior porque no son .pth)

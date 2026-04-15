@@ -209,24 +209,79 @@ footer a:hover { color: #111; }
     </table>
   </section>
 
-  <section>
+<section id="inferencia">
     <h2>Ejemplos de inferencia</h2>
-    <p>Visualización de la predicción del modelo sobre imágenes del split de test. Cada ejemplo muestra la imagen en falso color NIR-R-G, el ground truth MADOS y la predicción con post-procesado (FAI + suavizado gaussiano σ=2 + limpieza morfológica).</p>
-    <div class="gallery-note" id="gallery-note">
-      Las imágenes se generan al ejecutar <code>python inference.py --split test --n 6 --guardar</code>
-      y se colocan en <code>docs/assets/img/</code>.
+    <p>Visualización de la predicción del modelo sobre imágenes del split de test (datos nunca vistos durante el entrenamiento). Navega por el carrusel para ver distintos casos de éxito y mitigación de errores mediante el Pipeline Híbrido.</p>
+    
+    <div class="gallery-note" id="gallery-note" style="margin-bottom: 2rem;">
+      Las imágenes han sido generadas mediante el script <code>inference.py</code>, aplicando el post-procesado completo (FAI + suavizado gaussiano σ=2 + limpieza morfológica).
     </div>
-    <div class="gallery-grid" id="gallery">
-      <div class="gallery-item">
-        <div class="gallery-img"><div class="placeholder">inferencia pendiente</div></div>
-        <div class="gallery-caption"><h4>Scene · Dense Sargassum</h4><p>IoU: — · px detectados: —</p></div>
+
+    <div class="carousel-container" style="position: relative; max-width: 100%; margin: 0 auto; border: 1px solid #eee; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; background: #fafafa; padding: 1rem;">
+      
+      <img id="carouselImage" src="" alt="Ejemplo de inferencia" style="width: 100%; height: auto; border-radius: 4px; display: block;">
+      
+      <div style="padding: 1rem 0.5rem 0.5rem;">
+        <h4 id="carouselTitle" style="color: #2e86c1; margin-bottom: 0.5rem; font-size: 1.1rem;">Cargando...</h4>
+        <p id="carouselDesc" style="font-size: 0.95rem; color: #555; margin: 0;">Por favor, espera.</p>
       </div>
-      <div class="gallery-item">
-        <div class="gallery-img"><div class="placeholder">inferencia pendiente</div></div>
-        <div class="gallery-caption"><h4>Scene · Sin sargazo</h4><p>Verdadero negativo</p></div>
+
+      <button onclick="cambiarImagen(-1)" style="position: absolute; top: 40%; left: 10px; background: rgba(0,0,0,0.6); color: white; border: none; font-size: 1.5rem; padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; transition: 0.2s;">&#10094;</button>
+      <button onclick="cambiarImagen(1)" style="position: absolute; top: 40%; right: 10px; background: rgba(0,0,0,0.6); color: white; border: none; font-size: 1.5rem; padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; transition: 0.2s;">&#10095;</button>
+      
+      <div id="carouselCounter" style="position: absolute; top: 15px; right: 20px; background: rgba(0,0,0,0.6); color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-family: monospace;">
+        1 / 3
       </div>
     </div>
   </section>
+
+  <script>
+    const diapositivas = [
+      {
+        archivo: "Inferencia_test_1.png", // Nombre exacto del archivo en assets/img/
+        titulo: "Detección precisa vs Efecto Halo",
+        descripcion: "El Swin Transformer detecta el contexto espacial dilatado. El Índice FAI recorta la detección, ajustando el resultado estrictamente a la biomasa real."
+      },
+      {
+        archivo: "Inferencia_test_2.png",
+        titulo: "Mitigación de Falsos Positivos",
+        descripcion: "El sistema penaliza y descarta estructuras oceánicas (espuma/olas) que carecen de la reflectancia en el Infrarrojo Cercano (NIR) necesaria."
+      },
+      {
+        archivo: "Inferencia_test_3.png",
+        titulo: "Corrección de etiquetas débiles (Weak Labels)",
+        descripcion: "La red logra detectar trazas finas de sargazo que fueron omitidas por los anotadores humanos del dataset original MADOS."
+      }
+    ];
+
+    let indiceActual = 0;
+    const imgRutaBase = "assets/img/"; // La carpeta donde están tus fotos
+
+    function actualizarCarrusel() {
+      const datos = diapositivas[indiceActual];
+      
+      // Actualizar imagen y textos
+      document.getElementById("carouselImage").src = imgRutaBase + datos.archivo;
+      document.getElementById("carouselTitle").textContent = datos.titulo;
+      document.getElementById("carouselDesc").textContent = datos.descripcion;
+      
+      // Actualizar contador (ej. 1 / 3)
+      document.getElementById("carouselCounter").textContent = `${indiceActual + 1} / ${diapositivas.length}`;
+    }
+
+    function cambiarImagen(direccion) {
+      indiceActual += direccion;
+      
+      // Lógica circular (si pasa de la última, vuelve a la primera y viceversa)
+      if (indiceActual >= diapositivas.length) indiceActual = 0;
+      if (indiceActual < 0) indiceActual = diapositivas.length - 1;
+      
+      actualizarCarrusel();
+    }
+
+    // Arrancar el carrusel con la primera imagen al cargar la página
+    window.onload = actualizarCarrusel;
+  </script>
 
   <section>
     <h2>Clases del dataset MADOS</h2>
