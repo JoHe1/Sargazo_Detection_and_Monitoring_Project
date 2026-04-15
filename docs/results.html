@@ -11,7 +11,6 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Source Serif 4', Georgia, serif; background: #fff; color: #111; line-height: 1.7; font-weight: 300; }
 
-/* 2. AÑADIDO: He cambiado el 720px por 1100px para hacerlo más grande y espectacular */
 .container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
 
 header { border-bottom: 1px solid #111; padding: 2rem 0 1.5rem; margin-bottom: 3rem; }
@@ -33,30 +32,18 @@ section { margin-bottom: 4rem; }
 h2 { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
 p { margin-bottom: 1rem; color: #222; font-weight: 300; }
 
-/* ── CONTENEDOR DE GRÁFICAS ── */
 .chart-container { position: relative; height: 400px; width: 100%; margin-bottom: 3rem; }
 
-/* ── METRICS ── */
+/* ── METRICS NUEVAS (Basadas en Test Final) ── */
 .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid #ddd; margin-bottom: 1.5rem; }
 .metric { padding: 1.2rem 1rem; border-right: 1px solid #ddd; text-align: center; }
 .metric:last-child { border-right: none; }
 .metric:nth-child(3) { border-right: none; }
 .metric:nth-child(4), .metric:nth-child(5), .metric:nth-child(6) { border-top: 1px solid #ddd; }
 .metric-val { font-family: 'Source Code Pro', monospace; font-size: 1.5rem; font-weight: 500; display: block; margin-bottom: 0.25rem; }
-.metric-val.primary { color: #111; }
-.metric-val.pending { color: #bbb; }
-.metric-lbl { font-size: 0.75rem; color: #777; font-weight: 300; }
-.metric-sub { font-size: 0.7rem; color: #aaa; font-family: 'Source Code Pro', monospace; margin-top: 0.15rem; }
-
-.metrics-note {
-  font-family: 'Source Code Pro', monospace;
-  font-size: 0.78rem;
-  color: #888;
-  padding: 0.75rem 1rem;
-  border: 1px solid #eee;
-  background: #fafafa;
-  margin-bottom: 2rem;
-}
+.metric-val.primary { color: #1e8449; }
+.metric-lbl { font-size: 0.75rem; color: #777; font-weight: 300; text-transform: uppercase; letter-spacing: 0.05em; }
+.metric-sub { font-size: 0.7rem; color: #aaa; font-family: 'Source Code Pro', monospace; margin-top: 0.15rem; display: block; }
 
 /* ── COMPARE TABLE ── */
 .compare-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.88rem; }
@@ -65,32 +52,12 @@ p { margin-bottom: 1rem; color: #222; font-weight: 300; }
 .compare-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid #eee; vertical-align: middle; color: #333; font-weight: 300; }
 .compare-table tr:last-child td { border-bottom: none; }
 .compare-table tr:hover td { background: #fafafa; }
-.tag-main { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; padding: 0.1rem 0.4rem; border: 1px solid #aaa; color: #555; margin-left: 0.4rem; vertical-align: middle; }
-.tag-pending { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; color: #aaa; }
-.val-running { font-family: 'Source Code Pro', monospace; font-size: 0.8rem; color: #999; font-style: italic; }
+.tag-main { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; padding: 0.1rem 0.4rem; border: 1px solid #1e8449; color: #1e8449; background: #e8f8f5; margin-left: 0.4rem; vertical-align: middle; border-radius: 3px; }
 
 /* ── GALLERY ── */
-.gallery-note {
-  font-size: 0.85rem;
-  color: #777;
-  font-style: italic;
-  padding: 1.5rem;
-  border: 1px dashed #ccc;
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
+.gallery-note { font-size: 0.85rem; color: #777; font-style: italic; padding: 1.5rem; border: 1px dashed #ccc; margin-bottom: 1.5rem; text-align: center; }
 .gallery-note code { font-family: 'Source Code Pro', monospace; font-size: 0.8rem; color: #555; background: #f5f5f5; padding: 0.1rem 0.3rem; }
-
-/* ── CLASSES ── */
-.classes-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-.classes-table tr { border-bottom: 1px solid #f0f0f0; }
-.classes-table tr:last-child { border-bottom: none; }
-.classes-table td { padding: 0.45rem 0.5rem; vertical-align: middle; }
-.classes-table td:first-child { font-family: 'Source Code Pro', monospace; font-size: 0.75rem; color: #999; width: 30px; }
-.classes-table td:nth-child(2) { width: 14px; }
-.class-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
-.classes-table tr.target td { font-weight: 400; }
-.target-mark { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; color: #555; margin-left: 0.4rem; }
+.carousel-container { position: relative; width: 100%; border: 1px solid #eee; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; background: #fafafa; padding: 1.5rem; }
 
 footer { border-top: 1px solid #ddd; padding: 1.5rem 0; margin-top: 4rem; }
 .footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
@@ -125,53 +92,51 @@ footer a:hover { color: #111; }
   <div class="page-title">
     <p class="breadcrumb"><a href="index.html">Inicio</a> / Resultados</p>
     <h1>Resultados del modelo</h1>
-    <p>Métricas de evaluación sobre el conjunto de test del dataset MADOS, ejemplos de inferencia y comparativa entre arquitecturas.</p>
+    <p>Métricas de evaluación sobre el conjunto de test del dataset MADOS, ejemplos de inferencia y comparativa entre arquitecturas del estado del arte.</p>
   </div>
 
   <section>
-    <h2>Métricas del mejor checkpoint</h2>
+    <h2>Métricas Principales: Swin Transformer</h2>
+    <p style="font-size: 0.9rem; color: #666; margin-top: -1rem; margin-bottom: 1.5rem;">Resultados obtenidos sobre los datos de Test Final, empleando el post-procesado con umbral FAI.</p>
     <div class="metrics-grid">
       <div class="metric">
-        <span class="metric-val primary" id="iou-sarg">—</span>
-        <span class="metric-lbl">IoU sargazo combinado</span>
-        <span class="metric-sub">clases 2 + 3</span>
+        <span class="metric-val primary" id="top-recall">—</span>
+        <span class="metric-lbl">Recall (Sensibilidad)</span>
+        <span class="metric-sub">Tasa de detección</span>
       </div>
       <div class="metric">
-        <span class="metric-val primary" id="iou-dense">—</span>
-        <span class="metric-lbl">IoU Dense Sargassum</span>
-        <span class="metric-sub">clase 2</span>
+        <span class="metric-val" id="top-precision">—</span>
+        <span class="metric-lbl">Precisión</span>
+        <span class="metric-sub">Sargazo detectado real</span>
       </div>
       <div class="metric">
-        <span class="metric-val primary" id="iou-sparse">—</span>
-        <span class="metric-lbl">IoU Sparse Algae</span>
-        <span class="metric-sub">clase 3</span>
+        <span class="metric-val" id="top-f1">—</span>
+        <span class="metric-lbl">F1-Score</span>
+        <span class="metric-sub">Media armónica</span>
       </div>
       <div class="metric">
-        <span class="metric-val" id="miou">—</span>
-        <span class="metric-lbl">mIoU global</span>
-        <span class="metric-sub">16 clases</span>
+        <span class="metric-val" id="top-iou">—</span>
+        <span class="metric-lbl">IoU Global</span>
+        <span class="metric-sub">Intersección s/ Unión</span>
       </div>
       <div class="metric">
-        <span class="metric-val" id="best-epoch">—</span>
-        <span class="metric-lbl">Mejor época</span>
-        <span class="metric-sub">early stopping</span>
+        <span class="metric-val primary" id="top-tp">—</span>
+        <span class="metric-lbl">Verdaderos Positivos</span>
+        <span class="metric-sub">Píxeles acertados</span>
       </div>
       <div class="metric">
-        <span class="metric-val" id="val-loss">—</span>
-        <span class="metric-lbl">Val loss</span>
-        <span class="metric-sub">CE + Dice</span>
+        <span class="metric-val" id="top-fn" style="color: #c0392b;">—</span>
+        <span class="metric-lbl">Falsos Negativos</span>
+        <span class="metric-sub">Sargazo omitido</span>
       </div>
-    </div>
-    <div class="metrics-note" id="metrics-note">
-      Métricas pendientes de entrenamiento. Actualizar con: python scripts/export_results.py
     </div>
   </section>
 
   <section>
     <h2>Comparativa de modelos (Test)</h2>
-    <p>Los siguientes gráficos muestran el rendimiento del modelo frente al estado del arte (Random Forest, XGBoost, etc.) obtenidos desde los archivos JSON.</p>
+    <p>Los siguientes gráficos muestran el rendimiento de nuestra propuesta frente al estado del arte clásico, evaluados sobre las mismas 4 bandas espectrales.</p>
     <div id="graficas-error" style="display:none; color: #c0392b; background: #fadbd8; padding: 1rem; border-radius: 4px; margin-bottom: 2rem;">
-        Error cargando las gráficas. Asegúrate de estar corriendo esto en un servidor (GitHub Pages) y de que los archivos estén en assets/data/
+        Error cargando los archivos JSON. Asegúrate de estar corriendo esto en un servidor (GitHub Pages) y de que los archivos estén en la ruta <code>assets/data/test_final/</code>
     </div>
     
     <div style="margin-top: 2rem;">
@@ -188,35 +153,14 @@ footer a:hover { color: #111; }
       <thead>
         <tr>
           <th>Modelo</th>
-          <th>Épocas</th>
-          <th>LR</th>
-          <th>IoU sargazo</th>
-          <th>mIoU</th>
+          <th>Recall</th>
+          <th>Precisión</th>
+          <th>F1-Score</th>
+          <th>IoU Global</th>
         </tr>
       </thead>
-      <tbody>
-        <tr>
-          <td>Swin Transformer Tiny <span class="tag-main">principal</span></td>
-          <td>50</td>
-          <td><span style="font-family:'Source Code Pro',monospace;font-size:0.8rem;">5e-5</span></td>
-          <td><span class="val-running" id="table-swin-iou">entrenando...</span></td>
-          <td><span class="val-running" id="table-swin-miou">entrenando...</span></td>
-        </tr>
-        <tr>
-          <td>UNet</td>
-          <td>—</td>
-          <td>—</td>
-          <td><span class="tag-pending">pendiente</span></td>
-          <td><span class="tag-pending">pendiente</span></td>
-        </tr>
-        <tr>
-          <td>SegFormer</td>
-          <td>—</td>
-          <td>—</td>
-          <td><span class="tag-pending">pendiente</span></td>
-          <td><span class="tag-pending">pendiente</span></td>
-        </tr>
-      </tbody>
+      <tbody id="dynamic-table-body">
+        </tbody>
     </table>
   </section>
 
@@ -224,12 +168,11 @@ footer a:hover { color: #111; }
     <h2>Ejemplos de inferencia</h2>
     <p>Visualización de la predicción del modelo sobre imágenes del split de test (datos nunca vistos durante el entrenamiento). Navega por el carrusel para ver distintos casos de éxito y mitigación de errores mediante el Pipeline Híbrido.</p>
     
-    <div class="gallery-note" id="gallery-note" style="margin-bottom: 2rem;">
+    <div class="gallery-note">
       Las imágenes han sido generadas mediante el script <code>inference.py</code>, aplicando el post-procesado completo (FAI + suavizado gaussiano σ=2 + limpieza morfológica).
     </div>
 
-    <div class="carousel-container" style="position: relative; max-width: 100%; margin: 0 auto; border: 1px solid #eee; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; background: #fafafa; padding: 1rem;">
-      
+    <div class="carousel-container">
       <img id="carouselImage" src="" alt="Ejemplo de inferencia" style="width: 100%; height: auto; border-radius: 4px; display: block;">
       
       <div style="padding: 1rem 0.5rem 0.5rem;">
@@ -256,22 +199,74 @@ footer a:hover { color: #111; }
 </footer>
 
 <script>
-  // 4. AÑADIDO: Lógica de las gráficas
-  async function cargarResultadosGraficas() {
+  // ==========================================
+  // LÓGICA DE DATOS (LECTURA DE JSON FINALES)
+  // ==========================================
+  async function cargarResultadosCompletos() {
     try {
+      // ATENCIÓN A LAS RUTAS: Si no tienes la carpeta "test_final", quítalo de la ruta.
       const [resSwin, resOtros] = await Promise.all([
-        fetch('assets/data/evaluacion_swin_test.json').then(r => r.json()),
-        fetch('assets/data/evaluacion_test.json').then(r => r.json())
+        fetch('assets/data/test_final/evaluacion_swin_test.json').then(r => r.json()),
+        fetch('assets/data/test_final/evaluacion_test_art_state.json').then(r => r.json())
       ]);
 
       const todosLosModelos = { ...resSwin, ...resOtros };
-      const labels = Object.keys(todosLosModelos);
       
-      const recallData = labels.map(m => (todosLosModelos[m].recall * 100).toFixed(2));
-      const f1Data = labels.map(m => (todosLosModelos[m].f1 * 100).toFixed(2));
-      const precisionData = labels.map(m => (todosLosModelos[m].precision * 100).toFixed(2));
-      const iouData = labels.map(m => (todosLosModelos[m].iou_sargazo_global * 100).toFixed(2));
+      // 1. Rellenar las tarjetas superiores solo con los datos de Swin Transformer
+      const swin = resSwin["Swin Transformer"];
+      if(swin) {
+        document.getElementById('top-recall').textContent = (swin.recall * 100).toFixed(2) + '%';
+        document.getElementById('top-precision').textContent = (swin.precision * 100).toFixed(2) + '%';
+        document.getElementById('top-f1').textContent = (swin.f1 * 100).toFixed(2) + '%';
+        document.getElementById('top-iou').textContent = (swin.iou_sargazo_global * 100).toFixed(2) + '%';
+        document.getElementById('top-tp').textContent = swin.tp_total.toLocaleString();
+        document.getElementById('top-fn').textContent = swin.fn_total.toLocaleString();
+      }
 
+      // 2. Preparar datos para las Gráficas y la Tabla
+      const labels = Object.keys(todosLosModelos);
+      const recallData = [];
+      const f1Data = [];
+      const precisionData = [];
+      const iouData = [];
+
+      const tableBody = document.getElementById('dynamic-table-body');
+      tableBody.innerHTML = ''; // Limpiamos la tabla
+
+      labels.forEach(nombreModelo => {
+        const d = todosLosModelos[nombreModelo];
+        
+        // Datos para gráficas
+        recallData.push((d.recall * 100).toFixed(2));
+        f1Data.push((d.f1 * 100).toFixed(2));
+        precisionData.push((d.precision * 100).toFixed(2));
+        iouData.push((d.iou_sargazo_global * 100).toFixed(2));
+
+        // Crear fila para la tabla
+        const tr = document.createElement('tr');
+        // Resaltar Swin Transformer
+        if (nombreModelo === "Swin Transformer") {
+            tr.innerHTML = `
+                <td><strong>${nombreModelo}</strong> <span class="tag-main">PROPUESTO</span></td>
+                <td><strong>${(d.recall * 100).toFixed(2)}%</strong></td>
+                <td>${(d.precision * 100).toFixed(2)}%</td>
+                <td>${(d.f1 * 100).toFixed(2)}%</td>
+                <td>${(d.iou_sargazo_global * 100).toFixed(2)}%</td>
+            `;
+            tr.style.backgroundColor = "#e8f8f5";
+        } else {
+            tr.innerHTML = `
+                <td>${nombreModelo}</td>
+                <td>${(d.recall * 100).toFixed(2)}%</td>
+                <td>${(d.precision * 100).toFixed(2)}%</td>
+                <td>${(d.f1 * 100).toFixed(2)}%</td>
+                <td>${(d.iou_sargazo_global * 100).toFixed(2)}%</td>
+            `;
+        }
+        tableBody.appendChild(tr);
+      });
+
+      // 3. Dibujar Gráficas
       const ctx1 = document.getElementById('comparativeChart').getContext('2d');
       new Chart(ctx1, {
           type: 'bar',
@@ -297,13 +292,16 @@ footer a:hover { color: #111; }
           },
           options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
       });
+      
     } catch (error) {
       console.error("Error cargando los JSON:", error);
       document.getElementById('graficas-error').style.display = 'block';
     }
   }
 
-  // Lógica del carrusel intacta
+  // ==========================================
+  // LÓGICA DEL CARRUSEL DE IMÁGENES
+  // ==========================================
   const diapositivas = [
     { archivo: "Inferencia_test_1.png", titulo: "Detección precisa vs Efecto Halo", descripcion: "El Swin Transformer detecta el contexto espacial dilatado. El Índice FAI recorta la detección, ajustando el resultado estrictamente a la biomasa real." },
     { archivo: "Inferencia_test_2.png", titulo: "Mitigación de Falsos Positivos", descripcion: "El sistema penaliza y descarta estructuras oceánicas (espuma/olas) que carecen de la reflectancia en el Infrarrojo Cercano (NIR) necesaria." },
@@ -315,7 +313,12 @@ footer a:hover { color: #111; }
 
   function actualizarCarrusel() {
     const datos = diapositivas[indiceActual];
-    document.getElementById("carouselImage").src = imgRutaBase + datos.archivo;
+    const imgElement = document.getElementById("carouselImage");
+    imgElement.onerror = function() {
+        this.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22800%22%20height%3D%22200%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20800%20200%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23eee%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22100%22%20fill%3D%22%23999%22%20dy%3D%22.3em%22%20font-family%3D%22Arial%22%20font-size%3D%2220%22%20text-anchor%3D%22middle%22%3EFalta la imagen: ' + datos.archivo + '%3C%2Ftext%3E%3C%2Fsvg%3E';
+    };
+    imgElement.src = imgRutaBase + datos.archivo;
+    
     document.getElementById("carouselTitle").textContent = datos.titulo;
     document.getElementById("carouselDesc").textContent = datos.descripcion;
     document.getElementById("carouselCounter").textContent = `${indiceActual + 1} / ${diapositivas.length}`;
@@ -328,36 +331,10 @@ footer a:hover { color: #111; }
     actualizarCarrusel();
   }
 
-  // TU FETCH ORIGINAL PARA METRICS.JSON
-  function cargarMetricsJson() {
-    fetch('assets/metrics.json')
-      .then(r => r.json())
-      .then(data => {
-        const set = (id, val) => {
-          const el = document.getElementById(id);
-          if (el && val !== null && val !== undefined) el.textContent = val;
-        };
-        set('iou-sarg',    data.iou_sargassum?.toFixed(3));
-        set('iou-dense',   data.iou_dense?.toFixed(3));
-        set('iou-sparse',  data.iou_sparse?.toFixed(3));
-        set('miou',        data.mIoU?.toFixed(3));
-        set('best-epoch',  data.best_epoch);
-        set('val-loss',    data.best_val_loss?.toFixed(4));
-        set('table-swin-iou',  data.iou_sargassum?.toFixed(3));
-        set('table-swin-miou', data.mIoU?.toFixed(3));
-        if (data.saved_at) {
-          const note = document.getElementById('metrics-note');
-          if (note) note.style.display = 'none';
-        }
-      })
-      .catch(() => {});
-  }
-
   // Lanzar todo al iniciar
   window.onload = () => {
     actualizarCarrusel();
-    cargarResultadosGraficas();
-    cargarMetricsJson();
+    cargarResultadosCompletos();
   };
 </script>
 
