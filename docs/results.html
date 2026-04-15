@@ -6,13 +6,16 @@
 <title>Resultados — Detección de Sargazo · TFG ULPGC 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Source Serif 4', Georgia, serif; background: #fff; color: #111; line-height: 1.7; font-weight: 300; }
-.container { max-width: 720px; margin: 0 auto; padding: 0 2rem; }
+
+/* 2. AÑADIDO: He cambiado el 720px por 1100px para hacerlo más grande y espectacular */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
 
 header { border-bottom: 1px solid #111; padding: 2rem 0 1.5rem; margin-bottom: 3rem; }
-.header-inner { max-width: 720px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
+.header-inner { max-width: 1100px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
 .site-title { font-size: 0.8rem; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; color: #111; }
 nav { display: flex; gap: 1.5rem; }
 nav a { font-size: 0.85rem; font-weight: 300; color: #555; text-decoration: none; transition: color 0.15s; }
@@ -29,6 +32,9 @@ nav a.active { color: #111; border-bottom: 1px solid #111; }
 section { margin-bottom: 4rem; }
 h2 { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
 p { margin-bottom: 1rem; color: #222; font-weight: 300; }
+
+/* ── CONTENEDOR DE GRÁFICAS ── */
+.chart-container { position: relative; height: 400px; width: 100%; margin-bottom: 3rem; }
 
 /* ── METRICS ── */
 .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid #ddd; margin-bottom: 1.5rem; }
@@ -74,14 +80,6 @@ p { margin-bottom: 1rem; color: #222; font-weight: 300; }
   text-align: center;
 }
 .gallery-note code { font-family: 'Source Code Pro', monospace; font-size: 0.8rem; color: #555; background: #f5f5f5; padding: 0.1rem 0.3rem; }
-.gallery-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.gallery-item { border: 1px solid #ddd; }
-.gallery-img { width: 100%; aspect-ratio: 3/2; background: #f5f5f5; display: flex; align-items: center; justify-content: center; }
-.gallery-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.gallery-img .placeholder { font-size: 0.8rem; color: #aaa; font-family: 'Source Code Pro', monospace; text-align: center; padding: 1rem; }
-.gallery-caption { padding: 0.6rem 0.75rem; border-top: 1px solid #eee; }
-.gallery-caption h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.15rem; }
-.gallery-caption p { font-size: 0.78rem; color: #777; margin: 0; font-family: 'Source Code Pro', monospace; }
 
 /* ── CLASSES ── */
 .classes-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
@@ -95,7 +93,7 @@ p { margin-bottom: 1rem; color: #222; font-weight: 300; }
 .target-mark { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; color: #555; margin-left: 0.4rem; }
 
 footer { border-top: 1px solid #ddd; padding: 1.5rem 0; margin-top: 4rem; }
-.footer-inner { max-width: 720px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
 footer p { font-size: 0.8rem; color: #999; margin: 0; }
 footer a { color: #777; text-decoration: none; }
 footer a:hover { color: #111; }
@@ -105,7 +103,6 @@ footer a:hover { color: #111; }
   .metric:nth-child(2) { border-right: none; }
   .metric:nth-child(3) { border-top: 1px solid #ddd; border-right: 1px solid #ddd; }
   .metric:nth-child(4) { border-right: none; }
-  .gallery-grid { grid-template-columns: 1fr; }
   nav { display: none; }
 }
 </style>
@@ -171,9 +168,23 @@ footer a:hover { color: #111; }
   </section>
 
   <section>
-    <h2>Comparativa de modelos</h2>
-    <p>Todos los modelos se evalúan con la misma configuración base (lr=5e-5, AdamW, CrossEntropy+Dice, dataset MADOS) para garantizar comparabilidad.</p>
-    <table class="compare-table">
+    <h2>Comparativa de modelos (Test)</h2>
+    <p>Los siguientes gráficos muestran el rendimiento del modelo frente al estado del arte (Random Forest, XGBoost, etc.) obtenidos desde los archivos JSON.</p>
+    <div id="graficas-error" style="display:none; color: #c0392b; background: #fadbd8; padding: 1rem; border-radius: 4px; margin-bottom: 2rem;">
+        Error cargando las gráficas. Asegúrate de estar corriendo esto en un servidor (GitHub Pages) y de que los archivos estén en assets/data/
+    </div>
+    
+    <div style="margin-top: 2rem;">
+        <h3 style="font-size:1rem; color:#555; text-transform:uppercase;">Recall vs F1-Score</h3>
+        <div class="chart-container"><canvas id="comparativeChart"></canvas></div>
+    </div>
+    
+    <div style="margin-top: 2rem;">
+        <h3 style="font-size:1rem; color:#555; text-transform:uppercase;">Precisión vs IoU Global</h3>
+        <div class="chart-container"><canvas id="secondaryChart"></canvas></div>
+    </div>
+
+    <table class="compare-table" style="margin-top: 2rem;">
       <thead>
         <tr>
           <th>Modelo</th>
@@ -209,7 +220,7 @@ footer a:hover { color: #111; }
     </table>
   </section>
 
-<section id="inferencia">
+  <section id="inferencia">
     <h2>Ejemplos de inferencia</h2>
     <p>Visualización de la predicción del modelo sobre imágenes del split de test (datos nunca vistos durante el entrenamiento). Navega por el carrusel para ver distintos casos de éxito y mitigación de errores mediante el Pipeline Híbrido.</p>
     
@@ -235,77 +246,6 @@ footer a:hover { color: #111; }
     </div>
   </section>
 
-  <script>
-    const diapositivas = [
-      {
-        archivo: "Inferencia_test_1.png", // Nombre exacto del archivo en assets/img/
-        titulo: "Detección precisa vs Efecto Halo",
-        descripcion: "El Swin Transformer detecta el contexto espacial dilatado. El Índice FAI recorta la detección, ajustando el resultado estrictamente a la biomasa real."
-      },
-      {
-        archivo: "Inferencia_test_2.png",
-        titulo: "Mitigación de Falsos Positivos",
-        descripcion: "El sistema penaliza y descarta estructuras oceánicas (espuma/olas) que carecen de la reflectancia en el Infrarrojo Cercano (NIR) necesaria."
-      },
-      {
-        archivo: "Inferencia_test_3.png",
-        titulo: "Corrección de etiquetas débiles (Weak Labels)",
-        descripcion: "La red logra detectar trazas finas de sargazo que fueron omitidas por los anotadores humanos del dataset original MADOS."
-      }
-    ];
-
-    let indiceActual = 0;
-    const imgRutaBase = "assets/img/"; // La carpeta donde están tus fotos
-
-    function actualizarCarrusel() {
-      const datos = diapositivas[indiceActual];
-      
-      // Actualizar imagen y textos
-      document.getElementById("carouselImage").src = imgRutaBase + datos.archivo;
-      document.getElementById("carouselTitle").textContent = datos.titulo;
-      document.getElementById("carouselDesc").textContent = datos.descripcion;
-      
-      // Actualizar contador (ej. 1 / 3)
-      document.getElementById("carouselCounter").textContent = `${indiceActual + 1} / ${diapositivas.length}`;
-    }
-
-    function cambiarImagen(direccion) {
-      indiceActual += direccion;
-      
-      // Lógica circular (si pasa de la última, vuelve a la primera y viceversa)
-      if (indiceActual >= diapositivas.length) indiceActual = 0;
-      if (indiceActual < 0) indiceActual = diapositivas.length - 1;
-      
-      actualizarCarrusel();
-    }
-
-    // Arrancar el carrusel con la primera imagen al cargar la página
-    window.onload = actualizarCarrusel;
-  </script>
-<!--
-  <section>
-    <h2>Clases del dataset MADOS</h2>
-    <p>16 clases de materiales marinos etiquetadas manualmente sobre imágenes Sentinel-2. Las clases 2 y 3 constituyen el objetivo principal del sistema.</p>
-    <table class="classes-table">
-      <tr><td>0</td><td><span class="class-dot" style="background:#ccc;"></span></td><td>Non-annotated</td></tr>
-      <tr><td>1</td><td><span class="class-dot" style="background:#e74c3c;"></span></td><td>Marine Debris</td></tr>
-      <tr class="target"><td>2</td><td><span class="class-dot" style="background:#1e8449;"></span></td><td>Dense Sargassum <span class="target-mark">★ objetivo</span></td></tr>
-      <tr class="target"><td>3</td><td><span class="class-dot" style="background:#58d68d;"></span></td><td>Sparse Floating Algae <span class="target-mark">★ objetivo</span></td></tr>
-      <tr><td>4</td><td><span class="class-dot" style="background:#f39c12;"></span></td><td>Natural Organic Material</td></tr>
-      <tr><td>5</td><td><span class="class-dot" style="background:#8e44ad;"></span></td><td>Ship</td></tr>
-      <tr><td>6</td><td><span class="class-dot" style="background:#555;"></span></td><td>Oil Spill</td></tr>
-      <tr><td>7</td><td><span class="class-dot" style="background:#2e86c1;"></span></td><td>Marine Water</td></tr>
-      <tr><td>8</td><td><span class="class-dot" style="background:#d4ac0d;"></span></td><td>Sediment-Laden Water</td></tr>
-      <tr><td>9</td><td><span class="class-dot" style="background:#ccc;border:1px solid #aaa;"></span></td><td>Foam</td></tr>
-      <tr><td>10</td><td><span class="class-dot" style="background:#5499c7;"></span></td><td>Turbid Water</td></tr>
-      <tr><td>11</td><td><span class="class-dot" style="background:#a9cce3;"></span></td><td>Shallow Water</td></tr>
-      <tr><td>12</td><td><span class="class-dot" style="background:#abebc6;"></span></td><td>Waves & Wakes</td></tr>
-      <tr><td>13</td><td><span class="class-dot" style="background:#922b21;"></span></td><td>Oil Platform</td></tr>
-      <tr><td>14</td><td><span class="class-dot" style="background:#f1948a;"></span></td><td>Jellyfish</td></tr>
-      <tr><td>15</td><td><span class="class-dot" style="background:#b7950b;"></span></td><td>Sea Snot</td></tr>
-    </table>
-  </section>-->
-
 </main>
 
 <footer>
@@ -316,27 +256,109 @@ footer a:hover { color: #111; }
 </footer>
 
 <script>
-fetch('assets/metrics.json')
-  .then(r => r.json())
-  .then(data => {
-    const set = (id, val) => {
-      const el = document.getElementById(id);
-      if (el && val !== null && val !== undefined) el.textContent = val;
-    };
-    set('iou-sarg',    data.iou_sargassum?.toFixed(3));
-    set('iou-dense',   data.iou_dense?.toFixed(3));
-    set('iou-sparse',  data.iou_sparse?.toFixed(3));
-    set('miou',        data.mIoU?.toFixed(3));
-    set('best-epoch',  data.best_epoch);
-    set('val-loss',    data.best_val_loss?.toFixed(4));
-    set('table-swin-iou',  data.iou_sargassum?.toFixed(3));
-    set('table-swin-miou', data.mIoU?.toFixed(3));
-    if (data.saved_at) {
-      const note = document.getElementById('metrics-note');
-      if (note) note.style.display = 'none';
+  // 4. AÑADIDO: Lógica de las gráficas
+  async function cargarResultadosGraficas() {
+    try {
+      const [resSwin, resOtros] = await Promise.all([
+        fetch('assets/data/evaluacion_swin_test.json').then(r => r.json()),
+        fetch('assets/data/evaluacion_test.json').then(r => r.json())
+      ]);
+
+      const todosLosModelos = { ...resSwin, ...resOtros };
+      const labels = Object.keys(todosLosModelos);
+      
+      const recallData = labels.map(m => (todosLosModelos[m].recall * 100).toFixed(2));
+      const f1Data = labels.map(m => (todosLosModelos[m].f1 * 100).toFixed(2));
+      const precisionData = labels.map(m => (todosLosModelos[m].precision * 100).toFixed(2));
+      const iouData = labels.map(m => (todosLosModelos[m].iou_sargazo_global * 100).toFixed(2));
+
+      const ctx1 = document.getElementById('comparativeChart').getContext('2d');
+      new Chart(ctx1, {
+          type: 'bar',
+          data: {
+              labels: labels,
+              datasets: [
+                  { label: 'Recall (%)', data: recallData, backgroundColor: 'rgba(54, 162, 235, 0.7)', borderColor: 'rgba(54, 162, 235, 1)', borderWidth: 1 },
+                  { label: 'F1-Score (%)', data: f1Data, backgroundColor: 'rgba(255, 159, 64, 0.7)', borderColor: 'rgba(255, 159, 64, 1)', borderWidth: 1 }
+              ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+
+      const ctx2 = document.getElementById('secondaryChart').getContext('2d');
+      new Chart(ctx2, {
+          type: 'bar',
+          data: {
+              labels: labels,
+              datasets: [
+                  { label: 'Precisión (%)', data: precisionData, backgroundColor: 'rgba(153, 102, 255, 0.7)', borderColor: 'rgba(153, 102, 255, 1)', borderWidth: 1 },
+                  { label: 'IoU Global (%)', data: iouData, backgroundColor: 'rgba(75, 192, 192, 0.7)', borderColor: 'rgba(75, 192, 192, 1)', borderWidth: 1 }
+              ]
+          },
+          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
+      });
+    } catch (error) {
+      console.error("Error cargando los JSON:", error);
+      document.getElementById('graficas-error').style.display = 'block';
     }
-  })
-  .catch(() => {});
+  }
+
+  // Lógica del carrusel intacta
+  const diapositivas = [
+    { archivo: "Inferencia_test_1.png", titulo: "Detección precisa vs Efecto Halo", descripcion: "El Swin Transformer detecta el contexto espacial dilatado. El Índice FAI recorta la detección, ajustando el resultado estrictamente a la biomasa real." },
+    { archivo: "Inferencia_test_2.png", titulo: "Mitigación de Falsos Positivos", descripcion: "El sistema penaliza y descarta estructuras oceánicas (espuma/olas) que carecen de la reflectancia en el Infrarrojo Cercano (NIR) necesaria." },
+    { archivo: "Inferencia_test_3.png", titulo: "Corrección de etiquetas débiles (Weak Labels)", descripcion: "La red logra detectar trazas finas de sargazo que fueron omitidas por los anotadores humanos del dataset original MADOS." }
+  ];
+
+  let indiceActual = 0;
+  const imgRutaBase = "assets/img/"; 
+
+  function actualizarCarrusel() {
+    const datos = diapositivas[indiceActual];
+    document.getElementById("carouselImage").src = imgRutaBase + datos.archivo;
+    document.getElementById("carouselTitle").textContent = datos.titulo;
+    document.getElementById("carouselDesc").textContent = datos.descripcion;
+    document.getElementById("carouselCounter").textContent = `${indiceActual + 1} / ${diapositivas.length}`;
+  }
+
+  function cambiarImagen(direccion) {
+    indiceActual += direccion;
+    if (indiceActual >= diapositivas.length) indiceActual = 0;
+    if (indiceActual < 0) indiceActual = diapositivas.length - 1;
+    actualizarCarrusel();
+  }
+
+  // TU FETCH ORIGINAL PARA METRICS.JSON
+  function cargarMetricsJson() {
+    fetch('assets/metrics.json')
+      .then(r => r.json())
+      .then(data => {
+        const set = (id, val) => {
+          const el = document.getElementById(id);
+          if (el && val !== null && val !== undefined) el.textContent = val;
+        };
+        set('iou-sarg',    data.iou_sargassum?.toFixed(3));
+        set('iou-dense',   data.iou_dense?.toFixed(3));
+        set('iou-sparse',  data.iou_sparse?.toFixed(3));
+        set('miou',        data.mIoU?.toFixed(3));
+        set('best-epoch',  data.best_epoch);
+        set('val-loss',    data.best_val_loss?.toFixed(4));
+        set('table-swin-iou',  data.iou_sargassum?.toFixed(3));
+        set('table-swin-miou', data.mIoU?.toFixed(3));
+        if (data.saved_at) {
+          const note = document.getElementById('metrics-note');
+          if (note) note.style.display = 'none';
+        }
+      })
+      .catch(() => {});
+  }
+
+  // Lanzar todo al iniciar
+  window.onload = () => {
+    actualizarCarrusel();
+    cargarResultadosGraficas();
+    cargarMetricsJson();
+  };
 </script>
 
 </body>
