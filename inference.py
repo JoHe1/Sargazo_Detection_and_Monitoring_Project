@@ -38,6 +38,10 @@ from core.config.paths import SARGASSUM_READY, CHECKPOINTS_DIR, RESULTS_DIR
 from core.utils.visualization import MADOS_CLASSES
 from models.architectures.swin_transformer import SwinSegmenter
 
+import json
+from pathlib import Path
+from models.registry import ModelRegistry
+
 # ══════════════════════════════════════════════════════════════════════
 # CONFIGURACIÓN
 # ══════════════════════════════════════════════════════════════════════
@@ -374,7 +378,7 @@ def visualizar(
 # ══════════════════════════════════════════════════════════════════════
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Inferencia Swin MADOS v2")
+    parser = argparse.ArgumentParser(description="Inferencia Swin/Segformer MADOS v2")
     parser.add_argument("--split",      default="val",
                         choices=["val", "test", "train"])
     parser.add_argument("--n",          type=int,   default=None)
@@ -386,14 +390,14 @@ def main() -> None:
     parser.add_argument("--umbral-fai", type=float, default=0.005)
     parser.add_argument("--dataset",    type=str,   default=str(SARGASSUM_READY))
     parser.add_argument("--modelo",     type=str,   default=None,
-                        help="Carpeta del checkpoint (contiene weights.pth)")
+                        help="Carpeta del checkpoint (contiene weights.pth y metadata.json)")
     parser.add_argument("--evaluar",    action="store_true",
                         help="Modo evaluación: sin gráficas, genera JSON comparable con Echevarría")
     args = parser.parse_args()
 
     usar_tta = not args.sin_tta
 
-    # ── Cargar modelo ─────────────────────────────────────────────────
+    # ── 1. Determinar rutas del modelo ─────────────────────────────────
     if args.modelo is None:
         # Buscar el checkpoint más reciente si no se especifica uno
         runs = sorted(Path("experiments/runs").glob("*/weights.pth"))
@@ -402,14 +406,40 @@ def main() -> None:
             print("        Especifica uno con --modelo ruta/al/checkpoint/")
             return
         weights_path = runs[-1]
-        print(f"[inference] Usando checkpoint más reciente: {weights_path.parent.name}")
+        checkpoint_dir = weights_path.parent
+        print(f"[inference] Usando checkpoint más reciente: {checkpoint_dir.name}")
     else:
-        weights_path = Path(args.modelo) / "weights.pth"
+        checkpoint_dir = Path(args.modelo)
+        weights_path = checkpoint_dir / "weights.pth"
 
-    print(f"[inference] Cargando modelo desde: {weights_path}")
-    model = SwinSegmenter(num_classes=NUM_CLASSES).to(DEVICE)
-    model.load(checkpoint_dir=weights_path.parent, device=DEVICE)
+    # ── 2. Leer metadata y cargar el modelo dinámicamente ──────────────
+    metadata_path = checkpoint_dir / "metadata.json"
+    
+    # Importar el Registry (asegúrate de que esta ruta de importación es correcta según tu proyecto)
+    from models.registry import ModelRegistry
+
+    if metadata_path.exists():
+        with open(metadata_path, 'r') as f:
+            metadata = json.load(f)
+        model_name = metadata.get("model_name", "swin_transformer") 
+        print(f"[inference] Detectado modelo tipo: '{model_name}' desde metadata.json")
+    else:
+        print("[inference] WARNING: No se encontró metadata.json. Forzando 'swin_transformer' por defecto.")
+        model_name = "swin_transformer"
+
+    print(f"[inference] Cargando pesos desde: {weights_path}")
+    
+    try:
+        # Instanciar el modelo dinámicamente usando el nombre extraído del metadata
+        model = ModelRegistry.build(model_name, num_classes=NUM_CLASSES).to(DEVICE)
+    except Exception as e:
+         print(f"[ERROR] Fallo al instanciar el modelo '{model_name}' desde ModelRegistry. Detalles: {e}")
+         return
+         
+    # Cargar los pesos y preparar para inferencia
+    model.load(checkpoint_dir=checkpoint_dir, device=DEVICE)
     model.eval()
+    
     print(f"[inference] {DEVICE.upper()} | TTA: {'ON' if usar_tta else 'OFF'} | "
           f"Umbral: {args.umbral:.0%} | Sigma: {args.sigma}")
 
@@ -535,8 +565,11 @@ def main() -> None:
     print("=" * 55)
 
     if args.evaluar:
+        # El JSON de salida ahora reflejará dinámicamente el nombre del modelo evaluado
+        nombre_etiqueta = model_name.replace("_", " ").title()
+        
         resultado_json = {
-            "Swin Transformer": {
+            nombre_etiqueta: {
                 "precision":          round(prec_g, 4),
                 "recall":             round(rec_g,  4),
                 "f1":                 round(f1_g,   4),
@@ -555,7 +588,8 @@ def main() -> None:
                 }
             }
         }
-        out_path = Path("experiments") / f"evaluacion_swin_{args.split}.json"
+        # Si quieres que todos los modelos guarden en nombres de archivo distintos para luego unirlos:
+        out_path = Path("experiments") / f"evaluacion_{model_name}_{args.split}.json"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, "w") as f:
             json.dump(resultado_json, f, indent=2, ensure_ascii=False)
