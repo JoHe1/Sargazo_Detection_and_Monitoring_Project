@@ -24,14 +24,14 @@ class CrossEntropyDiceLoss(nn.Module):
     """
 
     CLASS_WEIGHTS = {
-        0:  0.5,   # Non-annotated
-        1:  10.0,  # Marine Debris
-        2:  100.0,  # Dense Sargassum       ← subido de 50 a 100
-        3:  100.0,  # Sparse Floating Algae ← subido de 50 a 100
-        5:  10.0,  # Ship
-        6:  10.0,  # Oil Spill
-        7:  1.0,   # Marine Water
-        10: 1.0,   # Turbid Water
+            0:   0.0,   # Non-annotated (Es mejor poner 0.0 para que el modelo ignore los bordes negros y no aprenda basura)
+            1:   5.0,   # Marine Debris
+            2:  10.0,   # Dense Sargassum (Un x10 es un empujón fuerte pero no destructivo)
+            3:  10.0,   # Sparse Floating Algae
+            5:   5.0,   # Ship
+            6:   5.0,   # Oil Spill
+            7:   1.0,   # Marine Water
+            10:  1.0,   # Turbid Water
     }
 
     DICE_CLASSES = [1, 2, 3, 5, 6]

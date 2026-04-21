@@ -101,13 +101,9 @@ def train(config: ExperimentConfig) -> None:
     )
 
     # ── Loss ──────────────────────────────────────────────────────────
-    criterion = FocalDiceLoss(
-        num_classes=config.num_classes,
-        gamma=2.0,
-        device=device,
-    ).to(device)
-
-    #criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
+    criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
+    # criterion = FocalDiceLoss(num_classes=config.num_classes,gamma=2.0,device=device,).to(device)
+    # criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
 
 
     # ── Preparar directorio de checkpoint ────────────────────────────
