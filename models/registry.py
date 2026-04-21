@@ -33,6 +33,7 @@ import torch.nn as nn
 # ── Importar todas las arquitecturas disponibles ───────────────────────
 from models.architectures.swin_transformer import SwinSegmenter
 from models.architectures.segformer import SegFormerSegmenter
+from models.architectures.swin_transformer_attention import SwinAttSegmenter
 
 
 class ModelRegistry:
@@ -48,6 +49,7 @@ class ModelRegistry:
     # Dict principal: nombre_en_config → clase
     _REGISTRY: dict[str, Type[nn.Module]] = {
         "swin_transformer": SwinSegmenter,
+        "swin_transformer_attention": SwinAttSegmenter,
         "segformer":        SegFormerSegmenter,
     }
 
