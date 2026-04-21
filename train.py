@@ -41,8 +41,8 @@ from core.config.experiment_config import ExperimentConfig
 from core.config.paths import check_paths, SARGASSUM_READY
 from core.utils.metrics import compute_metrics, iou_per_class
 from datasets.sources.mados_dataset import MADOSDataset
-#from models.losses.cross_entropy_dice import CrossEntropyDiceLoss
-#from models.losses.focal_dice import FocalDiceLoss
+from models.losses.cross_entropy_dice import CrossEntropyDiceLoss
+from models.losses.focal_dice import FocalDiceLoss
 from models.losses.cross_entropy_dice_tversky import CrossEntropyDiceTverskyLoss
 from models.registry import ModelRegistry
 
@@ -101,13 +101,13 @@ def train(config: ExperimentConfig) -> None:
     )
 
     # ── Loss ──────────────────────────────────────────────────────────
-    #criterion = FocalDiceLoss(
-    #    num_classes=config.num_classes,
-    #    gamma=2.0,
-    #    device=device,
-    #).to(device)
+    criterion = FocalDiceLoss(
+        num_classes=config.num_classes,
+        gamma=2.0,
+        device=device,
+    ).to(device)
 
-    criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
+    #criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
 
 
     # ── Preparar directorio de checkpoint ────────────────────────────

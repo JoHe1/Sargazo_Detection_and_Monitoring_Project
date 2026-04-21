@@ -131,4 +131,4 @@ class SwinAttSegmenter(BaseModel):
     def configure_optimizers(self, config):
         """ Configura el optimizador AdamW usando el objeto config de train.py """
         import torch.optim as optim
-        return optim.AdamW(self.parameters(), lr=config.lr, weight_decay=1e-4)
+        return optim.AdamW(self.parameters(), lr=config.lr, weight_decay=1e-2)
