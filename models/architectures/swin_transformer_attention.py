@@ -95,12 +95,11 @@ class SwinAttSegmenter(BaseModel):
             outputs = self.backbone(x, output_hidden_states=True)
             states = outputs.hidden_states
 
-            # 2. Extraer y "doblar" los parches para convertirlos en imágenes (H, W)
-            # Igual que en tu swin_transformer.py original
-            s0 = states[1].transpose(1, 2).view(-1, 96, 56, 56)
-            s1 = states[3].transpose(1, 2).view(-1, 192, 28, 28)
-            s2 = states[5].transpose(1, 2).view(-1, 384, 14, 14)
-            s3 = states[7].transpose(1, 2).view(-1, 768, 7, 7)
+            # 2. Extraer y "doblar" los parches usando .reshape() para evitar errores de memoria
+            s0 = states[1].transpose(1, 2).reshape(-1, 96, 56, 56)
+            s1 = states[3].transpose(1, 2).reshape(-1, 192, 28, 28)
+            s2 = states[5].transpose(1, 2).reshape(-1, 384, 14, 14)
+            s3 = states[7].transpose(1, 2).reshape(-1, 768, 7, 7)
 
             # 3. Pasar por el decodificador de Atención
             x = self.up4(s3, s2) 
