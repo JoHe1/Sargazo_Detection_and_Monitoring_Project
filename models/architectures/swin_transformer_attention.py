@@ -94,12 +94,16 @@ class SwinAttSegmenter(BaseModel):
             # 1. Pasar por el codificador Swin
             outputs = self.backbone(x, output_hidden_states=True)
             states = outputs.hidden_states
+            
+            # Opcional (pero muy útil para debugging): 
+            # Si vuelve a fallar, descomenta esta línea para ver exactamente qué te devuelve el modelo:
+            # print("TAMAÑOS DE STATES:", [s.shape for s in states])
 
-            # 2. Extraer y "doblar" los parches usando .reshape() para evitar errores de memoria
+            # 2. Extraer y "doblar" los parches usando los índices correctos de HuggingFace (1, 2, 3, 4)
             s0 = states[1].transpose(1, 2).reshape(-1, 96, 56, 56)
-            s1 = states[3].transpose(1, 2).reshape(-1, 192, 28, 28)
-            s2 = states[5].transpose(1, 2).reshape(-1, 384, 14, 14)
-            s3 = states[7].transpose(1, 2).reshape(-1, 768, 7, 7)
+            s1 = states[2].transpose(1, 2).reshape(-1, 192, 28, 28)
+            s2 = states[3].transpose(1, 2).reshape(-1, 384, 14, 14)
+            s3 = states[4].transpose(1, 2).reshape(-1, 768, 7, 7)
 
             # 3. Pasar por el decodificador de Atención
             x = self.up4(s3, s2) 
