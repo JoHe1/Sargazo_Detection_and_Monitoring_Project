@@ -91,18 +91,25 @@ class SwinAttSegmenter(BaseModel):
         self.head = nn.Conv2d(96, num_classes, kernel_size=1)
 
     def forward(self, x):
-        outputs = self.backbone(x, output_hidden_states=True)
-        s0 = outputs.hidden_states[1].permute(0, 3, 1, 2) 
-        s1 = outputs.hidden_states[3].permute(0, 3, 1, 2) 
-        s2 = outputs.hidden_states[5].permute(0, 3, 1, 2) 
-        s3 = outputs.hidden_states[7].permute(0, 3, 1, 2) 
+            # 1. Pasar por el codificador Swin
+            outputs = self.backbone(x, output_hidden_states=True)
+            states = outputs.hidden_states
 
-        x = self.up4(s3, s2) 
-        x = self.up3(x, s1)  
-        x = self.up2(x, s0)  
-        
-        x = self.up1(x)       
-        return self.head(x)   
+            # 2. Extraer y "doblar" los parches para convertirlos en imágenes (H, W)
+            # Igual que en tu swin_transformer.py original
+            s0 = states[1].transpose(1, 2).view(-1, 96, 56, 56)
+            s1 = states[3].transpose(1, 2).view(-1, 192, 28, 28)
+            s2 = states[5].transpose(1, 2).view(-1, 384, 14, 14)
+            s3 = states[7].transpose(1, 2).view(-1, 768, 7, 7)
+
+            # 3. Pasar por el decodificador de Atención
+            x = self.up4(s3, s2) 
+            x = self.up3(x, s1)  
+            x = self.up2(x, s0)  
+            
+            # 4. Upsample final y cabecera de clasificación
+            x = self.up1(x)       
+            return self.head(x)
 
     def configure_optimizers(self, config):
         """
