@@ -11,6 +11,7 @@ Uso:
 
     # Instanciar por nombre
     model = ModelRegistry.build("swin_transformer", num_classes=16)
+    model = ModelRegistry.build("segformer", num_classes=16)
 
     # Listar modelos disponibles
     print(ModelRegistry.available())
@@ -31,8 +32,7 @@ import torch.nn as nn
 
 # ── Importar todas las arquitecturas disponibles ───────────────────────
 from models.architectures.swin_transformer import SwinSegmenter
-# from models.architectures.unet import UNetModel          # añadir cuando esté listo
-# from models.architectures.segformer import SegFormer     # añadir cuando esté listo
+from models.architectures.segformer import SegFormerSegmenter
 
 
 class ModelRegistry:
@@ -48,8 +48,7 @@ class ModelRegistry:
     # Dict principal: nombre_en_config → clase
     _REGISTRY: dict[str, Type[nn.Module]] = {
         "swin_transformer": SwinSegmenter,
-        # "unet":            UNetModel,
-        # "segformer":       SegFormer,
+        "segformer":        SegFormerSegmenter,
     }
 
     # ── API pública ───────────────────────────────────────────────────
