@@ -90,29 +90,40 @@ class SwinAttSegmenter(BaseModel):
         # 3. Final Head
         self.head = nn.Conv2d(96, num_classes, kernel_size=1)
 
+    def reshape_hidden(self, tensor: torch.Tensor, h: int, w: int) -> torch.Tensor:
+            """
+            Convierte la secuencia de parches 1D del Swin a un mapa 2D espacial.
+            Usa .contiguous() y .view() para evitar problemas de memoria en GPU.
+            tensor shape in:  (Batch, Sequence, Channels)
+            tensor shape out: (Batch, Channels, Height, Width)
+            """
+            # Transponer de (B, L, C) a (B, C, L)
+            tensor = tensor.transpose(1, 2)
+            # Hacerlo contiguo en memoria y darle forma 2D
+            return tensor.contiguous().view(-1, tensor.size(1), h, w)
+
     def forward(self, x):
-            # 1. Pasar por el codificador Swin
-            outputs = self.backbone(x, output_hidden_states=True)
-            states = outputs.hidden_states
-            
-            # Opcional (pero muy útil para debugging): 
-            # Si vuelve a fallar, descomenta esta línea para ver exactamente qué te devuelve el modelo:
-            # print("TAMAÑOS DE STATES:", [s.shape for s in states])
+        # 1. Pasar por el codificador Swin
+        outputs = self.backbone(x, output_hidden_states=True)
 
-            # 2. Extraer y "doblar" los parches usando los índices correctos de HuggingFace (1, 2, 3, 4)
-            s0 = states[1].transpose(1, 2).reshape(-1, 96, 56, 56)
-            s1 = states[2].transpose(1, 2).reshape(-1, 192, 28, 28)
-            s2 = states[3].transpose(1, 2).reshape(-1, 384, 14, 14)
-            s3 = states[4].transpose(1, 2).reshape(-1, 768, 7, 7)
+        # 2. Extraer features de cada etapa usando la misma lógica que tu modelo original
+        # s0: (B,  96, 56, 56)
+        # s1: (B, 192, 28, 28)
+        # s2: (B, 384, 14, 14)
+        # s3: (B, 768,  7,  7)
+        s0 = self.reshape_hidden(outputs.hidden_states[0], 56, 56) 
+        s1 = self.reshape_hidden(outputs.hidden_states[1], 28, 28) 
+        s2 = self.reshape_hidden(outputs.hidden_states[2], 14, 14) 
+        s3 = self.reshape_hidden(outputs.last_hidden_state, 7, 7)
 
-            # 3. Pasar por el decodificador de Atención
-            x = self.up4(s3, s2) 
-            x = self.up3(x, s1)  
-            x = self.up2(x, s0)  
-            
-            # 4. Upsample final y cabecera de clasificación
-            x = self.up1(x)       
-            return self.head(x)
+        # 3. Pasar por el decodificador de Atención
+        x = self.up4(s3, s2)  # Sube de 7x7 a 14x14
+        x = self.up3(x, s1)   # Sube de 14x14 a 28x28
+        x = self.up2(x, s0)   # Sube de 28x28 a 56x56
+        
+        # 4. Upsample final y cabecera de clasificación
+        x = self.up1(x)       # Sube a 112x112
+        return self.head(x)   # Clasifica y sube internamente a 224x224 (según tu self.head)
 
     def configure_optimizers(self, config):
         """
