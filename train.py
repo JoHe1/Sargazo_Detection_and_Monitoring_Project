@@ -105,6 +105,7 @@ def train(config: ExperimentConfig) -> None:
     # criterion = FocalDiceLoss(num_classes=config.num_classes,gamma=2.0,device=device,).to(device)
     # criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
 
+    loss_name = criterion.__class__.__name__
 
     # ── Preparar directorio de checkpoint ────────────────────────────
     ckpt_dir  = Path(config.checkpoint_dir)
@@ -210,6 +211,7 @@ def train(config: ExperimentConfig) -> None:
                 checkpoint_dir=ckpt_dir,
                 metadata={
                     **config.to_dict(),
+                    "loss_function": loss_name,
                     "best_epoch":    epoch,
                     "best_val_loss": round(mejor_val_loss, 5),
                     "iou_sargassum": round(iou_sarg,  5) if not np.isnan(iou_sarg)  else None,
