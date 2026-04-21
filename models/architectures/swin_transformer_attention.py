@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import SwinModel
+from core.interfaces.base_model import BaseModel
 
 class AttentionGate(nn.Module):
     """
@@ -92,7 +93,7 @@ class AttDecoderBlock(nn.Module):
         x = self.conv(x)
         return x
 
-class SwinAttSegmenter(nn.Module):
+class SwinAttSegmenter(BaseModel):
     """
     Segmentador Swin Transformer con Decodificador de Atención (AttUNet).
     """
