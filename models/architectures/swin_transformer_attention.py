@@ -153,3 +153,11 @@ class SwinAttSegmenter(BaseModel):
         
         # Clasificación final
         return self.head(x)   # -> 112x112, num_classes
+    
+    def configure_optimizers(self, lr: float, weight_decay: float = 1e-4):
+        """
+        Configura el optimizador (AdamW) exigido por BaseModel.
+        """
+        import torch.optim as optim
+        # Usamos AdamW que es el estándar para Transformers
+        return optim.AdamW(self.parameters(), lr=lr, weight_decay=weight_decay)
