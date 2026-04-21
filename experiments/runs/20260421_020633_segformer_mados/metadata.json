@@ -20,6 +20,7 @@
   "checkpoint_dir": "experiments/runs/20260421_020633_segformer_mados",
   "use_amp": false,
   "seed": 42,
+  "loss_function":"tversky_loss",
   "best_epoch": 57,
   "best_val_loss": 1.43097,
   "iou_sargassum": 0.00255,
