@@ -53,14 +53,17 @@ class AttDecoderBlock(nn.Module):
         )
 
     def forward(self, x, skip):
-        # 1. Aplicamos atención a la skip connection antes de concatenar
-        skip = self.attn(g=x, x=skip)
-        # 2. Escalamos la imagen hacia arriba
-        x = self.up(x)
-        # 3. Concatenamos y aplicamos convoluciones
-        x = torch.cat([x, skip], dim=1)
-        x = self.conv(x)
-        return x
+            # 1. PRIMERO escalamos la imagen profunda (gating) hacia arriba
+            # Así pasamos de 7x7 a 14x14 para que encaje con la skip connection
+            x = self.up(x)
+            
+            # 2. AHORA aplicamos la atención (ambos tensores ya miden lo mismo)
+            skip = self.attn(g=x, x=skip)
+            
+            # 3. Concatenamos y aplicamos convoluciones
+            x = torch.cat([x, skip], dim=1)
+            x = self.conv(x)
+            return x
 
 class SwinAttSegmenter(BaseModel):
     """
