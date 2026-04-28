@@ -20,7 +20,7 @@
   "checkpoint_dir": "experiments/runs/20260421_122035_swin_transformer_attention_mados",
   "use_amp": false,
   "seed": 42,
-    "loss_function":"tversky_loss",
+  "loss_function":"tversky_loss",
   "best_epoch": 147,
   "best_val_loss": 1.71676,
   "iou_sargassum": 0.00284,

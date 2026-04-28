@@ -32,7 +32,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torch.nn as nn
-from scipy.ndimage import binary_fill_holes, gaussian_filter, label
+from scipy.ndimage import binary_fill_holes, binary_erosion, gaussian_filter, label
+from skimage.morphology import skeletonize, dilation, disk
 
 from core.config.paths import SARGASSUM_READY, CHECKPOINTS_DIR, RESULTS_DIR
 from core.utils.visualization import MADOS_CLASSES
@@ -140,29 +141,78 @@ def inferir(
 def postprocesar(
     prob_sarg:  np.ndarray,
     umbral:     float = 0.35,
-    sigma:      float = 2.0,
+    sigma:      float = 1.0,
     min_pixels: int   = 50,
 ) -> tuple[np.ndarray, np.ndarray]:
     """
     Pipeline de post-procesado para reducir ruido en el mapa de sargazo.
 
-    1. Suavizado gaussiano — elimina ruido granular de alta frecuencia
-    2. Umbral — binariza el mapa suavizado
-    3. Eliminar componentes pequeños — elimina FP aislados
-    4. Rellenar huecos internos — da continuidad a las manchas
+    Cambios respecto a v1:
+        - sigma por defecto bajado de 2.0 a 1.0 para reducir el engrosamiento
+          lateral en líneas finas de sargazo. Con sigma=2.0 el radio de
+          suavizado (~4-6px) era mayor que el ancho de muchas líneas,
+          añadiendo halo lateral. Con sigma=1.0 se mantiene la eliminación
+          de ruido granular sin engrosar estructuras finas.
+        - Se añade erosión morfológica (1 iteración) después del umbral para
+          recortar 1px de cada borde, reduciendo el halo residual en manchas
+          y líneas anchas.
+        - Se sustituye binary_fill_holes por esqueletización + dilatación
+          controlada en componentes detectados como líneas (ratio alto de
+          perímetro/área). Para manchas compactas se mantiene binary_fill_holes.
+
+    Pasos:
+        1. Suavizado gaussiano (sigma=1.0) — elimina ruido granular
+        2. Umbral — binariza el mapa suavizado
+        3. Erosión morfológica (1 iter) — recorta halo lateral
+        4. Eliminar componentes pequeños — elimina FP aislados
+        5. Por componente: si es línea → esqueleto + dilatación controlada
+                           si es mancha → binary_fill_holes
     """
+    # 1. Suavizado gaussiano
     prob_suave = gaussian_filter(prob_sarg.astype(np.float32), sigma=sigma) \
                  if sigma > 0 else prob_sarg.copy()
 
+    # 2. Umbral
     binario = (prob_suave >= umbral).astype(np.uint8)
 
+    # 3. Erosión morfológica — recorta 1px de cada borde
+    binario = binary_erosion(binario, iterations=1).astype(np.uint8)
+
+    # 4. Eliminar componentes pequeños
     if min_pixels > 0:
         etiquetas, n_comp = label(binario)
         for i in range(1, n_comp + 1):
             if (etiquetas == i).sum() < min_pixels:
                 binario[etiquetas == i] = 0
 
-    mascara_limpia = binary_fill_holes(binario).astype(np.uint8)
+    # 5. Postprocesado adaptativo por componente
+    etiquetas, n_comp = label(binario)
+    mascara_limpia = np.zeros_like(binario, dtype=np.uint8)
+
+    for i in range(1, n_comp + 1):
+        comp = (etiquetas == i).astype(np.uint8)
+        area = comp.sum()
+
+        if area == 0:
+            continue
+
+        # Detectar si es línea: ratio perímetro²/área alto indica estructura lineal
+        # Una mancha compacta tiene ratio ~4π ≈ 12.6; una línea fina tiene ratio >> 50
+        from scipy.ndimage import binary_dilation
+        borde = binary_dilation(comp) ^ comp.astype(bool)
+        perimetro = borde.sum()
+        ratio = (perimetro ** 2) / area if area > 0 else 0
+
+        if ratio > 100:
+            # Estructura lineal: esqueleto + dilatación controlada (radio 2px)
+            esqueleto = skeletonize(comp.astype(bool))
+            comp_proc  = dilation(esqueleto, disk(2)).astype(np.uint8)
+        else:
+            # Mancha compacta: rellenar huecos internos
+            comp_proc = binary_fill_holes(comp).astype(np.uint8)
+
+        mascara_limpia = np.maximum(mascara_limpia, comp_proc)
+
     return prob_suave, mascara_limpia
 
 
@@ -384,7 +434,7 @@ def main() -> None:
     parser.add_argument("--n",          type=int,   default=None)
     parser.add_argument("--todas",      action="store_true")
     parser.add_argument("--umbral",     type=float, default=0.35)
-    parser.add_argument("--sigma",      type=float, default=2.0)
+    parser.add_argument("--sigma",      type=float, default=1.0)
     parser.add_argument("--min-pixels", type=int,   default=50)
     parser.add_argument("--sin-tta",    action="store_true")
     parser.add_argument("--umbral-fai", type=float, default=0.005)
