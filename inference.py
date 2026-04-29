@@ -468,13 +468,23 @@ def main() -> None:
     # Importar el Registry (asegúrate de que esta ruta de importación es correcta según tu proyecto)
     from models.registry import ModelRegistry
 
+    # Mapeo de nombres en metadata.json → nombres registrados en ModelRegistry
+    MODEL_NAME_MAP = {
+        "swin_transformer_tiny":      "swin_transformer",
+        "swin_transformer_base":      "swin_transformer",
+        "swin_transformer":           "swin_transformer",
+        "swin_transformer_attention": "swin_transformer_attention",
+        "segformer":                  "segformer",
+    }
+
     if metadata_path.exists():
         with open(metadata_path, 'r') as f:
             metadata = json.load(f)
-        model_name = metadata.get("model_name", "swin_transformer") 
-        print(f"[inference] Detectado modelo tipo: '{model_name}' desde metadata.json")
+        model_name_raw = metadata.get("model_name", "swin_transformer")
+        model_name     = MODEL_NAME_MAP.get(model_name_raw, model_name_raw)
+        print(f"[inference] Detectado: '{model_name_raw}' → registry: '{model_name}'")
     else:
-        print("[inference] WARNING: No se encontró metadata.json. Forzando 'swin_transformer' por defecto.")
+        print("[inference] WARNING: No se encontró metadata.json. Usando 'swin_transformer'.")
         model_name = "swin_transformer"
 
     print(f"[inference] Cargando pesos desde: {weights_path}")

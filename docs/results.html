@@ -5,73 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Resultados — Detección de Sargazo · TFG ULPGC 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Source Serif 4', Georgia, serif; background: #fff; color: #111; line-height: 1.7; font-weight: 300; }
-
-.container { max-width: 1100px; margin: 0 auto; padding: 0 2rem; }
-
-header { border-bottom: 1px solid #111; padding: 2rem 0 1.5rem; margin-bottom: 3rem; }
-.header-inner { max-width: 1100px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
-.site-title { font-size: 0.8rem; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; color: #111; }
-nav { display: flex; gap: 1.5rem; }
-nav a { font-size: 0.85rem; font-weight: 300; color: #555; text-decoration: none; transition: color 0.15s; }
-nav a:hover { color: #111; }
-nav a.active { color: #111; border-bottom: 1px solid #111; }
-
-.page-title { margin-bottom: 3rem; }
-.breadcrumb { font-family: 'Source Code Pro', monospace; font-size: 0.75rem; color: #999; margin-bottom: 0.75rem; }
-.breadcrumb a { color: #777; text-decoration: none; }
-.breadcrumb a:hover { color: #111; }
-.page-title h1 { font-size: 1.6rem; font-weight: 600; margin-bottom: 0.5rem; }
-.page-title p { color: #555; font-weight: 300; }
-
-section { margin-bottom: 4rem; }
-h2 { font-size: 1.1rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
-p { margin-bottom: 1rem; color: #222; font-weight: 300; }
-
-.chart-container { position: relative; height: 400px; width: 100%; margin-bottom: 3rem; }
-
-/* ── METRICS NUEVAS (Basadas en Test Final) ── */
-.metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; border: 1px solid #ddd; margin-bottom: 1.5rem; }
-.metric { padding: 1.2rem 1rem; border-right: 1px solid #ddd; text-align: center; }
-.metric:last-child { border-right: none; }
-.metric:nth-child(3) { border-right: none; }
-.metric:nth-child(4), .metric:nth-child(5), .metric:nth-child(6) { border-top: 1px solid #ddd; }
-.metric-val { font-family: 'Source Code Pro', monospace; font-size: 1.5rem; font-weight: 500; display: block; margin-bottom: 0.25rem; }
-.metric-val.primary { color: #1e8449; }
-.metric-lbl { font-size: 0.75rem; color: #777; font-weight: 300; text-transform: uppercase; letter-spacing: 0.05em; }
-.metric-sub { font-size: 0.7rem; color: #aaa; font-family: 'Source Code Pro', monospace; margin-top: 0.15rem; display: block; }
-
-/* ── COMPARE TABLE ── */
-.compare-table { width: 100%; border-collapse: collapse; margin-bottom: 1.5rem; font-size: 0.88rem; }
-.compare-table thead tr { border-bottom: 2px solid #111; }
-.compare-table th { text-align: left; padding: 0.5rem 0.75rem; font-family: 'Source Code Pro', monospace; font-size: 0.72rem; font-weight: 500; color: #555; letter-spacing: 0.05em; text-transform: uppercase; }
-.compare-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid #eee; vertical-align: middle; color: #333; font-weight: 300; }
-.compare-table tr:last-child td { border-bottom: none; }
-.compare-table tr:hover td { background: #fafafa; }
-.tag-main { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; padding: 0.1rem 0.4rem; border: 1px solid #1e8449; color: #1e8449; background: #e8f8f5; margin-left: 0.4rem; vertical-align: middle; border-radius: 3px; }
-
-/* ── GALLERY ── */
-.gallery-note { font-size: 0.85rem; color: #777; font-style: italic; padding: 1.5rem; border: 1px dashed #ccc; margin-bottom: 1.5rem; text-align: center; }
-.gallery-note code { font-family: 'Source Code Pro', monospace; font-size: 0.8rem; color: #555; background: #f5f5f5; padding: 0.1rem 0.3rem; }
-.carousel-container { position: relative; width: 100%; border: 1px solid #eee; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; background: #fafafa; padding: 1.5rem; }
-
-footer { border-top: 1px solid #ddd; padding: 1.5rem 0; margin-top: 4rem; }
-.footer-inner { max-width: 1100px; margin: 0 auto; padding: 0 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
-footer p { font-size: 0.8rem; color: #999; margin: 0; }
-footer a { color: #777; text-decoration: none; }
-footer a:hover { color: #111; }
-
-@media (max-width: 640px) {
-  .metrics-grid { grid-template-columns: 1fr 1fr; }
-  .metric:nth-child(2) { border-right: none; }
-  .metric:nth-child(3) { border-top: 1px solid #ddd; border-right: 1px solid #ddd; }
-  .metric:nth-child(4) { border-right: none; }
-  nav { display: none; }
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'Source Serif 4',Georgia,serif;background:#fff;color:#111;line-height:1.7;font-weight:300}
+.container{max-width:900px;margin:0 auto;padding:0 2rem}
+header{border-bottom:1px solid #111;padding:2rem 0 1.5rem;margin-bottom:3rem}
+.header-inner{max-width:900px;margin:0 auto;padding:0 2rem;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.5rem}
+.site-title{font-size:.8rem;font-weight:400;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:#111}
+nav{display:flex;gap:1.5rem}
+nav a{font-size:.85rem;font-weight:300;color:#555;text-decoration:none}
+nav a:hover{color:#111}
+nav a.active{color:#111;border-bottom:1px solid #111}
+.page-title{margin-bottom:3rem}
+.breadcrumb{font-family:'Source Code Pro',monospace;font-size:.75rem;color:#999;margin-bottom:.75rem}
+.breadcrumb a{color:#777;text-decoration:none}
+.page-title h1{font-size:1.8rem;font-weight:600;margin-bottom:.5rem;line-height:1.25}
+.page-title .subtitle{color:#555;font-weight:300;font-size:.93rem}
+section{margin-bottom:4rem}
+h2{font-size:.8rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;border-bottom:1px solid #ddd;padding-bottom:.5rem;margin-bottom:1.75rem;color:#666}
+h3{font-size:1.05rem;font-weight:600;margin-bottom:.75rem;color:#111}
+p{margin-bottom:1rem;color:#333;font-weight:300;font-size:.92rem}
+.tabs{display:flex;border-bottom:1px solid #ddd;margin-bottom:2rem;overflow-x:auto}
+.tab-btn{padding:.6rem 1.1rem;font-family:'Source Code Pro',monospace;font-size:.73rem;font-weight:500;color:#999;cursor:pointer;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab-btn:hover{color:#333}
+.tab-btn.active{color:#111;border-bottom-color:#111}
+.tab-btn .badge{display:inline-block;margin-left:.35rem;padding:.03rem .3rem;font-size:.6rem;background:#1e8449;color:#fff;border-radius:2px}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.mg{display:grid;gap:0;border:1px solid #ddd;margin-bottom:1.25rem}
+.mg5{grid-template-columns:repeat(5,1fr)}
+.mg4{grid-template-columns:repeat(4,1fr)}
+.mc{padding:.85rem .75rem;border-right:1px solid #ddd;text-align:center}
+.mc:last-child{border-right:none}
+.ml{font-family:'Source Code Pro',monospace;font-size:.6rem;color:#bbb;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.2rem}
+.mv{font-family:'Source Code Pro',monospace;font-size:.85rem;font-weight:600;color:#111;display:block}
+.mv.good{color:#1e8449}
+.mr{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #ddd;margin-bottom:1.25rem}
+.mt{padding:1rem .75rem;border-right:1px solid #ddd;text-align:center}
+.mt:last-child{border-right:none}
+.mv2{font-family:'Source Code Pro',monospace;font-size:1.4rem;font-weight:500;display:block;margin-bottom:.15rem;color:#111}
+.mv2.good{color:#1e8449}
+.mv2.warn{color:#c0392b}
+.ml2{font-size:.67rem;color:#aaa;text-transform:uppercase;letter-spacing:.05em}
+.cw{position:relative;height:250px;width:100%;margin-bottom:1.75rem}
+.cl{font-family:'Source Code Pro',monospace;font-size:.68rem;color:#ccc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+.tw{overflow-x:auto;margin-bottom:1.25rem}
+.tbl{width:100%;border-collapse:collapse;font-size:.83rem}
+.tbl thead tr{border-bottom:2px solid #111}
+.tbl th{text-align:left;padding:.42rem .65rem;font-family:'Source Code Pro',monospace;font-size:.63rem;font-weight:600;color:#888;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.tbl td{padding:.58rem .65rem;border-bottom:1px solid #eee;color:#333;font-weight:300}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr.best td{background:#f0faf5}
+.tbl tr.best td:first-child{border-left:3px solid #1e8449;padding-left:calc(.65rem - 3px)}
+.tag{font-family:'Source Code Pro',monospace;font-size:.58rem;padding:.06rem .28rem;border-radius:2px;margin-left:.28rem;vertical-align:middle}
+.tb{background:#e8f8f5;color:#1e8449;border:1px solid #a9dfbf}
+.note{border-left:3px solid #ddd;padding:.65rem .9rem;font-size:.82rem;color:#888;margin-bottom:1.25rem}
+.note.info{border-left-color:#2471a3;background:#eaf4fb;color:#1a5276}
+.loading{text-align:center;padding:2rem;font-family:'Source Code Pro',monospace;font-size:.78rem;color:#bbb}
+footer{border-top:1px solid #ddd;padding:1.5rem 0;margin-top:4rem}
+.footer-inner{max-width:900px;margin:0 auto;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+footer p{font-size:.8rem;color:#999;margin:0}
+footer a{color:#777;text-decoration:none}
+@media(max-width:640px){.mg5{grid-template-columns:repeat(3,1fr)}.mr{grid-template-columns:1fr 1fr}nav{display:none}}
 </style>
 </head>
 <body>
@@ -82,6 +80,7 @@ footer a:hover { color: #111; }
     <nav>
       <a href="index.html">Inicio</a>
       <a href="results.html" class="active">Resultados</a>
+      <a href="experiments.html">Entrenamiento</a>
       <a href="monitor.html">Monitorización</a>
     </nav>
   </div>
@@ -91,100 +90,65 @@ footer a:hover { color: #111; }
 
   <div class="page-title">
     <p class="breadcrumb"><a href="index.html">Inicio</a> / Resultados</p>
-    <h1>Resultados del modelo</h1>
-    <p>Métricas de evaluación sobre el conjunto de test del dataset MADOS, ejemplos de inferencia y comparativa entre arquitecturas del estado del arte.</p>
+    <h1>Evaluación experimental</h1>
+    <p class="subtitle">Comparativa de arquitecturas de segmentación semántica sobre el split de test de MADOS. Todos los datos se cargan dinámicamente desde los archivos del repositorio.</p>
   </div>
 
-  <section>
-    <h2>Métricas Principales: Swin Transformer</h2>
-    <p style="font-size: 0.9rem; color: #666; margin-top: -1rem; margin-bottom: 1.5rem;">Resultados obtenidos sobre los datos de Test Final, empleando el post-procesado con umbral FAI.</p>
-    <div class="metrics-grid">
-      <div class="metric">
-        <span class="metric-val primary" id="top-recall">—</span>
-        <span class="metric-lbl">Recall (Sensibilidad)</span>
-        <span class="metric-sub">Tasa de detección</span>
+  <!-- SECCIÓN 1: EXPERIMENTOS -->
+  <section id="modelos">
+    <h2>Experimentos por arquitectura</h2>
+    <div class="loading" id="runs-loading">Cargando experimentos…</div>
+    <div id="runs-tabs" class="tabs" style="display:none"></div>
+    <div id="runs-panels"></div>
+  </section>
+
+  <!-- SECCIÓN 2: TOP 3 TEST -->
+  <section id="top3">
+    <h2>Top 3 modelos — evaluación sobre test</h2>
+    <p>Tres arquitecturas evaluadas sobre los 45 tiles de test con sargazo, misma configuración de postprocesado (umbral 0.70, FAI ≥ −0.01, σ = 1.0, min_pixels = 50).</p>
+    <div class="loading" id="top3-loading">Cargando…</div>
+    <div id="top3-content" style="display:none">
+      <div class="cl">Recall · Precision · F1 · IoU Global</div>
+      <div class="cw"><canvas id="chart-top3"></canvas></div>
+      <div class="tw">
+        <table class="tbl" id="tbl-top3">
+          <thead><tr><th>Modelo</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>TP</th><th>FP</th><th>FN</th></tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <div class="metric">
-        <span class="metric-val" id="top-precision">—</span>
-        <span class="metric-lbl">Precisión</span>
-        <span class="metric-sub">Sargazo detectado real</span>
-      </div>
-      <div class="metric">
-        <span class="metric-val" id="top-f1">—</span>
-        <span class="metric-lbl">F1-Score</span>
-        <span class="metric-sub">Media armónica</span>
-      </div>
-      <div class="metric">
-        <span class="metric-val" id="top-iou">—</span>
-        <span class="metric-lbl">IoU Global</span>
-        <span class="metric-sub">Intersección s/ Unión</span>
-      </div>
-      <div class="metric">
-        <span class="metric-val primary" id="top-tp">—</span>
-        <span class="metric-lbl">Verdaderos Positivos</span>
-        <span class="metric-sub">Píxeles acertados</span>
-      </div>
-      <div class="metric">
-        <span class="metric-val" id="top-fn" style="color: #c0392b;">—</span>
-        <span class="metric-lbl">Falsos Negativos</span>
-        <span class="metric-sub">Sargazo omitido</span>
-      </div>
+      <p class="note">El <strong>Swin+Att-UNet</strong> ofrece el mejor balance F1 (29.4%) e IoU (17.2%). El Swin estándar tiene mayor Recall (92.7%) a costa de más falsos positivos. El SegFormer, pese a su mejor mIoU en validación, generaliza peor sobre los datos de test reales.</p>
     </div>
   </section>
 
-  <section>
-    <h2>Comparativa de modelos (Test)</h2>
-    <p>Los siguientes gráficos muestran el rendimiento de nuestra propuesta frente al estado del arte clásico, evaluados sobre las mismas 4 bandas espectrales.</p>
-    <div id="graficas-error" style="display:none; color: #c0392b; background: #fadbd8; padding: 1rem; border-radius: 4px; margin-bottom: 2rem;">
-        Error cargando los archivos JSON. Asegúrate de estar corriendo esto en un servidor (GitHub Pages) y de que los archivos estén en la ruta <code>assets/data/test_final/</code>
-    </div>
-    
-    <div style="margin-top: 2rem;">
-        <h3 style="font-size:1rem; color:#555; text-transform:uppercase;">Recall vs F1-Score</h3>
-        <div class="chart-container"><canvas id="comparativeChart"></canvas></div>
-    </div>
-    
-    <div style="margin-top: 2rem;">
-        <h3 style="font-size:1rem; color:#555; text-transform:uppercase;">Precisión vs IoU Global</h3>
-        <div class="chart-container"><canvas id="secondaryChart"></canvas></div>
+  <!-- SECCIÓN 3: ESTADO DEL ARTE -->
+  <section id="state-of-art">
+    <h2>Comparativa con el estado del arte</h2>
+    <p>Modelos de Echevarría et al. (2025) evaluados sobre los mismos tiles de test. Se muestran en dos condiciones: entrenados con su CSV original (Landsat-8, Zenodo) y reentrenados con píxeles extraídos de MADOS.</p>
+    <div class="note info">Los modelos clásicos son clasificadores por píxel (KNN, RF, XGBoost, MLP, CNN-1D) sin contexto espacial. El modelo propuesto (Swin+Att-UNet) opera a nivel de imagen completa con skip connections atencionales.</div>
+
+    <div class="tabs" id="ech-tabs">
+      <button class="tab-btn active" onclick="switchEch('csv',this)">CSV Echevarría (Landsat-8)</button>
+      <button class="tab-btn" onclick="switchEch('mados',this)">Reentrenados con MADOS</button>
     </div>
 
-    <table class="compare-table" style="margin-top: 2rem;">
-      <thead>
-        <tr>
-          <th>Modelo</th>
-          <th>Recall</th>
-          <th>Precisión</th>
-          <th>F1-Score</th>
-          <th>IoU Global</th>
-        </tr>
-      </thead>
-      <tbody id="dynamic-table-body">
-        </tbody>
-    </table>
-  </section>
-
-  <section id="inferencia">
-    <h2>Ejemplos de inferencia</h2>
-    <p>Visualización de la predicción del modelo sobre imágenes del split de test (datos nunca vistos durante el entrenamiento). Navega por el carrusel para ver distintos casos de éxito y mitigación de errores mediante el Pipeline Híbrido.</p>
-    
-    <div class="gallery-note">
-      Las imágenes han sido generadas mediante el script <code>inference.py</code>, aplicando el post-procesado completo (FAI + suavizado gaussiano σ=2 + limpieza morfológica).
-    </div>
-
-    <div class="carousel-container">
-      <img id="carouselImage" src="" alt="Ejemplo de inferencia" style="width: 100%; height: auto; border-radius: 4px; display: block;">
-      
-      <div style="padding: 1rem 0.5rem 0.5rem;">
-        <h4 id="carouselTitle" style="color: #2e86c1; margin-bottom: 0.5rem; font-size: 1.1rem;">Cargando...</h4>
-        <p id="carouselDesc" style="font-size: 0.95rem; color: #555; margin: 0;">Por favor, espera.</p>
+    <div class="loading" id="ech-loading">Cargando…</div>
+    <div id="ech-content" style="display:none">
+      <div id="ech-csv">
+        <div class="cl">Recall · Precision · F1 · IoU — CSV Echevarría</div>
+        <div class="cw"><canvas id="chart-ech-csv"></canvas></div>
+        <div class="tw"><table class="tbl" id="tbl-ech-csv">
+          <thead><tr><th>Modelo</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>Tiles</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
       </div>
-
-      <button onclick="cambiarImagen(-1)" style="position: absolute; top: 40%; left: 10px; background: rgba(0,0,0,0.6); color: white; border: none; font-size: 1.5rem; padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; transition: 0.2s;">&#10094;</button>
-      <button onclick="cambiarImagen(1)" style="position: absolute; top: 40%; right: 10px; background: rgba(0,0,0,0.6); color: white; border: none; font-size: 1.5rem; padding: 0.5rem 1rem; cursor: pointer; border-radius: 4px; transition: 0.2s;">&#10095;</button>
-      
-      <div id="carouselCounter" style="position: absolute; top: 15px; right: 20px; background: rgba(0,0,0,0.6); color: white; padding: 0.2rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-family: monospace;">
-        1 / 3
+      <div id="ech-mados" style="display:none">
+        <div class="cl">Recall · Precision · F1 · IoU — reentrenados MADOS</div>
+        <div class="cw"><canvas id="chart-ech-mados"></canvas></div>
+        <div class="tw"><table class="tbl" id="tbl-ech-mados">
+          <thead><tr><th>Modelo</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>Tiles</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <p class="note">Al reentrenar con MADOS (desbalance ~0.002% sargazo), la Precision colapsa en todos los modelos clásicos. Confirma que los clasificadores por píxel no escalan a detección de objetos raros sin mecanismos estructurales de compensación del desbalance.</p>
       </div>
     </div>
   </section>
@@ -194,149 +158,243 @@ footer a:hover { color: #111; }
 <footer>
   <div class="footer-inner">
     <p>© 2026 Jorge Lorenzo Lorenzo · ULPGC</p>
-    <p><a href="index.html">← Volver al inicio</a></p>
+    <p><a href="index.html">← Inicio</a></p>
   </div>
 </footer>
 
 <script>
-  // ==========================================
-  // LÓGICA DE DATOS (LECTURA DE JSON FINALES)
-  // ==========================================
-  async function cargarResultadosCompletos() {
-    try {
-      // ATENCIÓN A LAS RUTAS: Si no tienes la carpeta "test_final", quítalo de la ruta.
-      const [resSwin, resOtros] = await Promise.all([
-        fetch('assets/data/test_final/evaluacion_swin_test.json').then(r => r.json()),
-        fetch('assets/data/test_final/evaluacion_test_art_state.json').then(r => r.json())
-      ]);
+const BASE_RUNS = 'assets/data/runs';
+const BASE_TEST = 'assets/data/test_final';
+const COLORS  = ['rgba(52,120,190,.75)','rgba(30,132,73,.75)','rgba(211,84,0,.75)','rgba(125,60,152,.75)','rgba(192,57,43,.75)','rgba(23,165,137,.75)'];
+const BORDERS = COLORS.map(c=>c.replace('.75','1'));
 
-      const todosLosModelos = { ...resSwin, ...resOtros };
-      
-      // 1. Rellenar las tarjetas superiores solo con los datos de Swin Transformer
-      const swin = resSwin["Swin Transformer"];
-      if(swin) {
-        document.getElementById('top-recall').textContent = (swin.recall * 100).toFixed(2) + '%';
-        document.getElementById('top-precision').textContent = (swin.precision * 100).toFixed(2) + '%';
-        document.getElementById('top-f1').textContent = (swin.f1 * 100).toFixed(2) + '%';
-        document.getElementById('top-iou').textContent = (swin.iou_sargazo_global * 100).toFixed(2) + '%';
-        document.getElementById('top-tp').textContent = swin.tp_total.toLocaleString();
-        document.getElementById('top-fn').textContent = swin.fn_total.toLocaleString();
-      }
+async function jf(url){ const r=await fetch(url); if(!r.ok) throw new Error(r.status+': '+url); return r.json(); }
+async function tf(url){ const r=await fetch(url); if(!r.ok) throw new Error(r.status+': '+url); return r.text(); }
 
-      // 2. Preparar datos para las Gráficas y la Tabla
-      const labels = Object.keys(todosLosModelos);
-      const recallData = [];
-      const f1Data = [];
-      const precisionData = [];
-      const iouData = [];
+function parseCSV(txt){
+  const ls=txt.trim().split(/\r?\n/);
+  const hs=ls[0].split(',').map(h=>h.trim());
+  return ls.slice(1).map(l=>{const vs=l.split(',');const o={};hs.forEach((h,i)=>o[h]=vs[i]?.trim()||'');return o;});
+}
 
-      const tableBody = document.getElementById('dynamic-table-body');
-      tableBody.innerHTML = ''; // Limpiamos la tabla
+function pct(v,d=1){ const n=parseFloat(v); return isNaN(n)?'—':(n*100).toFixed(d)+'%'; }
+function num(v,d=5){ const n=parseFloat(v); return isNaN(n)?'—':n.toFixed(d); }
 
-      labels.forEach(nombreModelo => {
-        const d = todosLosModelos[nombreModelo];
-        
-        // Datos para gráficas
-        recallData.push((d.recall * 100).toFixed(2));
-        f1Data.push((d.f1 * 100).toFixed(2));
-        precisionData.push((d.precision * 100).toFixed(2));
-        iouData.push((d.iou_sargazo_global * 100).toFixed(2));
-
-        // Crear fila para la tabla
-        const tr = document.createElement('tr');
-        // Resaltar Swin Transformer
-        if (nombreModelo === "Swin Transformer") {
-            tr.innerHTML = `
-                <td><strong>${nombreModelo}</strong> <span class="tag-main">PROPUESTO</span></td>
-                <td><strong>${(d.recall * 100).toFixed(2)}%</strong></td>
-                <td>${(d.precision * 100).toFixed(2)}%</td>
-                <td>${(d.f1 * 100).toFixed(2)}%</td>
-                <td>${(d.iou_sargazo_global * 100).toFixed(2)}%</td>
-            `;
-            tr.style.backgroundColor = "#e8f8f5";
-        } else {
-            tr.innerHTML = `
-                <td>${nombreModelo}</td>
-                <td>${(d.recall * 100).toFixed(2)}%</td>
-                <td>${(d.precision * 100).toFixed(2)}%</td>
-                <td>${(d.f1 * 100).toFixed(2)}%</td>
-                <td>${(d.iou_sargazo_global * 100).toFixed(2)}%</td>
-            `;
-        }
-        tableBody.appendChild(tr);
-      });
-
-      // 3. Dibujar Gráficas
-      const ctx1 = document.getElementById('comparativeChart').getContext('2d');
-      new Chart(ctx1, {
-          type: 'bar',
-          data: {
-              labels: labels,
-              datasets: [
-                  { label: 'Recall (%)', data: recallData, backgroundColor: 'rgba(54, 162, 235, 0.7)', borderColor: 'rgba(54, 162, 235, 1)', borderWidth: 1 },
-                  { label: 'F1-Score (%)', data: f1Data, backgroundColor: 'rgba(255, 159, 64, 0.7)', borderColor: 'rgba(255, 159, 64, 1)', borderWidth: 1 }
-              ]
-          },
-          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
-      });
-
-      const ctx2 = document.getElementById('secondaryChart').getContext('2d');
-      new Chart(ctx2, {
-          type: 'bar',
-          data: {
-              labels: labels,
-              datasets: [
-                  { label: 'Precisión (%)', data: precisionData, backgroundColor: 'rgba(153, 102, 255, 0.7)', borderColor: 'rgba(153, 102, 255, 1)', borderWidth: 1 },
-                  { label: 'IoU Global (%)', data: iouData, backgroundColor: 'rgba(75, 192, 192, 0.7)', borderColor: 'rgba(75, 192, 192, 1)', borderWidth: 1 }
-              ]
-          },
-          options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100 } } }
-      });
-      
-    } catch (error) {
-      console.error("Error cargando los JSON:", error);
-      document.getElementById('graficas-error').style.display = 'block';
+function barChart(id, labels, datasets, maxY=1){
+  const ctx=document.getElementById(id); if(!ctx)return;
+  new Chart(ctx,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{font:{family:'Source Code Pro',size:10},boxWidth:11}}},
+    scales:{
+      x:{ticks:{font:{family:'Source Code Pro',size:9},maxRotation:25}},
+      y:{beginAtZero:true,max:maxY,ticks:{font:{family:'Source Code Pro',size:9},callback:v=>(v*100).toFixed(0)+'%'}}
     }
-  }
+  }});
+}
 
-  // ==========================================
-  // LÓGICA DEL CARRUSEL DE IMÁGENES
-  // ==========================================
-  const diapositivas = [
-    { archivo: "Inferencia_test_1.png", titulo: "Detección precisa vs Efecto Halo", descripcion: "El Swin Transformer detecta el contexto espacial dilatado. El Índice FAI recorta la detección, ajustando el resultado estrictamente a la biomasa real." },
-    { archivo: "Inferencia_test_2.png", titulo: "Mitigación de Falsos Positivos", descripcion: "El sistema penaliza y descarta estructuras oceánicas (espuma/olas) que carecen de la reflectancia en el Infrarrojo Cercano (NIR) necesaria." },
-    { archivo: "Inferencia_test_3.png", titulo: "Corrección de etiquetas débiles (Weak Labels)", descripcion: "La red logra detectar trazas finas de sargazo que fueron omitidas por los anotadores humanos del dataset original MADOS." }
-  ];
+function lossChart(id, rows){
+  const ctx=document.getElementById(id); if(!ctx)return;
+  new Chart(ctx,{type:'line',data:{
+    labels:rows.map(r=>r.epoch),
+    datasets:[
+      {label:'Train Loss',data:rows.map(r=>parseFloat(r.train_loss)||null),borderColor:BORDERS[0],tension:.3,pointRadius:1,borderWidth:2},
+      {label:'Val Loss',  data:rows.map(r=>parseFloat(r.val_loss)||null),  borderColor:BORDERS[4],tension:.3,pointRadius:1,borderWidth:2},
+    ]
+  },options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{font:{family:'Source Code Pro',size:10},boxWidth:11}}},
+    scales:{
+      x:{title:{display:true,text:'Época',font:{family:'Source Code Pro',size:10}},ticks:{font:{family:'Source Code Pro',size:9},maxTicksLimit:15}},
+      y:{title:{display:true,text:'Pérdida',font:{family:'Source Code Pro',size:10}},ticks:{font:{family:'Source Code Pro',size:9}}}
+    }
+  }});
+}
 
-  let indiceActual = 0;
-  const imgRutaBase = "assets/img/"; 
+function archLabel(cls){ return {SwinSegmenter:'UNet',SwinAttSegmenter:'Att-UNet',SegFormerSegmenter:'MLP Decoder'}[cls]||cls; }
 
-  function actualizarCarrusel() {
-    const datos = diapositivas[indiceActual];
-    const imgElement = document.getElementById("carouselImage");
-    imgElement.onerror = function() {
-        this.src = 'data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22800%22%20height%3D%22200%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20800%20200%22%20preserveAspectRatio%3D%22none%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23eee%22%2F%3E%3Ctext%20x%3D%22400%22%20y%3D%22100%22%20fill%3D%22%23999%22%20dy%3D%22.3em%22%20font-family%3D%22Arial%22%20font-size%3D%2220%22%20text-anchor%3D%22middle%22%3EFalta la imagen: ' + datos.archivo + '%3C%2Ftext%3E%3C%2Fsvg%3E';
-    };
-    imgElement.src = imgRutaBase + datos.archivo;
-    
-    document.getElementById("carouselTitle").textContent = datos.titulo;
-    document.getElementById("carouselDesc").textContent = datos.descripcion;
-    document.getElementById("carouselCounter").textContent = `${indiceActual + 1} / ${diapositivas.length}`;
-  }
+function folderLabel(name){
+  return name
+    .replace(/_/g,' ')
+    .replace('Swin Transformer Tiny Attention','Swin+Att')
+    .replace('Swin Transformer Tiny','Swin Tiny')
+    .replace('Swin Transformer Base','Swin Base')
+    .replace('Segformer Segmenter','SegFormer')
+    .replace('Dice Loss','(Dice)')
+    .replace('Tversky Loss','(Tversky)');
+}
 
-  function cambiarImagen(direccion) {
-    indiceActual += direccion;
-    if (indiceActual >= diapositivas.length) indiceActual = 0;
-    if (indiceActual < 0) indiceActual = diapositivas.length - 1;
-    actualizarCarrusel();
-  }
+// ─── SECCIÓN 1 ─────────────────────────────────────────
+async function loadRuns(){
+  try{
+    const index=await jf(`${BASE_RUNS}/index.json`);
+    const tabsEl=document.getElementById('runs-tabs');
+    const panelsEl=document.getElementById('runs-panels');
+    document.getElementById('runs-loading').style.display='none';
+    tabsEl.style.display='flex';
 
-  // Lanzar todo al iniciar
-  window.onload = () => {
-    actualizarCarrusel();
-    cargarResultadosCompletos();
-  };
+    const ordered=[...index].sort((a,b)=>{
+      const pa=a.includes('Attention')&&a.includes('Dice')?0:a.includes('Attention')?1:a.includes('Tiny')&&a.includes('Dice')&&!a.includes('Attention')?2:3;
+      const pb=b.includes('Attention')&&b.includes('Dice')?0:b.includes('Attention')?1:b.includes('Tiny')&&b.includes('Dice')&&!b.includes('Attention')?2:3;
+      return pa-pb||a.localeCompare(b);
+    });
+
+    const metas=await Promise.all(ordered.map(n=>jf(`${BASE_RUNS}/${n}/metadata.json`).catch(()=>null)));
+
+    ordered.forEach((name,i)=>{
+      const meta=metas[i];
+      const label=folderLabel(name);
+      const isBest=name.includes('Attention')&&name.includes('Dice');
+      const isFirst=i===0;
+
+      // Tab
+      const btn=document.createElement('button');
+      btn.className='tab-btn'+(isFirst?' active':'');
+      btn.innerHTML=label+(isBest?' <span class="badge">MEJOR</span>':'');
+      btn.onclick=()=>{
+        document.querySelectorAll('#runs-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.rp').forEach(p=>p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('rp-'+i).classList.add('active');
+      };
+      tabsEl.appendChild(btn);
+
+      // Panel
+      const panel=document.createElement('div');
+      panel.className='tab-panel rp'+(isFirst?' active':'');
+      panel.id='rp-'+i;
+
+      if(!meta){ panel.innerHTML='<p class="note">No se pudo cargar metadata.json</p>'; panelsEl.appendChild(panel); return; }
+
+      const pM=(meta.num_parameters/1e6).toFixed(1);
+      panel.innerHTML=`
+        <h3>${label}</h3>
+        <div class="mg mg5">
+          <div class="mc"><span class="ml">Clase</span><span class="mv">${meta.model_class}</span></div>
+          <div class="mc"><span class="ml">Decoder</span><span class="mv">${archLabel(meta.model_class)}</span></div>
+          <div class="mc"><span class="ml">Loss</span><span class="mv">${meta.loss_function||'—'}</span></div>
+          <div class="mc"><span class="ml">Parámetros</span><span class="mv">${pM}M</span></div>
+          <div class="mc"><span class="ml">Optimizador</span><span class="mv">${meta.optimizer_name}</span></div>
+        </div>
+        <div class="mg mg5">
+          <div class="mc"><span class="ml">Épocas config.</span><span class="mv">${meta.epochs}</span></div>
+          <div class="mc"><span class="ml">Mejor época</span><span class="mv good">${meta.best_epoch}</span></div>
+          <div class="mc"><span class="ml">Val Loss ↓</span><span class="mv good">${meta.best_val_loss}</span></div>
+          <div class="mc"><span class="ml">Learning Rate</span><span class="mv">${meta.lr}</span></div>
+          <div class="mc"><span class="ml">Patience</span><span class="mv">${meta.patience}</span></div>
+        </div>
+        <div class="mg mg4">
+          <div class="mc"><span class="ml">IoU Sargazo denso</span><span class="mv">${meta.iou_sargassum??'—'}</span></div>
+          <div class="mc"><span class="ml">IoU Algas sparse</span><span class="mv">${meta.iou_algas??'—'}</span></div>
+          <div class="mc"><span class="ml">mIoU val</span><span class="mv">${meta.mIoU??'—'}</span></div>
+          <div class="mc"><span class="ml">Batch size</span><span class="mv">${meta.batch_size}</span></div>
+        </div>
+        <div class="cl">Curvas de pérdida — entrenamiento</div>
+        <div class="cw"><canvas id="lc-${i}"></canvas></div>
+      `;
+      panelsEl.appendChild(panel);
+
+      tf(`${BASE_RUNS}/${name}/metrics.csv`)
+        .then(txt=>lossChart('lc-'+i,parseCSV(txt)))
+        .catch(()=>{ const c=document.getElementById('lc-'+i); if(c) c.parentElement.innerHTML='<p class="note">No se pudo cargar metrics.csv</p>'; });
+    });
+  }catch(e){ document.getElementById('runs-loading').textContent='Error: '+e.message; }
+}
+
+// ─── SECCIÓN 2 ─────────────────────────────────────────
+async function loadTop3(){
+  try{
+    const [dS,dA,dSeg]=await Promise.all([
+      jf(`${BASE_TEST}/evaluacion_swin_transformer_test.json`),
+      jf(`${BASE_TEST}/evaluacion_swin_transformer_attention_test.json`),
+      jf(`${BASE_TEST}/evaluacion_segformer_test.json`),
+    ]);
+    const swin=Object.values(dS)[0];
+    const att=Object.values(dA)[0];
+    const seg=Object.values(dSeg)[0];
+    const datos=[
+      {label:'Swin+Att-UNet',d:att, best:true},
+      {label:'Swin Tiny',    d:swin,best:false},
+      {label:'SegFormer',    d:seg, best:false},
+    ];
+
+    document.getElementById('top3-loading').style.display='none';
+    document.getElementById('top3-content').style.display='block';
+
+    barChart('chart-top3', datos.map(x=>x.label), [
+      {label:'Recall',   data:datos.map(x=>x.d.recall),            backgroundColor:COLORS[0],borderColor:BORDERS[0],borderWidth:1},
+      {label:'Precision',data:datos.map(x=>x.d.precision),         backgroundColor:COLORS[2],borderColor:BORDERS[2],borderWidth:1},
+      {label:'F1',       data:datos.map(x=>x.d.f1),                backgroundColor:COLORS[1],borderColor:BORDERS[1],borderWidth:1},
+      {label:'IoU',      data:datos.map(x=>x.d.iou_sargazo_global),backgroundColor:COLORS[3],borderColor:BORDERS[3],borderWidth:1},
+    ]);
+
+    const tbody=document.querySelector('#tbl-top3 tbody');
+    datos.forEach(({label,d,best})=>{
+      const tr=document.createElement('tr');
+      if(best) tr.className='best';
+      tr.innerHTML=`
+        <td>${best?'<strong>'+label+'</strong>':label}${best?'<span class="tag tb">PROPUESTO</span>':''}</td>
+        <td>${best?'<strong>':''} ${pct(d.recall)}${best?'</strong>':''}</td>
+        <td>${pct(d.precision)}</td>
+        <td>${pct(d.f1)}</td>
+        <td>${pct(d.iou_sargazo_global)}</td>
+        <td>${d.tp_total?.toLocaleString()??'—'}</td>
+        <td>${d.fp_total?.toLocaleString()??'—'}</td>
+        <td>${d.fn_total?.toLocaleString()??'—'}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }catch(e){ document.getElementById('top3-loading').textContent='Error: '+e.message; }
+}
+
+// ─── SECCIÓN 3 ─────────────────────────────────────────
+function switchEch(id,btn){
+  document.getElementById('ech-csv').style.display=id==='csv'?'block':'none';
+  document.getElementById('ech-mados').style.display=id==='mados'?'block':'none';
+  document.querySelectorAll('#ech-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function fillEch(chartId, tableId, data, attFlat){
+  const all={'Swin+Att-UNet ★':{...attFlat,_best:true},...data};
+  const labels=Object.keys(all);
+  barChart(chartId, labels, [
+    {label:'Recall',   data:labels.map(k=>all[k].recall),            backgroundColor:COLORS[0],borderColor:BORDERS[0],borderWidth:1},
+    {label:'Precision',data:labels.map(k=>all[k].precision),         backgroundColor:COLORS[2],borderColor:BORDERS[2],borderWidth:1},
+    {label:'F1',       data:labels.map(k=>all[k].f1),                backgroundColor:COLORS[1],borderColor:BORDERS[1],borderWidth:1},
+    {label:'IoU',      data:labels.map(k=>all[k].iou_sargazo_global),backgroundColor:COLORS[3],borderColor:BORDERS[3],borderWidth:1},
+  ]);
+  const tbody=document.querySelector('#'+tableId+' tbody');
+  tbody.innerHTML='';
+  Object.entries(all).forEach(([nombre,d])=>{
+    const isBest=d._best;
+    const tr=document.createElement('tr');
+    if(isBest) tr.className='best';
+    tr.innerHTML=`
+      <td>${isBest?'<strong>'+nombre+'</strong>':nombre}${isBest?'<span class="tag tb">PROPUESTO</span>':''}</td>
+      <td>${isBest?'<strong>':''} ${pct(d.recall)}${isBest?'</strong>':''}</td>
+      <td>${pct(d.precision)}</td>
+      <td>${pct(d.f1)}</td>
+      <td>${pct(d.iou_sargazo_global)}</td>
+      <td>${d.tiles_evaluados??'—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function loadEch(){
+  try{
+    const [dE,dM,dA]=await Promise.all([
+      jf(`${BASE_TEST}/evaluacion_test_echevarria.json`),
+      jf(`${BASE_TEST}/evaluacion_test_mados.json`),
+      jf(`${BASE_TEST}/evaluacion_swin_transformer_attention_test.json`),
+    ]);
+    const attFlat=Object.values(dA)[0];
+    document.getElementById('ech-loading').style.display='none';
+    document.getElementById('ech-content').style.display='block';
+    fillEch('chart-ech-csv',  'tbl-ech-csv',  dE, attFlat);
+    fillEch('chart-ech-mados','tbl-ech-mados', dM, attFlat);
+  }catch(e){ document.getElementById('ech-loading').textContent='Error: '+e.message; }
+}
+
+window.onload=()=>{ loadRuns(); loadTop3(); loadEch(); };
 </script>
-
 </body>
 </html>

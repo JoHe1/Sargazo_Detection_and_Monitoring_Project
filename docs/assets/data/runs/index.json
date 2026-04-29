@@ -1,5 +1,8 @@
 [
-    "Swin_Transformer_Mados_Base_Model",
-    "Swin_Transformer_Mados_Tiny_Model"
-
+    "Segformer_Segmenter_Dice_Loss",
+    "Segformer_Segmenter_Tversky_Loss",
+    "Swin_Transformer_Tiny_Attention_Dice_Loss",
+    "Swin_Transformer_Tiny_Attention_Tversky_Loss",
+    "Swin_Transformer_Tiny_Dice_Loss",
+    "Swin_Transformer_Tiny_Tversky_Loss"
 ]
