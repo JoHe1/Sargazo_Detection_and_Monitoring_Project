@@ -1,0 +1,57 @@
+{
+  "RandomForest": {
+    "precision": 0.0044,
+    "recall": 0.4972,
+    "f1": 0.0088,
+    "iou_sargazo_global": 0.0044,
+    "iou_sargazo_medio": 0.0046,
+    "tp_total": 9657,
+    "fp_total": 2167495,
+    "fn_total": 9765,
+    "tiles_evaluados": 45
+  },
+  "XGBoost": {
+    "precision": 0.0022,
+    "recall": 0.2334,
+    "f1": 0.0044,
+    "iou_sargazo_global": 0.0022,
+    "iou_sargazo_medio": 0.0021,
+    "tp_total": 4534,
+    "fp_total": 2041948,
+    "fn_total": 14888,
+    "tiles_evaluados": 45
+  },
+  "KNN": {
+    "precision": 0.0071,
+    "recall": 0.7862,
+    "f1": 0.0142,
+    "iou_sargazo_global": 0.0071,
+    "iou_sargazo_medio": 0.0075,
+    "tp_total": 15265,
+    "fp_total": 2120980,
+    "fn_total": 4152,
+    "tiles_evaluados": 44
+  },
+  "MLP": {
+    "precision": 0.0086,
+    "recall": 0.9477,
+    "f1": 0.017,
+    "iou_sargazo_global": 0.0086,
+    "iou_sargazo_medio": 0.009,
+    "tp_total": 18402,
+    "fp_total": 2123357,
+    "fn_total": 1015,
+    "tiles_evaluados": 44
+  },
+  "CNN-1D": {
+    "precision": 0.0792,
+    "recall": 0.3708,
+    "f1": 0.1305,
+    "iou_sargazo_global": 0.0698,
+    "iou_sargazo_medio": 0.2218,
+    "tp_total": 7202,
+    "fp_total": 83772,
+    "fn_total": 12220,
+    "tiles_evaluados": 45
+  }
+}

@@ -18,6 +18,8 @@ Uso:
     python -m models.external.echevarria2025.evaluate_echevarria
     python -m models.external.echevarria2025.evaluate_echevarria --split val
     python -m models.external.echevarria2025.evaluate_echevarria --n 10
+    python -m models.external.echevarria2025.evaluate_echevarria --split test
+    python -m models.external.echevarria2025.evaluate_echevarria --split test --modelos-dir models/external/echevarria2025/models_4bands_mados
 
 Salida:
     Tabla de métricas por modelo en consola
@@ -40,7 +42,7 @@ from core.config.paths import SARGASSUM_READY
 
 # ── Rutas ─────────────────────────────────────────────────────────────
 SCRIPT_DIR   = Path(__file__).parent
-MODELS_DIR   = SCRIPT_DIR / "models_4bands"
+MODELS_DIR   = SCRIPT_DIR / "models_4bands"   # sobreescrito desde main() via --modelos-dir
 
 # Clases de sargazo en MADOS
 CLASES_SARGASSUM = {2, 3}   # Dense Sargassum + Sparse Floating Algae
@@ -57,22 +59,31 @@ BAND_INDICES = [0, 1, 2, 3]
 # ══════════════════════════════════════════════════════════════════════
 
 def cargar_modelos() -> dict:
-    """Carga todos los modelos disponibles en models_4bands/."""
+    """
+    Carga todos los modelos disponibles en MODELS_DIR.
+
+    Detecta automáticamente el sufijo de los archivos:
+        - models_4bands/      → sufijo "_4b"        (modelos originales Echevarría)
+        - models_4bands_mados/ → sufijo "_4b_mados"  (modelos reentrenados con MADOS)
+    """
     modelos = {}
 
+    # Detectar sufijo según la carpeta
+    sufijo = "_4b_mados" if "mados" in MODELS_DIR.name else "_4b"
+
     archivos = {
-        "RandomForest": MODELS_DIR / "randomforest_4b.joblib",
-        "XGBoost":      MODELS_DIR / "xgboost_4b.joblib",
-        "KNN":          MODELS_DIR / "knn_4b.joblib",
-        "MLP":          MODELS_DIR / "mlp_4b.joblib",
+        "RandomForest": MODELS_DIR / f"randomforest{sufijo}.joblib",
+        "XGBoost":      MODELS_DIR / f"xgboost{sufijo}.joblib",
+        "KNN":          MODELS_DIR / f"knn{sufijo}.joblib",
+        "MLP":          MODELS_DIR / f"mlp{sufijo}.joblib",
     }
 
-    scaler_path = MODELS_DIR / "scaler_4b.joblib"
-    le_path     = MODELS_DIR / "label_encoder_4b.joblib"
+    scaler_path = MODELS_DIR / f"scaler{sufijo}.joblib"
+    le_path     = MODELS_DIR / f"label_encoder{sufijo}.joblib"
 
     if not scaler_path.exists():
         print(f"[ERROR] Scaler no encontrado: {scaler_path}")
-        print("        Ejecuta primero: python -m models.external.echevarria2025.retrain_4bands")
+        print(f"        Ejecuta primero el script de reentrenamiento correspondiente")
         return {}
 
     scaler = load(scaler_path)
@@ -95,7 +106,7 @@ def cargar_modelos() -> dict:
             print(f"  · {nombre} no encontrado ({path.name})")
 
     # CNN (TensorFlow)
-    cnn_path = MODELS_DIR / "cnn_4b.keras"
+    cnn_path = MODELS_DIR / f"cnn{sufijo}.keras"
     if cnn_path.exists():
         try:
             import tensorflow as tf
@@ -264,7 +275,10 @@ def evaluar(split: str = "test", n: int | None = None, solo_sargassum: bool = Tr
     if n:
         tiles = random.sample(tiles, min(n, len(tiles)))
 
-    print(f"\n[Evaluación] split={split}  tiles={len(tiles)}  solo_sargazo={solo_sargassum}")
+    # Etiqueta para identificar qué modelos se están evaluando
+    etiqueta = "mados" if "mados" in MODELS_DIR.name else "echevarria"
+    print(f"\n[Evaluación] split={split}  tiles={len(tiles)}  "
+          f"solo_sargazo={solo_sargassum}  modelos={etiqueta}")
 
     # Cargar modelos
     print("\n[Cargando modelos...]")
@@ -314,7 +328,7 @@ def evaluar(split: str = "test", n: int | None = None, solo_sargassum: bool = Tr
 
     # Tabla comparativa final
     print("\n" + "═" * 65)
-    print(f"  COMPARATIVA FINAL — split={split}")
+    print(f"  COMPARATIVA FINAL — split={split}  modelos={etiqueta}")
     print("═" * 65)
     print(f"  {'Modelo':<16} {'Precision':>10} {'Recall':>8} {'F1':>8} {'IoU Sarg':>10}")
     print("  " + "─" * 55)
@@ -323,8 +337,8 @@ def evaluar(split: str = "test", n: int | None = None, solo_sargassum: bool = Tr
               f"{res['f1']:>8.4f} {res['iou_sargazo_global']:>10.4f}")
     print("═" * 65)
 
-    # Guardar JSON
-    out_path = SCRIPT_DIR / f"evaluacion_{split}.json"
+    # Guardar JSON con nombre que identifica los modelos usados
+    out_path = SCRIPT_DIR / f"evaluacion_{split}_{etiqueta}.json"
     with open(out_path, "w") as f:
         json.dump(resultados_globales, f, indent=2)
     print(f"\n[Guardado] {out_path}")
@@ -344,7 +358,21 @@ def main() -> None:
                         help="Número de tiles aleatorios (default: todos con sargazo)")
     parser.add_argument("--todas",  action="store_true",
                         help="Evaluar también tiles sin sargazo")
+    parser.add_argument(
+        "--modelos-dir", type=Path, default=None,
+        help=(
+            "Carpeta con los modelos a evaluar. "
+            "Por defecto: models_4bands/ (modelos originales Echevarría). "
+            "Para los modelos reentrenados con MADOS: models_4bands_mados/"
+        )
+    )
     args = parser.parse_args()
+
+    # Sobreescribir MODELS_DIR si se especifica
+    global MODELS_DIR
+    if args.modelos_dir is not None:
+        MODELS_DIR = args.modelos_dir
+    print(f"[info] Carpeta de modelos: {MODELS_DIR}")
 
     evaluar(
         split          = args.split,

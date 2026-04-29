@@ -27,6 +27,7 @@ datasets/data/sentinel_caribbean/
 
 # ── Modelos preentrenados — demasiado grandes para GitHub ───────────────
 models/external/echevarria2025/models_4bands/
+models/external/echevarria2025/models_4bands_mados/
 models/external/echevarria2025/sargassum_data.csv
 
 # ── Modelos entrenados — demasiado grandes ──────────────────────────
