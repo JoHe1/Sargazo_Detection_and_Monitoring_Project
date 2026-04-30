@@ -143,18 +143,26 @@
   // 3. Renderizar las cajitas de metadatos
   function renderizarMetadata(meta) {
     const container = document.getElementById('meta-container');
+    const pM = meta.num_parameters ? (meta.num_parameters/1e6).toFixed(1)+'M' : 'N/A';
     container.innerHTML = `
       <div class="meta-item"><span class="meta-label">Arquitectura</span><span class="meta-value">${meta.model_class || 'N/A'}</span></div>
+      <div class="meta-item"><span class="meta-label">Loss</span><span class="meta-value">${meta.loss_function || 'N/A'}</span></div>
+      <div class="meta-item"><span class="meta-label">Parámetros</span><span class="meta-value">${pM}</span></div>
       <div class="meta-item"><span class="meta-label">Optimizador</span><span class="meta-value">${meta.optimizer_name || 'N/A'}</span></div>
       <div class="meta-item"><span class="meta-label">Learning Rate</span><span class="meta-value">${meta.lr || 'N/A'}</span></div>
       <div class="meta-item"><span class="meta-label">Batch Size</span><span class="meta-value">${meta.batch_size || 'N/A'}</span></div>
+      <div class="meta-item"><span class="meta-label">Épocas config.</span><span class="meta-value">${meta.epochs || 'N/A'}</span></div>
+      <div class="meta-item"><span class="meta-label">Patience</span><span class="meta-value">${meta.patience || 'N/A'}</span></div>
       <div class="meta-item"><span class="meta-label">Mejor Época</span><span class="meta-value" style="color:#27ae60;">${meta.best_epoch || 'N/A'}</span></div>
+      <div class="meta-item"><span class="meta-label">Val Loss ↓</span><span class="meta-value" style="color:#27ae60;">${meta.best_val_loss || 'N/A'}</span></div>
+      <div class="meta-item"><span class="meta-label">IoU Sargazo</span><span class="meta-value">${meta.iou_sargassum ?? 'N/A'}</span></div>
+      <div class="meta-item"><span class="meta-label">mIoU val</span><span class="meta-value">${meta.mIoU ?? 'N/A'}</span></div>
     `;
   }
 
   // 4. Procesar CSV y dibujar las gráficas
   function procesarYRenderizarGraficas(csvText) {
-    const lineas = csvText.trim().split('\\n');
+    const lineas = csvText.trim().split(/\r?\n/);
     const cabeceras = lineas.shift().split(',');
 
     const epochs = [];
@@ -190,8 +198,8 @@
       data: {
         labels: labels,
         datasets: [
-          { label: 'Train Loss', data: trainData, borderColor: 'rgba(54, 162, 235, 1)', tension: 0.3, pointRadius: 1, borderWidth: 2 },
-          { label: 'Validation Loss', data: valData, borderColor: 'rgba(255, 99, 132, 1)', tension: 0.3, pointRadius: 1, borderWidth: 2 }
+          { label: 'Train Loss', data: trainData, borderColor: 'rgba(54, 162, 235, 1)', tension: 0.3, pointRadius: 1, borderWidth: 2, spanGaps: true },
+          { label: 'Validation Loss', data: valData, borderColor: 'rgba(255, 99, 132, 1)', tension: 0.3, pointRadius: 1, borderWidth: 2, spanGaps: true }
         ]
       },
       options: {
