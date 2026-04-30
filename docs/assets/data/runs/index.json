@@ -1,6 +1,7 @@
 [
     "Segformer_Segmenter_Dice_Loss",
     "Segformer_Segmenter_Tversky_Loss",
+    "Swin_Transformer_Base_Dice_Loss",
     "Swin_Transformer_Tiny_Attention_Dice_Loss",
     "Swin_Transformer_Tiny_Attention_Tversky_Loss",
     "Swin_Transformer_Tiny_Dice_Loss",
