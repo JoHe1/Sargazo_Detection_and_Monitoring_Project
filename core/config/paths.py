@@ -45,6 +45,7 @@ LAND_MASK_DIR     = PREPROCESSORS_DIR / "land_mask"
 # ── Modelos ────────────────────────────────────────────────────────
 MODELS_DIR       = ROOT / "models"
 CHECKPOINTS_DIR  = ROOT / "experiments" / "checkpoints"
+SARGASSUM_READY_SWIR = DATA_ROOT / "Sargassum_Ready_Dataset_SWIR"
 # Estructura dentro de checkpoints/:
 #   {nombre_experimento}/
 #       weights.pth

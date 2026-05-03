@@ -34,6 +34,7 @@ import torch.nn as nn
 from models.architectures.swin_transformer import SwinSegmenter
 from models.architectures.segformer import SegFormerSegmenter
 from models.architectures.swin_transformer_attention import SwinAttSegmenter
+from models.architectures.swin_transformer_attention_swir import SwinAttSegmenterSWIR
 
 
 class ModelRegistry:
@@ -51,6 +52,7 @@ class ModelRegistry:
         "swin_transformer": SwinSegmenter,
         "swin_transformer_attention": SwinAttSegmenter,
         "segformer":        SegFormerSegmenter,
+        "swin_transformer_attention_swir": SwinAttSegmenterSWIR,
     }
 
     # ── API pública ───────────────────────────────────────────────────

@@ -474,6 +474,7 @@ def main() -> None:
         "swin_transformer_base":      "swin_transformer",
         "swin_transformer":           "swin_transformer",
         "swin_transformer_attention": "swin_transformer_attention",
+        "swin_transformer_attention_swir": "swin_transformer_attention_swir",
         "segformer":                  "segformer",
     }
 

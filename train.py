@@ -41,6 +41,7 @@ from core.config.experiment_config import ExperimentConfig
 from core.config.paths import check_paths, SARGASSUM_READY
 from core.utils.metrics import compute_metrics, iou_per_class
 from datasets.sources.mados_dataset import MADOSDataset
+from datasets.sources.mados_dataset_swir import MADOSDatasetSWIR, SARGASSUM_READY_SWIR
 from models.losses.cross_entropy_dice import CrossEntropyDiceLoss
 from models.losses.focal_dice import FocalDiceLoss
 from models.losses.cross_entropy_dice_tversky import CrossEntropyDiceTverskyLoss
@@ -60,14 +61,21 @@ def train(config: ExperimentConfig) -> None:
 
     # ── Datasets ──────────────────────────────────────────────────────
     print("\n[train] Cargando datasets...")
-    train_dataset = MADOSDataset(
-        root_path=SARGASSUM_READY,
+    # Detectar si el modelo necesita 6 canales (SWIR)
+    usa_swir = "swir" in config.model_name.lower()
+    DatasetClass = MADOSDatasetSWIR if usa_swir else MADOSDataset
+    dataset_root = SARGASSUM_READY_SWIR if usa_swir else SARGASSUM_READY
+    if usa_swir:
+        print("[train] Modo SWIR: usando MADOSDatasetSWIR (6 canales)")
+
+    train_dataset = DatasetClass(
+        root_path=dataset_root,
         split="train",
         image_size=config.image_size,
         num_classes=config.num_classes,
     )
-    val_dataset = MADOSDataset(
-        root_path=SARGASSUM_READY,
+    val_dataset = DatasetClass(
+        root_path=dataset_root,
         split="val",
         image_size=config.image_size,
         num_classes=config.num_classes,

@@ -65,21 +65,42 @@ class AttDecoderBlock(nn.Module):
             x = self.conv(x)
             return x
 
-class SwinAttSegmenter(BaseModel):
+class SwinAttSegmenterSWIR(BaseModel):
     """
-    ARQUITECTURA FINAL: Swin Transformer + Attention U-Net
+    ARQUITECTURA FINAL: Swin Transformer + Attention U-Net + 6 canales (RGB + NIR + SWIR1 + SWIR2)
+
+    Extiende SwinAttSegmenter añadiendo los canales SWIR de Sentinel-2
+    (B11=1610nm, B12=2190nm) para mejorar la discriminación de sargazo
+    frente a agua turbia, espuma y nubes bajas.
+
+    Los pesos de los canales SWIR se inicializan con la media de los
+    pesos NIR pre-entrenados, que es la banda más similar espectralmente.
     """
-    def __init__(self, num_classes=16, **kwargs):
-        super(SwinAttSegmenter, self).__init__()
+    def __init__(self, num_classes=16, num_input_channels=6, **kwargs):
+        super(SwinAttSegmenterSWIR, self).__init__()
+        self.num_input_channels = num_input_channels
         # 1. Codificador Swin (Cargando pesos de Microsoft)
         self.backbone = SwinModel.from_pretrained("microsoft/swin-tiny-patch4-window7-224")
         
-        # Adaptar para 4 canales (RGB + NIR)
+        # Adaptar para 6 canales (RGB + NIR + SWIR1 + SWIR2)
         old_conv = self.backbone.embeddings.patch_embeddings.projection
-        new_conv = nn.Conv2d(4, old_conv.out_channels, kernel_size=old_conv.kernel_size, 
-                             stride=old_conv.stride, padding=old_conv.padding)
-        new_conv.weight.data[:, :3, :, :] = old_conv.weight.data
-        new_conv.weight.data[:, 3:4, :, :] = old_conv.weight.data.mean(dim=1, keepdim=True)
+        new_conv = nn.Conv2d(
+            num_input_channels, old_conv.out_channels,
+            kernel_size=old_conv.kernel_size,
+            stride=old_conv.stride,
+            padding=old_conv.padding
+        )
+        with torch.no_grad():
+            # Copiar pesos RGB pre-entrenados
+            new_conv.weight.data[:, :3, :, :] = old_conv.weight.data
+            # Canal NIR: media de los 3 canales RGB (igual que en SwinAttSegmenter)
+            new_conv.weight.data[:, 3:4, :, :] = old_conv.weight.data.mean(dim=1, keepdim=True)
+            # Canales SWIR1 y SWIR2: inicializados con los pesos del canal NIR
+            # El NIR es la banda espectralmente más próxima al SWIR
+            if num_input_channels > 4:
+                new_conv.weight.data[:, 4:5, :, :] = new_conv.weight.data[:, 3:4, :, :]
+            if num_input_channels > 5:
+                new_conv.weight.data[:, 5:6, :, :] = new_conv.weight.data[:, 3:4, :, :]
         self.backbone.embeddings.patch_embeddings.projection = new_conv
 
         # 2. Decodificadores con Atención (U-Net)

@@ -22,6 +22,7 @@ ENV/
 # ── Datos crudos — demasiado grandes para GitHub ────────────────────
 datasets/data/MADOS/
 datasets/data/Sargassum_Ready_Dataset/
+datasets/data/Sargassum_Ready_Dataset_SWIR
 datasets/data/sentinel_downloads/
 datasets/data/sentinel_caribbean/
 
@@ -49,6 +50,7 @@ sargazo_*.png
 estadisticas_globales.png
 /experiments/results
 /datasets/data/Sargassum_Ready_Dataset.zip
+/datasets/data/Sargassum_Ready_Dataset_SWIR.zip
 
 # ── IDEs ─────────────────────────────────────────────────────────────
 .vscode/settings.json
