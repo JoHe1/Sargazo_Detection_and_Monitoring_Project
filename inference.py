@@ -66,7 +66,11 @@ def preprocesar(img_path: str) -> tuple[np.ndarray, torch.Tensor]:
     """
     img = np.load(img_path).astype(np.float32)
     img = np.nan_to_num(img, nan=0.0, posinf=1.0, neginf=0.0)
-    img = img[:, :, [2, 1, 0, 3]]           # (B,G,R,NIR) → (R,G,B,NIR)
+    # Reordenar canales según número disponible (4 canales o 6 con SWIR)
+    if img.shape[2] == 6:
+        img = img[:, :, [2, 1, 0, 3, 4, 5]]  # (B,G,R,NIR,SWIR1,SWIR2) → (R,G,B,NIR,SWIR1,SWIR2)
+    else:
+        img = img[:, :, [2, 1, 0, 3]]         # (B,G,R,NIR) → (R,G,B,NIR)
     if img.max() > 10.0:
         img = img / 10000.0
     img = np.clip(img * 5.0, 0.0, 1.0)

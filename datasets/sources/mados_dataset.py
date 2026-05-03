@@ -21,6 +21,8 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 from core.config.paths import SARGASSUM_READY
 from datasets.base.base_dataset import SargassoBaseDataset
 
+import albumentations as A
+
 CLASES_SARGAZO = {2, 3}
 
 
@@ -79,6 +81,42 @@ class MADOSDataset(SargassoBaseDataset):
         image = self._reorder_channels(image)
         image = self._normalize(image)
         return image
+
+    def _augment(self, image: np.ndarray, mask: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Aplica Data Augmentation severo "al vuelo" usando Albumentations.
+        Solo se aplica si el split es 'train'.
+        """
+        if self.split != "train":
+            return image, mask
+
+        # Inicializar el pipeline solo una vez (podrías pasarlo al __init__, 
+        # pero aquí está bien para no romper tu SargassoBaseDataset)
+        import albumentations as A
+        
+        # 1. Flip Horizontal (50% de probabilidad)
+        # 2. Flip Vertical (50% de probabilidad)
+        # 3. Rotación Aleatoria de 90 grados (50% de probabilidad)
+        # 4. Transposición (intercambiar filas y columnas)
+        # 5. Ligeros cambios de brillo/contraste para independizar al modelo de la iluminación
+        
+        transform = A.Compose([
+            A.HorizontalFlip(p=0.5),
+            A.VerticalFlip(p=0.5),
+            A.RandomRotate90(p=0.5),
+            A.Transpose(p=0.2),
+            A.RandomBrightnessContrast(
+                brightness_limit=0.1,  # Alterar brillo un +/- 10%
+                contrast_limit=0.1,    # Alterar contraste un +/- 10%
+                p=0.3
+            ),
+        ])
+
+        # Albumentations requiere que la imagen sea (H, W, C)
+        # y devuelve un diccionario.
+        augmented = transform(image=image, mask=mask)
+        
+        return augmented["image"], augmented["mask"]
 
     def __len__(self) -> int:
         return len(self.samples)
