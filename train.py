@@ -97,7 +97,7 @@ def train(config: ExperimentConfig) -> None:
     # ── Optimizer y scheduler ────────────────────────────────────────
     optimizer = model.configure_optimizers(config)
     scheduler = ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=8
+        optimizer, mode="min", factor=0.5, patience=12
     )
 
     # ── Loss ──────────────────────────────────────────────────────────

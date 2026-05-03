@@ -47,9 +47,10 @@ class AttDecoderBlock(nn.Module):
             nn.Conv2d(in_channels + skip_channels, out_channels, kernel_size=3, padding=1),
             nn.BatchNorm2d(out_channels),
             nn.ReLU(inplace=True),
+            nn.Dropout2d(p=0.15),
             nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
             nn.BatchNorm2d(out_channels),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
 
     def forward(self, x, skip):
@@ -96,10 +97,11 @@ class SwinAttSegmenter(BaseModel):
             nn.Conv2d(64, 32, kernel_size=3, padding=1),
             nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
+            nn.Dropout2d(p=0.10),
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True), # 224x224
             nn.Conv2d(32, 32, kernel_size=3, padding=1),
             nn.BatchNorm2d(32),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
         )
         
         self.head = nn.Conv2d(32, num_classes, kernel_size=1)
@@ -131,4 +133,5 @@ class SwinAttSegmenter(BaseModel):
     def configure_optimizers(self, config):
         """ Configura el optimizador AdamW usando el objeto config de train.py """
         import torch.optim as optim
-        return optim.AdamW(self.parameters(), lr=config.lr, weight_decay=1e-2)
+        wd = getattr(config, 'weight_decay', 1e-4)
+        return optim.AdamW(self.parameters(), lr=config.lr, weight_decay=wd)
