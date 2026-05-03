@@ -18,23 +18,26 @@ import torch.nn.functional as F
 
 class CrossEntropyDiceLoss(nn.Module):
     """
-    Loss = CrossEntropy(pesos, ignore_index=0) + Dice(clases_críticas)
+    Loss = CrossEntropy(pesos, ignore_index=0) + Dice(solo sargazo)
 
-    Cambio principal: pesos de sargazo 20 → 50.
+    Cambios v3: pesos sargazo 10 → 7, Marine Water 1 → 2,
+    Dice solo en clases 2 y 3, smooth 1.0 → 0.1.
     """
 
     CLASS_WEIGHTS = {
-            0:   0.0,   # Non-annotated (Es mejor poner 0.0 para que el modelo ignore los bordes negros y no aprenda basura)
+            0:   0.0,   # Non-annotated — ignorado completamente
             1:   5.0,   # Marine Debris
-            2:  10.0,   # Dense Sargassum (Un x10 es un empujón fuerte pero no destructivo)
-            3:  10.0,   # Sparse Floating Algae
+            2:   7.0,   # Dense Sargassum — bajado de 10 a 7 para reducir sobredetección
+            3:   7.0,   # Sparse Floating Algae — bajado de 10 a 7
             5:   5.0,   # Ship
             6:   5.0,   # Oil Spill
-            7:   1.0,   # Marine Water
+            7:   2.0,   # Marine Water — subido de 1 a 2 para mejor discriminación agua/sargazo
             10:  1.0,   # Turbid Water
     }
 
-    DICE_CLASSES = [1, 2, 3, 5, 6]
+    # Solo sargazo en Dice — concentra el gradiente en las clases de interés
+    # sin diluirlo entre Marine Debris, Ship y Oil Spill
+    DICE_CLASSES = [2, 3]
 
     def __init__(self, num_classes: int = 16, device: str = "cpu") -> None:
         super().__init__()
@@ -59,7 +62,7 @@ class CrossEntropyDiceLoss(nn.Module):
         targets_ohe     = F.one_hot(targets, num_classes=self.num_classes)
         targets_ohe     = targets_ohe.permute(0, 3, 1, 2).float()
 
-        smooth    = 1.0
+        smooth    = 0.1   # Bajado de 1.0 para Dice más estricto en bordes
         dice_loss = 0.0
 
         for c in self.DICE_CLASSES:
