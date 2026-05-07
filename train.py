@@ -1,30 +1,11 @@
 """
 train.py — Entry point de entrenamiento
 -----------------------------------------
-Entrena el modelo configurado en ExperimentConfig sobre el dataset MADOS.
-
-Uso:
-    # Con configuración por defecto (Swin Transformer, 50 épocas)
-    python train.py
-
-    # Con parámetros personalizados
-    python train.py --model swin_transformer --epochs 30 --lr 1e-4 --batch 4
-
-    # Desde un archivo YAML
-    python train.py --config experiments/configs/swin_mados.yaml
-
-Qué hace este archivo:
-    - Carga la configuración (por defecto o desde YAML/args)
-    - Instancia el modelo desde ModelRegistry
-    - Instancia los datasets MADOSDataset (train y val)
-    - Ejecuta el bucle de entrenamiento con early stopping
-    - Guarda el mejor checkpoint en experiments/runs/{run_name}/
-
-Lo que NO hace este archivo:
-    - No define la arquitectura del modelo (→ models/architectures/)
-    - No define la loss (→ models/losses/)
-    - No define el dataset (→ datasets/sources/)
-    - No define las métricas (→ core/utils/metrics.py)
+Cambios respecto a v2:
+    - EMA (Exponential Moving Average) añadido con alpha=0.999.
+      Mantiene una copia promediada de los pesos durante entrenamiento.
+      El checkpoint guarda los pesos EMA, no los pesos normales.
+      Esto produce modelos más estables y robustos (usado en MariNeXt).
 """
 
 from __future__ import annotations
@@ -48,20 +29,67 @@ from models.losses.cross_entropy_dice_tversky import CrossEntropyDiceTverskyLoss
 from models.registry import ModelRegistry
 
 
-def train(config: ExperimentConfig) -> None:
-    """
-    Bucle de entrenamiento completo.
+# ══════════════════════════════════════════════════════════════════════
+# EMA — Exponential Moving Average de pesos
+# ══════════════════════════════════════════════════════════════════════
 
-    Args:
-        config: configuración del experimento con todos los hiperparámetros
+class EMA:
     """
+    Mantiene una copia con media exponencial de los parámetros del modelo.
+
+    Uso en MariNeXt (Kikaki et al., 2024): alpha=0.999
+    θ_ema ← alpha * θ_ema + (1 - alpha) * θ
+
+    El modelo EMA se usa para validación y para guardar el checkpoint.
+    El modelo normal se sigue usando para el forward/backward de train.
+    """
+
+    def __init__(self, model: torch.nn.Module, alpha: float = 0.999) -> None:
+        self.alpha  = alpha
+        # Copia profunda de los pesos iniciales
+        self.shadow = {
+            name: param.data.clone()
+            for name, param in model.named_parameters()
+            if param.requires_grad
+        }
+
+    def update(self, model: torch.nn.Module) -> None:
+        """Actualiza los pesos shadow tras cada paso de optimización."""
+        for name, param in model.named_parameters():
+            if param.requires_grad and name in self.shadow:
+                self.shadow[name] = (
+                    self.alpha * self.shadow[name]
+                    + (1.0 - self.alpha) * param.data
+                )
+
+    def apply(self, model: torch.nn.Module) -> None:
+        """Copia los pesos EMA al modelo (para validación/inferencia)."""
+        for name, param in model.named_parameters():
+            if param.requires_grad and name in self.shadow:
+                param.data.copy_(self.shadow[name])
+
+    def restore(self, model: torch.nn.Module, backup: dict) -> None:
+        """Restaura los pesos originales al modelo tras validación."""
+        for name, param in model.named_parameters():
+            if param.requires_grad and name in backup:
+                param.data.copy_(backup[name])
+
+    def backup_params(self, model: torch.nn.Module) -> dict:
+        """Hace backup de los pesos actuales antes de aplicar EMA."""
+        return {
+            name: param.data.clone()
+            for name, param in model.named_parameters()
+            if param.requires_grad
+        }
+
+
+def train(config: ExperimentConfig) -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     config.print_summary()
     print(f"[train] Dispositivo: {device.upper()}")
 
     # ── Datasets ──────────────────────────────────────────────────────
     print("\n[train] Cargando datasets...")
-    # Detectar si el modelo necesita 6 canales (SWIR)
     usa_swir = "swir" in config.model_name.lower()
     DatasetClass = MADOSDatasetSWIR if usa_swir else MADOSDataset
     dataset_root = SARGASSUM_READY_SWIR if usa_swir else SARGASSUM_READY
@@ -102,6 +130,10 @@ def train(config: ExperimentConfig) -> None:
     info = model.get_info()
     print(f"[train] Parámetros entrenables: {info['num_parameters_M']}M")
 
+    # ── EMA ───────────────────────────────────────────────────────────
+    ema = EMA(model, alpha=0.999)
+    print("[train] EMA activado (alpha=0.999)")
+
     # ── Optimizer y scheduler ────────────────────────────────────────
     optimizer = model.configure_optimizers(config)
     scheduler = ReduceLROnPlateau(
@@ -110,23 +142,24 @@ def train(config: ExperimentConfig) -> None:
 
     # ── Loss ──────────────────────────────────────────────────────────
     # criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
-    criterion = FocalDiceLoss(num_classes=config.num_classes,gamma=2.0,device=device,).to(device)
+    criterion = FocalDiceLoss(num_classes=config.num_classes, gamma=2.0, device=device).to(device)
     # criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
 
     loss_name = criterion.__class__.__name__
 
     # ── Preparar directorio de checkpoint ────────────────────────────
-    ckpt_dir  = Path(config.checkpoint_dir)
+    ckpt_dir = Path(config.checkpoint_dir)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
-    csv_path  = ckpt_dir / "metrics.csv"
+    csv_path = ckpt_dir / "metrics.csv"
 
-    # Cabecera del CSV
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([
             "epoch", "train_loss", "val_loss",
-            "iou_sargassum_denso", "iou_algas_sparse", "iou_sargassum_combinado", "mIoU", "lr"
+            "iou_sargassum_denso", "iou_algas_sparse",
+            "iou_sargassum_combinado", "mIoU", "lr"
         ])
+
     # ── Bucle de entrenamiento ────────────────────────────────────────
     mejor_val_loss     = float("inf")
     epocas_sin_mejorar = 0
@@ -151,10 +184,15 @@ def train(config: ExperimentConfig) -> None:
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
+            # Actualizar EMA tras cada paso
+            ema.update(model)
             train_loss += loss.item()
 
-        # — Validación —
+        # — Validación con pesos EMA —
+        backup = ema.backup_params(model)  # guardar pesos actuales
+        ema.apply(model)                   # aplicar pesos EMA al modelo
         model.eval()
+
         val_loss  = 0.0
         iou_acum  = np.zeros(config.num_classes)
         iou_count = np.zeros(config.num_classes)
@@ -175,17 +213,20 @@ def train(config: ExperimentConfig) -> None:
                         iou_acum[c]  += iou
                         iou_count[c] += 1
 
+        # Restaurar pesos normales para continuar entrenando
+        ema.restore(model, backup)
+
         t_loss = train_loss / len(train_loader)
         v_loss = val_loss   / len(val_loader)
 
-        iou_medias  = np.where(iou_count > 0, iou_acum / iou_count, np.nan)
-        mean_iou    = float(np.nanmean(iou_medias))
-        iou_sarg    = float(iou_medias[2]) if not np.isnan(iou_medias[2]) else float("nan")
-        iou_algas   = float(iou_medias[3]) if not np.isnan(iou_medias[3]) else float("nan")
+        iou_medias    = np.where(iou_count > 0, iou_acum / iou_count, np.nan)
+        mean_iou      = float(np.nanmean(iou_medias))
+        iou_sarg      = float(iou_medias[2]) if not np.isnan(iou_medias[2]) else float("nan")
+        iou_algas     = float(iou_medias[3]) if not np.isnan(iou_medias[3]) else float("nan")
         sarg_vals     = [v for v in [iou_sarg, iou_algas] if not np.isnan(v)]
         iou_sargassum = float(np.mean(sarg_vals)) if sarg_vals else float("nan")
         iou_comb_str  = f"{iou_sargassum:.4f}" if not np.isnan(iou_sargassum) else "  n/a  "
-        lr_actual   = optimizer.param_groups[0]["lr"]
+        lr_actual     = optimizer.param_groups[0]["lr"]
 
         scheduler.step(v_loss)
         lr_nuevo = optimizer.param_groups[0]["lr"]
@@ -196,26 +237,27 @@ def train(config: ExperimentConfig) -> None:
         iou_s_str = f"{iou_sarg:.4f}"  if not np.isnan(iou_sarg)  else "  n/a  "
         iou_a_str = f"{iou_algas:.4f}" if not np.isnan(iou_algas) else "  n/a  "
         print(f"{epoch:>6}  {t_loss:>11.4f}  {v_loss:>10.4f}  "
-            f"{iou_s_str:>10}  {iou_a_str:>10}  {iou_comb_str:>12}  {mean_iou:>8.4f}{lr_str}")
+              f"{iou_s_str:>10}  {iou_a_str:>10}  {iou_comb_str:>12}  {mean_iou:>8.4f}{lr_str}")
 
-
-        # — Guardar métricas en CSV —
         with open(csv_path, "a", newline="") as f:
             writer = csv.writer(f)
             writer.writerow([
                 epoch,
                 round(t_loss, 5), round(v_loss, 5),
-                round(iou_sarg,       5) if not np.isnan(iou_sarg)       else "",
-                round(iou_algas,      5) if not np.isnan(iou_algas)      else "",
-                round(iou_sargassum,  5) if not np.isnan(iou_sargassum)  else "",
+                round(iou_sarg,       5) if not np.isnan(iou_sarg)      else "",
+                round(iou_algas,      5) if not np.isnan(iou_algas)     else "",
+                round(iou_sargassum,  5) if not np.isnan(iou_sargassum) else "",
                 round(mean_iou, 5),
                 round(lr_actual, 8),
             ])
 
-        # — Early stopping y guardado del mejor checkpoint —
+        # — Early stopping: guarda checkpoint con pesos EMA —
         if v_loss < mejor_val_loss:
             mejor_val_loss     = v_loss
             epocas_sin_mejorar = 0
+            # Aplicar EMA antes de guardar
+            backup_save = ema.backup_params(model)
+            ema.apply(model)
             model.save(
                 checkpoint_dir=ckpt_dir,
                 metadata={
@@ -226,9 +268,11 @@ def train(config: ExperimentConfig) -> None:
                     "iou_sargassum": round(iou_sarg,  5) if not np.isnan(iou_sarg)  else None,
                     "iou_algas":     round(iou_algas, 5) if not np.isnan(iou_algas) else None,
                     "mIoU":          round(mean_iou, 5),
+                    "ema_alpha":     0.999,
                 }
             )
-            print(f"  ✔ Mejora → checkpoint guardado (val_loss={mejor_val_loss:.4f})")
+            ema.restore(model, backup_save)
+            print(f"  ✔ Mejora → checkpoint EMA guardado (val_loss={mejor_val_loss:.4f})")
         else:
             epocas_sin_mejorar += 1
             print(f"  · Sin mejora ({epocas_sin_mejorar}/{config.patience})")
@@ -248,21 +292,17 @@ def train(config: ExperimentConfig) -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Entrenamiento de modelos de segmentación")
-    parser.add_argument("--config",  type=str, default=None,
-                        help="Ruta a un archivo YAML de configuración")
-    parser.add_argument("--model",   type=str, default="swin_transformer",
-                        help="Nombre del modelo (default: swin_transformer)")
-    parser.add_argument("--dataset", type=str, default="mados",
-                        help="Nombre del dataset (default: mados)")
-    parser.add_argument("--epochs",  type=int, default=50)
-    parser.add_argument("--lr",      type=float, default=5e-5)
-    parser.add_argument("--batch",   type=int, default=8)
-    parser.add_argument("--patience",type=int, default=8)
+    parser.add_argument("--config",   type=str,   default=None)
+    parser.add_argument("--model",    type=str,   default="swin_transformer")
+    parser.add_argument("--dataset",  type=str,   default="mados")
+    parser.add_argument("--epochs",   type=int,   default=50)
+    parser.add_argument("--lr",       type=float, default=5e-5)
+    parser.add_argument("--batch",    type=int,   default=8)
+    parser.add_argument("--patience", type=int,   default=8)
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-    # check_paths()
     args = parse_args()
 
     if args.config:
