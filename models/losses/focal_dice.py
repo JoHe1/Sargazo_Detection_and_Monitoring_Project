@@ -40,17 +40,12 @@ class FocalDiceLoss(nn.Module):
     """
 
     CLASS_WEIGHTS = {
-        0:  0.5,    # Non-annotated (ignorada por ignore_index, pero se define)
-        1:  10.0,   # Marine Debris
-        2:  100.0,  # Dense Sargassum
-        3:  100.0,  # Sparse Floating Algae
-        5:  10.0,   # Ship
-        6:  10.0,   # Oil Spill
-        7:  1.0,    # Marine Water
-        10: 1.0,    # Turbid Water
+        2: 15.0,   # no 100
+        3: 15.0,
+        7: 2.0,    # mantener discriminación agua
     }
 
-    DICE_CLASSES = [1, 2, 3, 5, 6]
+    DICE_CLASSES = [2, 3]
 
     def __init__(
         self,
@@ -126,7 +121,7 @@ class FocalDiceLoss(nn.Module):
         targets_ohe     = F.one_hot(targets, num_classes=self.num_classes)
         targets_ohe     = targets_ohe.permute(0, 3, 1, 2).float()
 
-        smooth    = 1.0
+        smooth    = 0.1
         dice_loss = 0.0
 
         for c in self.DICE_CLASSES:

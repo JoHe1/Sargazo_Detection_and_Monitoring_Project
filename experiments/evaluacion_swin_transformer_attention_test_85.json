@@ -1,0 +1,20 @@
+{
+  "Swin Transformer Attention": {
+    "precision": 0.3339,
+    "recall": 0.7948,
+    "f1": 0.4702,
+    "iou_sargazo_global": 0.3074,
+    "iou_sargazo_medio": 0.2384,
+    "tp_total": 15437,
+    "fp_total": 30796,
+    "fn_total": 3985,
+    "tiles_evaluados": 45,
+    "config": {
+      "umbral": 0.85,
+      "umbral_fai": -0.01,
+      "min_pixels": 50,
+      "sigma": 1.0,
+      "split": "test"
+    }
+  }
+}
