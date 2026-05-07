@@ -131,8 +131,8 @@ def train(config: ExperimentConfig) -> None:
     print(f"[train] Parámetros entrenables: {info['num_parameters_M']}M")
 
     # ── EMA ───────────────────────────────────────────────────────────
-    ema = EMA(model, alpha=0.999)
-    print("[train] EMA activado (alpha=0.999)")
+    ema = EMA(model, alpha=0.99)
+    print("[train] EMA activado (alpha=0.99)")
 
     # ── Optimizer y scheduler ────────────────────────────────────────
     optimizer = model.configure_optimizers(config)
@@ -161,7 +161,7 @@ def train(config: ExperimentConfig) -> None:
         ])
 
     # ── Bucle de entrenamiento ────────────────────────────────────────
-    mejor_val_loss     = float("inf")
+    mejor_iou_sarg     = -1.0   # criterio: IoU sargazo combinado (clases 2+3)
     epocas_sin_mejorar = 0
 
     print(f"\n[train] Iniciando entrenamiento "
@@ -251,9 +251,12 @@ def train(config: ExperimentConfig) -> None:
                 round(lr_actual, 8),
             ])
 
-        # — Early stopping: guarda checkpoint con pesos EMA —
-        if v_loss < mejor_val_loss:
-            mejor_val_loss     = v_loss
+        # — Early stopping por IoU sargazo combinado —
+        # Si iou_sargassum es nan (no hay sargazo en val), usamos 0.0
+        iou_sarg_criterio = iou_sargassum if not np.isnan(iou_sargassum) else 0.0
+
+        if iou_sarg_criterio > mejor_iou_sarg:
+            mejor_iou_sarg     = iou_sarg_criterio
             epocas_sin_mejorar = 0
             # Aplicar EMA antes de guardar
             backup_save = ema.backup_params(model)
@@ -264,15 +267,16 @@ def train(config: ExperimentConfig) -> None:
                     **config.to_dict(),
                     "loss_function": loss_name,
                     "best_epoch":    epoch,
-                    "best_val_loss": round(mejor_val_loss, 5),
+                    "best_val_loss": round(v_loss, 5),
                     "iou_sargassum": round(iou_sarg,  5) if not np.isnan(iou_sarg)  else None,
                     "iou_algas":     round(iou_algas, 5) if not np.isnan(iou_algas) else None,
+                    "iou_sargassum_combinado": round(iou_sarg_criterio, 5),
                     "mIoU":          round(mean_iou, 5),
-                    "ema_alpha":     0.999,
+                    "ema_alpha":     0.99,
                 }
             )
             ema.restore(model, backup_save)
-            print(f"  ✔ Mejora → checkpoint EMA guardado (val_loss={mejor_val_loss:.4f})")
+            print(f"  ✔ Mejora IoU sargazo={mejor_iou_sarg:.4f} → checkpoint EMA guardado")
         else:
             epocas_sin_mejorar += 1
             print(f"  · Sin mejora ({epocas_sin_mejorar}/{config.patience})")
@@ -281,9 +285,9 @@ def train(config: ExperimentConfig) -> None:
                 break
 
     print(f"\n[train] Entrenamiento finalizado.")
-    print(f"  Mejor val_loss : {mejor_val_loss:.4f}")
-    print(f"  Checkpoint     : {ckpt_dir}")
-    print(f"  Métricas CSV   : {csv_path}")
+    print(f"  Mejor IoU sargazo : {mejor_iou_sarg:.4f}")
+    print(f"  Checkpoint        : {ckpt_dir}")
+    print(f"  Métricas CSV      : {csv_path}")
 
 
 # ══════════════════════════════════════════════════════════════════════
