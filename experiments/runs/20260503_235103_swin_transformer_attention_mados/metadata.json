@@ -25,5 +25,6 @@
   "best_val_loss": 1.47057,
   "iou_sargassum": 0.00085,
   "iou_algas": 0.00262,
-  "mIoU": 0.00934
+  "mIoU": 0.00934,
+  "description" : "Swin Transformer con atención antes de la implementación del VSCP y EMA, para comparar la mejora que aportan estas técnicas. Se mantiene la misma configuración de hiperparámetros que en el modelo base, para una comparación directa entre ambas losses en el TFG."
 }
