@@ -1,11 +1,15 @@
 """
 train.py — Entry point de entrenamiento
 -----------------------------------------
-Cambios respecto a v3:
-    - EMA eliminado — con solo 33 tiles sargazo en val suaviza hacia agua.
-    - Early stopping por val_loss — más estable con pocos tiles sargazo.
-    - FocalDice activo — mejor loss (F1=0.602 experimento 1).
-    - VSCP activo en dataset — único cambio respecto a experimento 1.
+Cambios v5:
+    - EMA reactivado con alpha=0.995 — punto medio entre 0.99 (recall alto
+      pero inestable) y 0.999 (precision alta pero recall bajo). Objetivo:
+      equilibrar precision y recall en el modelo final.
+    - Early stopping por val_loss — criterio estable con pocos tiles sargazo en val.
+    - Validacion con pesos EMA, checkpoint guarda pesos EMA.
+    - Metadata completa: loss, gamma, ema_alpha, vscp, sargassum_weight.
+    - FocalDice activo — mejor loss probada (F1=0.617 umbral 0.70).
+    - VSCP a nivel de batch via collate_fn en MADOSDataset.
 """
 
 from __future__ import annotations
@@ -29,6 +33,55 @@ from models.losses.cross_entropy_dice_tversky import CrossEntropyDiceTverskyLoss
 from models.registry import ModelRegistry
 
 
+# ══════════════════════════════════════════════════════════════════════
+# EMA
+# ══════════════════════════════════════════════════════════════════════
+
+class EMA:
+    """
+    Exponential Moving Average de pesos del modelo.
+
+    alpha=0.995: punto medio entre 0.99 (recall alto) y 0.999 (precision alta).
+    El objetivo es equilibrar precision y recall evitando el comportamiento
+    ultraconservador de alpha=0.999 con datos escasos de sargazo.
+
+    theta_ema <- alpha * theta_ema + (1 - alpha) * theta
+    """
+
+    def __init__(self, model: torch.nn.Module, alpha: float = 0.995) -> None:
+        self.alpha  = alpha
+        self.shadow = {
+            name: param.data.clone()
+            for name, param in model.named_parameters()
+            if param.requires_grad
+        }
+
+    def update(self, model: torch.nn.Module) -> None:
+        for name, param in model.named_parameters():
+            if param.requires_grad and name in self.shadow:
+                self.shadow[name] = (
+                    self.alpha * self.shadow[name]
+                    + (1.0 - self.alpha) * param.data
+                )
+
+    def apply(self, model: torch.nn.Module) -> None:
+        for name, param in model.named_parameters():
+            if param.requires_grad and name in self.shadow:
+                param.data.copy_(self.shadow[name])
+
+    def restore(self, model: torch.nn.Module, backup: dict) -> None:
+        for name, param in model.named_parameters():
+            if param.requires_grad and name in backup:
+                param.data.copy_(backup[name])
+
+    def backup_params(self, model: torch.nn.Module) -> dict:
+        return {
+            name: param.data.clone()
+            for name, param in model.named_parameters()
+            if param.requires_grad
+        }
+
+
 def train(config: ExperimentConfig) -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     config.print_summary()
@@ -39,51 +92,51 @@ def train(config: ExperimentConfig) -> None:
     usa_swir = "swir" in config.model_name.lower()
     DatasetClass = MADOSDatasetSWIR if usa_swir else MADOSDataset
     dataset_root = SARGASSUM_READY_SWIR if usa_swir else SARGASSUM_READY
-    if usa_swir:
-        print("[train] Modo SWIR: usando MADOSDatasetSWIR (6 canales)")
 
     train_dataset = DatasetClass(
-        root_path=dataset_root,
-        split="train",
-        image_size=config.image_size,
-        num_classes=config.num_classes,
+        root_path=dataset_root, split="train",
+        image_size=config.image_size, num_classes=config.num_classes,
     )
     val_dataset = DatasetClass(
-        root_path=dataset_root,
-        split="val",
-        image_size=config.image_size,
-        num_classes=config.num_classes,
+        root_path=dataset_root, split="val",
+        image_size=config.image_size, num_classes=config.num_classes,
     )
 
     if len(train_dataset) == 0:
         print("[ERROR] No se encontraron datos de entrenamiento.")
-        print("        ¿Has ejecutado MADOSPreprocessor?")
         return
 
+    # Guardar sargassum_weight para metadata
+    SARGASSUM_WEIGHT = 10.0
+
     train_loader = train_dataset.get_loader(
-        batch_size=config.batch_size, num_workers=config.num_workers
+        batch_size=config.batch_size,
+        num_workers=config.num_workers,
+        sargassum_weight=SARGASSUM_WEIGHT,
     )
     val_loader = val_dataset.get_loader(
-        batch_size=config.batch_size, num_workers=config.num_workers
+        batch_size=config.batch_size,
+        num_workers=config.num_workers,
     )
 
     # ── Modelo ────────────────────────────────────────────────────────
     print(f"\n[train] Construyendo modelo: {config.model_name}")
-    model = ModelRegistry.build(
-        config.model_name,
-        num_classes=config.num_classes,
-    ).to(device)
-    info = model.get_info()
-    print(f"[train] Parámetros entrenables: {info['num_parameters_M']}M")
+    model = ModelRegistry.build(config.model_name, num_classes=config.num_classes).to(device)
+    info  = model.get_info()
+    print(f"[train] Parametros entrenables: {info['num_parameters_M']}M")
+
+    # ── EMA ───────────────────────────────────────────────────────────
+    EMA_ALPHA = 0.995
+    ema = EMA(model, alpha=EMA_ALPHA)
+    print(f"[train] EMA activado (alpha={EMA_ALPHA})")
 
     # ── Optimizer y scheduler ────────────────────────────────────────
     optimizer = model.configure_optimizers(config)
-    scheduler = ReduceLROnPlateau(
-        optimizer, mode="min", factor=0.5, patience=12
-    )
+    scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=12)
 
     # ── Loss ──────────────────────────────────────────────────────────
-    criterion = FocalDiceLoss(num_classes=config.num_classes, gamma=2.0, device=device).to(device)
+    FOCAL_GAMMA = 2.0
+    criterion = FocalDiceLoss(num_classes=config.num_classes, gamma=FOCAL_GAMMA, device=device).to(device)
     # criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
     # criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
 
@@ -107,8 +160,8 @@ def train(config: ExperimentConfig) -> None:
     epocas_sin_mejorar = 0
 
     print(f"\n[train] Iniciando entrenamiento "
-          f"({config.num_classes} clases | {config.image_size}×{config.image_size})")
-    print(f"{'Época':>6}  {'Train Loss':>11}  {'Val Loss':>10}  "
+          f"({config.num_classes} clases | {config.image_size}x{config.image_size})")
+    print(f"{'Epoca':>6}  {'Train Loss':>11}  {'Val Loss':>10}  "
           f"{'IoU Sarg.':>10}  {'IoU Algas':>10}  {'mIoU':>8}")
     print("─" * 65)
 
@@ -126,10 +179,14 @@ def train(config: ExperimentConfig) -> None:
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
+            ema.update(model)
             train_loss += loss.item()
 
-        # — Validación —
+        # — Validacion con pesos EMA —
+        backup = ema.backup_params(model)
+        ema.apply(model)
         model.eval()
+
         val_loss  = 0.0
         iou_acum  = np.zeros(config.num_classes)
         iou_count = np.zeros(config.num_classes)
@@ -144,11 +201,12 @@ def train(config: ExperimentConfig) -> None:
 
                 preds = outputs.argmax(dim=1)
                 ious  = iou_per_class(preds, masks, config.num_classes)
-
                 for c, iou in enumerate(ious):
                     if not np.isnan(iou):
                         iou_acum[c]  += iou
                         iou_count[c] += 1
+
+        ema.restore(model, backup)
 
         t_loss = train_loss / len(train_loader)
         v_loss = val_loss   / len(val_loader)
@@ -164,9 +222,7 @@ def train(config: ExperimentConfig) -> None:
 
         scheduler.step(v_loss)
         lr_nuevo = optimizer.param_groups[0]["lr"]
-        lr_str   = f"  [LR: {lr_actual:.2e}" + (
-            f" → {lr_nuevo:.2e}]" if lr_nuevo != lr_actual else "]"
-        )
+        lr_str   = f"  [LR: {lr_actual:.2e}" + (f" -> {lr_nuevo:.2e}]" if lr_nuevo != lr_actual else "]")
 
         iou_s_str = f"{iou_sarg:.4f}"  if not np.isnan(iou_sarg)  else "  n/a  "
         iou_a_str = f"{iou_algas:.4f}" if not np.isnan(iou_algas) else "  n/a  "
@@ -185,35 +241,49 @@ def train(config: ExperimentConfig) -> None:
                 round(lr_actual, 8),
             ])
 
-        # — Early stopping por val_loss —
+        # — Early stopping por val_loss, checkpoint con pesos EMA —
         if v_loss < mejor_val_loss:
             mejor_val_loss     = v_loss
             epocas_sin_mejorar = 0
+            backup_save = ema.backup_params(model)
+            ema.apply(model)
             model.save(
                 checkpoint_dir=ckpt_dir,
                 metadata={
                     **config.to_dict(),
-                    "loss_function": loss_name,
-                    "best_epoch":    epoch,
-                    "best_val_loss": round(mejor_val_loss, 5),
-                    "iou_sargassum": round(iou_sarg,  5) if not np.isnan(iou_sarg)  else None,
-                    "iou_algas":     round(iou_algas, 5) if not np.isnan(iou_algas) else None,
+                    # Loss
+                    "loss_function":        loss_name,
+                    "focal_gamma":          FOCAL_GAMMA,
+                    # EMA
+                    "ema_alpha":            EMA_ALPHA,
+                    # VSCP
+                    "vscp":                 True,
+                    "vscp_mode":            "batch_level",
+                    # WeightedSampler
+                    "sargassum_weight":     SARGASSUM_WEIGHT,
+                    # Mejor epoch
+                    "best_epoch":           epoch,
+                    "best_val_loss":        round(mejor_val_loss, 5),
+                    # Metricas val
+                    "iou_sargassum":        round(iou_sarg,  5) if not np.isnan(iou_sarg)  else None,
+                    "iou_algas":            round(iou_algas, 5) if not np.isnan(iou_algas) else None,
                     "iou_sargassum_combinado": round(iou_sargassum, 5) if not np.isnan(iou_sargassum) else None,
-                    "mIoU":          round(mean_iou, 5),
+                    "mIoU":                 round(mean_iou, 5),
                 }
             )
-            print(f"  ✔ Mejora → checkpoint guardado (val_loss={mejor_val_loss:.4f})")
+            ema.restore(model, backup_save)
+            print(f"  Mejora -> checkpoint EMA guardado (val_loss={mejor_val_loss:.4f})")
         else:
             epocas_sin_mejorar += 1
-            print(f"  · Sin mejora ({epocas_sin_mejorar}/{config.patience})")
+            print(f"  Sin mejora ({epocas_sin_mejorar}/{config.patience})")
             if epocas_sin_mejorar >= config.patience:
-                print(f"\n[train] Early stopping tras {epoch} épocas.")
+                print(f"\n[train] Early stopping tras {epoch} epocas.")
                 break
 
     print(f"\n[train] Entrenamiento finalizado.")
     print(f"  Mejor val_loss : {mejor_val_loss:.4f}")
     print(f"  Checkpoint     : {ckpt_dir}")
-    print(f"  Métricas CSV   : {csv_path}")
+    print(f"  Metricas CSV   : {csv_path}")
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -221,7 +291,7 @@ def train(config: ExperimentConfig) -> None:
 # ══════════════════════════════════════════════════════════════════════
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Entrenamiento de modelos de segmentación")
+    parser = argparse.ArgumentParser(description="Entrenamiento de modelos de segmentacion")
     parser.add_argument("--config",   type=str,   default=None)
     parser.add_argument("--model",    type=str,   default="swin_transformer")
     parser.add_argument("--dataset",  type=str,   default="mados")
@@ -234,7 +304,6 @@ def parse_args() -> argparse.Namespace:
 
 if __name__ == "__main__":
     args = parse_args()
-
     if args.config:
         config = ExperimentConfig.from_yaml(args.config)
     else:
@@ -246,5 +315,4 @@ if __name__ == "__main__":
             batch_size   = args.batch,
             patience     = args.patience,
         )
-
     train(config)
