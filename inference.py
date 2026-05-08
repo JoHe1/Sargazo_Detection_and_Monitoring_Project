@@ -460,7 +460,8 @@ def main() -> None:
     parser.add_argument("--todas",      action="store_true")
     parser.add_argument("--umbral",     type=float, default=0.35)
     parser.add_argument("--sigma",      type=float, default=1.0)
-    parser.add_argument("--min-pixels", type=int,   default=50)
+    parser.add_argument("--min-pixels", type=int,   default=0,
+                        help="Componentes minimos para limpieza (0=desactivado, antes 50)")
     parser.add_argument("--sin-tta",    action="store_true")
     parser.add_argument("--umbral-fai", type=float, default=0.005)
     parser.add_argument("--dataset",    type=str,   default=str(SARGASSUM_READY))
