@@ -50,7 +50,7 @@ class FocalDiceLoss(nn.Module):
     def __init__(
         self,
         num_classes: int = 16,
-        gamma: float = 2.0,
+        gamma: float = 1.5,
         device: str = "cpu",
     ) -> None:
         super().__init__()
