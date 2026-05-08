@@ -2,27 +2,27 @@
   "_experimento": {
     "descripcion": "sin descripción",
     "modelo": "Swin Transformer Attention",
-    "checkpoint": "experiments\\runs\\20260508_184742_swin_transformer_attention_mados",
+    "checkpoint": "experiments\\runs\\20260508_184742_swin_transformer_attention_mados (BEST)",
     "run_name": "20260508_184742",
     "loss_function": "FocalDiceLoss",
     "best_epoch": 45,
     "umbral": 0.95,
     "umbral_fai": -0.01,
     "sigma": 1.0,
-    "min_pixels": 50,
+    "min_pixels": 0,
     "split": "test",
     "tta": true,
-    "timestamp": "2026-05-08 21:04:02"
+    "timestamp": "2026-05-08 23:48:34"
   },
   "Swin Transformer Attention": {
-    "precision": 0.6682,
-    "recall": 0.6098,
-    "f1": 0.6377,
-    "iou_sargazo_global": 0.4681,
-    "iou_sargazo_medio": 0.2832,
-    "tp_total": 11844,
-    "fp_total": 5882,
-    "fn_total": 7578,
+    "precision": 0.6321,
+    "recall": 0.6692,
+    "f1": 0.6502,
+    "iou_sargazo_global": 0.4817,
+    "iou_sargazo_medio": 0.356,
+    "tp_total": 12998,
+    "fp_total": 7564,
+    "fn_total": 6424,
     "tiles_evaluados": 45
   }
 }
