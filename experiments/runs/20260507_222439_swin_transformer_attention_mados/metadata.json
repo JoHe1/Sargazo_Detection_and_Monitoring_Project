@@ -27,5 +27,5 @@
   "iou_algas": 0.00229,
   "mIoU": 0.0092,
   "ema_alpha": 0.999,
-  "description": "Swin Transformer con atención entrenado despues de agregar ema y vscp, para comprobar el aumento con respecto al anterior"
+  "description": "Swin Transformer con atención entrenado despues de agregar ema y vscp, para comprobar el aumento con respecto al anterior, es el segundo mejor"
 }
