@@ -108,38 +108,59 @@ def inferir(
     """
     Inferencia con TTA opcional (Test-Time Augmentation).
 
-    TTA promedia las probabilidades sobre 4 variantes:
-        original, flip-H, flip-V, flip-H+V.
-    Reduce el efecto granular en bordes de patch y mejora la coherencia espacial.
+    TTA con 8 transformaciones + majority voting por pixel,
+    igual que MariNeXt (Kikaki et al., 2024):
+        rot0/90/180/270 x (sin flip / con flip-H) = 8 variantes
+
+    Majority voting: cada pixel toma la clase predicha mas veces
+    entre las 8 variantes. prob_sargassum usa promedio softmax
+    para el umbral continuo.
 
     Returns:
-        clase_predicha : (H, W) int
-        prob_sargassum : (H, W) float  — P(cl.2) + P(cl.3)
+        clase_predicha : (H, W) int   -- majority voting
+        prob_sargassum : (H, W) float -- promedio P(cl.2) + P(cl.3)
         prob_todas     : (NUM_CLASSES, H, W) float
     """
     if not usar_tta:
         probs_np = inferir_single(model, tensor)
-    else:
-        acum  = np.zeros((NUM_CLASSES, 224, 224), dtype=np.float32)
-        flips = [
-            (False, False),
-            (True,  False),
-            (False, True),
-            (True,  True),
-        ]
-        for flip_h, flip_v in flips:
-            t = tensor.clone()
-            if flip_h: t = torch.flip(t, dims=[3])
-            if flip_v: t = torch.flip(t, dims=[2])
-            probs = inferir_single(model, t)
-            if flip_h: probs = probs[:, :, ::-1].copy()
-            if flip_v: probs = probs[:, ::-1, :].copy()
-            acum += probs
-        probs_np = acum / len(flips)
+        clase_predicha = probs_np.argmax(axis=0).astype(np.int32)
+        prob_sargassum = probs_np[2] + probs_np[3]
+        return clase_predicha, prob_sargassum, probs_np
 
-    clase_predicha = probs_np.argmax(axis=0).astype(np.int32)
-    prob_sargassum = probs_np[2] + probs_np[3]
-    return clase_predicha, prob_sargassum, probs_np
+    # 8 transformaciones: rot0/90/180/270 x (sin flip / con flip-H)
+    transformaciones = [
+        (0, False), (0, True),
+        (1, False), (1, True),
+        (2, False), (2, True),
+        (3, False), (3, True),
+    ]
+
+    acum_probs = np.zeros((NUM_CLASSES, 224, 224), dtype=np.float32)
+    votos      = np.zeros((NUM_CLASSES, 224, 224), dtype=np.int32)
+
+    for num_rot, flip_h in transformaciones:
+        t = tensor.clone()
+        if flip_h:
+            t = torch.flip(t, dims=[3])
+        if num_rot > 0:
+            t = torch.rot90(t, k=num_rot, dims=[2, 3])
+
+        probs = inferir_single(model, t)
+
+        if num_rot > 0:
+            probs = np.rot90(probs, k=-num_rot, axes=(1, 2)).copy()
+        if flip_h:
+            probs = probs[:, :, ::-1].copy()
+
+        acum_probs += probs
+        pred_clase = probs.argmax(axis=0)
+        for c in range(NUM_CLASSES):
+            votos[c] += (pred_clase == c).astype(np.int32)
+
+    clase_predicha = votos.argmax(axis=0).astype(np.int32)
+    prob_todas     = acum_probs / len(transformaciones)
+    prob_sargassum = prob_todas[2] + prob_todas[3]
+    return clase_predicha, prob_sargassum, prob_todas
 
 
 def postprocesar(
@@ -630,10 +651,31 @@ def main() -> None:
     print("=" * 55)
 
     if args.evaluar:
-        # El JSON de salida ahora reflejará dinámicamente el nombre del modelo evaluado
+        from datetime import datetime
         nombre_etiqueta = model_name.replace("_", " ").title()
-        
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        run_name      = metadata.get("run_name",      "unknown") if metadata_path.exists() else "unknown"
+        loss_function = metadata.get("loss_function", "unknown") if metadata_path.exists() else "unknown"
+        best_epoch    = metadata.get("best_epoch",    "unknown") if metadata_path.exists() else "unknown"
+        descripcion   = metadata.get("description",   "sin descripción") if metadata_path.exists() else "sin descripción"
+
         resultado_json = {
+            "_experimento": {
+                "descripcion":    descripcion,
+                "modelo":         nombre_etiqueta,
+                "checkpoint":     str(checkpoint_dir),
+                "run_name":       run_name,
+                "loss_function":  loss_function,
+                "best_epoch":     best_epoch,
+                "umbral":         args.umbral,
+                "umbral_fai":     args.umbral_fai,
+                "sigma":          args.sigma,
+                "min_pixels":     args.min_pixels,
+                "split":          args.split,
+                "tta":            usar_tta,
+                "timestamp":      timestamp,
+            },
             nombre_etiqueta: {
                 "precision":          round(prec_g, 4),
                 "recall":             round(rec_g,  4),
@@ -644,17 +686,12 @@ def main() -> None:
                 "fp_total":           fp_total,
                 "fn_total":           fn_total,
                 "tiles_evaluados":    len(img_paths),
-                "config": {
-                    "umbral":     args.umbral,
-                    "umbral_fai": args.umbral_fai,
-                    "min_pixels": args.min_pixels,
-                    "sigma":      args.sigma,
-                    "split":      args.split,
-                }
             }
         }
-        # Si quieres que todos los modelos guarden en nombres de archivo distintos para luego unirlos:
-        out_path = Path("experiments") / f"evaluacion_{model_name}_{args.split}.json"
+        # Guardar dentro de la carpeta del checkpoint usado
+        # Nombre: evaluacion_{split}_umbral{umbral}.json
+        umbral_str = f"{int(args.umbral * 100):02d}"
+        out_path   = checkpoint_dir / f"evaluacion_{args.split}_umbral{umbral_str}.json"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with open(out_path, "w") as f:
             json.dump(resultado_json, f, indent=2, ensure_ascii=False)

@@ -1,0 +1,28 @@
+{
+  "_experimento": {
+    "descripcion": "Swin Transformer con atención antes de la implementación del VSCP y EMA, para comparar la mejora que aportan estas técnicas. Se mantiene la misma configuración de hiperparámetros que en el modelo base, para una comparación directa entre ambas losses en el TFG.",
+    "modelo": "Swin Transformer Attention",
+    "checkpoint": "experiments\\runs\\20260507_194544_swin_transformer_attention_mados",
+    "run_name": "20260507_194544",
+    "loss_function": "FocalDiceLoss",
+    "best_epoch": 34,
+    "umbral": 0.95,
+    "umbral_fai": -0.01,
+    "sigma": 1.0,
+    "min_pixels": 50,
+    "split": "test",
+    "tta": true,
+    "timestamp": "2026-05-08 10:48:44"
+  },
+  "Swin Transformer Attention": {
+    "precision": 0.5354,
+    "recall": 0.6951,
+    "f1": 0.6049,
+    "iou_sargazo_global": 0.4336,
+    "iou_sargazo_medio": 0.2707,
+    "tp_total": 13501,
+    "fp_total": 11716,
+    "fn_total": 5921,
+    "tiles_evaluados": 45
+  }
+}

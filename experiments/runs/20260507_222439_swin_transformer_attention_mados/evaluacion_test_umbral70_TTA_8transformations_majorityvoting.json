@@ -1,0 +1,28 @@
+{
+  "_experimento": {
+    "descripcion": "Swin Transformer con atención entrenado despues de agregar ema y vscp, para comprobar el aumento con respecto al anterior",
+    "modelo": "Swin Transformer Attention",
+    "checkpoint": "experiments\\runs\\20260507_222439_swin_transformer_attention_mados",
+    "run_name": "20260507_222439",
+    "loss_function": "FocalDiceLoss",
+    "best_epoch": 35,
+    "umbral": 0.7,
+    "umbral_fai": -0.01,
+    "sigma": 1.0,
+    "min_pixels": 50,
+    "split": "test",
+    "tta": true,
+    "timestamp": "2026-05-08 10:29:18"
+  },
+  "Swin Transformer Attention": {
+    "precision": 0.5381,
+    "recall": 0.7228,
+    "f1": 0.6169,
+    "iou_sargazo_global": 0.446,
+    "iou_sargazo_medio": 0.3118,
+    "tp_total": 14038,
+    "fp_total": 12051,
+    "fn_total": 5384,
+    "tiles_evaluados": 45
+  }
+}
