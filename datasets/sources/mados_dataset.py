@@ -190,7 +190,7 @@ class MADOSDataset(SargassoBaseDataset):
         num_workers:           int   = 2,
         pin_memory:            bool  = True,
         use_weighted_sampler:  bool | None = None,
-        sargassum_weight:      float = 5.0,
+        sargassum_weight:      float = 10.0,
     ) -> DataLoader:
         if use_weighted_sampler is None:
             use_weighted_sampler = (self.split == "train")

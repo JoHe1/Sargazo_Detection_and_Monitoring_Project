@@ -1,11 +1,11 @@
 """
 train.py — Entry point de entrenamiento
 -----------------------------------------
-Cambios respecto a v2:
-    - EMA (Exponential Moving Average) añadido con alpha=0.999.
-      Mantiene una copia promediada de los pesos durante entrenamiento.
-      El checkpoint guarda los pesos EMA, no los pesos normales.
-      Esto produce modelos más estables y robustos (usado en MariNeXt).
+Cambios respecto a v3:
+    - EMA eliminado — con solo 33 tiles sargazo en val suaviza hacia agua.
+    - Early stopping por val_loss — más estable con pocos tiles sargazo.
+    - FocalDice activo — mejor loss (F1=0.602 experimento 1).
+    - VSCP activo en dataset — único cambio respecto a experimento 1.
 """
 
 from __future__ import annotations
@@ -27,60 +27,6 @@ from models.losses.cross_entropy_dice import CrossEntropyDiceLoss
 from models.losses.focal_dice import FocalDiceLoss
 from models.losses.cross_entropy_dice_tversky import CrossEntropyDiceTverskyLoss
 from models.registry import ModelRegistry
-
-
-# ══════════════════════════════════════════════════════════════════════
-# EMA — Exponential Moving Average de pesos
-# ══════════════════════════════════════════════════════════════════════
-
-class EMA:
-    """
-    Mantiene una copia con media exponencial de los parámetros del modelo.
-
-    Uso en MariNeXt (Kikaki et al., 2024): alpha=0.999
-    θ_ema ← alpha * θ_ema + (1 - alpha) * θ
-
-    El modelo EMA se usa para validación y para guardar el checkpoint.
-    El modelo normal se sigue usando para el forward/backward de train.
-    """
-
-    def __init__(self, model: torch.nn.Module, alpha: float = 0.999) -> None:
-        self.alpha  = alpha
-        # Copia profunda de los pesos iniciales
-        self.shadow = {
-            name: param.data.clone()
-            for name, param in model.named_parameters()
-            if param.requires_grad
-        }
-
-    def update(self, model: torch.nn.Module) -> None:
-        """Actualiza los pesos shadow tras cada paso de optimización."""
-        for name, param in model.named_parameters():
-            if param.requires_grad and name in self.shadow:
-                self.shadow[name] = (
-                    self.alpha * self.shadow[name]
-                    + (1.0 - self.alpha) * param.data
-                )
-
-    def apply(self, model: torch.nn.Module) -> None:
-        """Copia los pesos EMA al modelo (para validación/inferencia)."""
-        for name, param in model.named_parameters():
-            if param.requires_grad and name in self.shadow:
-                param.data.copy_(self.shadow[name])
-
-    def restore(self, model: torch.nn.Module, backup: dict) -> None:
-        """Restaura los pesos originales al modelo tras validación."""
-        for name, param in model.named_parameters():
-            if param.requires_grad and name in backup:
-                param.data.copy_(backup[name])
-
-    def backup_params(self, model: torch.nn.Module) -> dict:
-        """Hace backup de los pesos actuales antes de aplicar EMA."""
-        return {
-            name: param.data.clone()
-            for name, param in model.named_parameters()
-            if param.requires_grad
-        }
 
 
 def train(config: ExperimentConfig) -> None:
@@ -130,10 +76,6 @@ def train(config: ExperimentConfig) -> None:
     info = model.get_info()
     print(f"[train] Parámetros entrenables: {info['num_parameters_M']}M")
 
-    # ── EMA ───────────────────────────────────────────────────────────
-    ema = EMA(model, alpha=0.99)
-    print("[train] EMA activado (alpha=0.99)")
-
     # ── Optimizer y scheduler ────────────────────────────────────────
     optimizer = model.configure_optimizers(config)
     scheduler = ReduceLROnPlateau(
@@ -141,8 +83,8 @@ def train(config: ExperimentConfig) -> None:
     )
 
     # ── Loss ──────────────────────────────────────────────────────────
-    criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
-    # criterion = FocalDiceLoss(num_classes=config.num_classes, gamma=2.0, device=device).to(device)
+    criterion = FocalDiceLoss(num_classes=config.num_classes, gamma=2.0, device=device).to(device)
+    # criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
     # criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
 
     loss_name = criterion.__class__.__name__
@@ -161,7 +103,7 @@ def train(config: ExperimentConfig) -> None:
         ])
 
     # ── Bucle de entrenamiento ────────────────────────────────────────
-    mejor_iou_sarg     = -1.0   # criterio: IoU sargazo combinado (clases 2+3)
+    mejor_val_loss     = float("inf")
     epocas_sin_mejorar = 0
 
     print(f"\n[train] Iniciando entrenamiento "
@@ -184,15 +126,10 @@ def train(config: ExperimentConfig) -> None:
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
-            # Actualizar EMA tras cada paso
-            ema.update(model)
             train_loss += loss.item()
 
-        # — Validación con pesos EMA —
-        backup = ema.backup_params(model)  # guardar pesos actuales
-        ema.apply(model)                   # aplicar pesos EMA al modelo
+        # — Validación —
         model.eval()
-
         val_loss  = 0.0
         iou_acum  = np.zeros(config.num_classes)
         iou_count = np.zeros(config.num_classes)
@@ -212,9 +149,6 @@ def train(config: ExperimentConfig) -> None:
                     if not np.isnan(iou):
                         iou_acum[c]  += iou
                         iou_count[c] += 1
-
-        # Restaurar pesos normales para continuar entrenando
-        ema.restore(model, backup)
 
         t_loss = train_loss / len(train_loader)
         v_loss = val_loss   / len(val_loader)
@@ -251,32 +185,24 @@ def train(config: ExperimentConfig) -> None:
                 round(lr_actual, 8),
             ])
 
-        # — Early stopping por IoU sargazo combinado —
-        # Si iou_sargassum es nan (no hay sargazo en val), usamos 0.0
-        iou_sarg_criterio = iou_sargassum if not np.isnan(iou_sargassum) else 0.0
-
-        if iou_sarg_criterio > mejor_iou_sarg:
-            mejor_iou_sarg     = iou_sarg_criterio
+        # — Early stopping por val_loss —
+        if v_loss < mejor_val_loss:
+            mejor_val_loss     = v_loss
             epocas_sin_mejorar = 0
-            # Aplicar EMA antes de guardar
-            backup_save = ema.backup_params(model)
-            ema.apply(model)
             model.save(
                 checkpoint_dir=ckpt_dir,
                 metadata={
                     **config.to_dict(),
                     "loss_function": loss_name,
                     "best_epoch":    epoch,
-                    "best_val_loss": round(v_loss, 5),
+                    "best_val_loss": round(mejor_val_loss, 5),
                     "iou_sargassum": round(iou_sarg,  5) if not np.isnan(iou_sarg)  else None,
                     "iou_algas":     round(iou_algas, 5) if not np.isnan(iou_algas) else None,
-                    "iou_sargassum_combinado": round(iou_sarg_criterio, 5),
+                    "iou_sargassum_combinado": round(iou_sargassum, 5) if not np.isnan(iou_sargassum) else None,
                     "mIoU":          round(mean_iou, 5),
-                    "ema_alpha":     0.99,
                 }
             )
-            ema.restore(model, backup_save)
-            print(f"  ✔ Mejora IoU sargazo={mejor_iou_sarg:.4f} → checkpoint EMA guardado")
+            print(f"  ✔ Mejora → checkpoint guardado (val_loss={mejor_val_loss:.4f})")
         else:
             epocas_sin_mejorar += 1
             print(f"  · Sin mejora ({epocas_sin_mejorar}/{config.patience})")
@@ -285,9 +211,9 @@ def train(config: ExperimentConfig) -> None:
                 break
 
     print(f"\n[train] Entrenamiento finalizado.")
-    print(f"  Mejor IoU sargazo : {mejor_iou_sarg:.4f}")
-    print(f"  Checkpoint        : {ckpt_dir}")
-    print(f"  Métricas CSV      : {csv_path}")
+    print(f"  Mejor val_loss : {mejor_val_loss:.4f}")
+    print(f"  Checkpoint     : {ckpt_dir}")
+    print(f"  Métricas CSV   : {csv_path}")
 
 
 # ══════════════════════════════════════════════════════════════════════
