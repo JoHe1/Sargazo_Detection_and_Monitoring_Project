@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
 
 from core.config.experiment_config import ExperimentConfig
 from core.config.paths import check_paths, SARGASSUM_READY
@@ -132,12 +132,27 @@ def train(config: ExperimentConfig) -> None:
 
     # ── Optimizer y scheduler ────────────────────────────────────────
     optimizer = model.configure_optimizers(config)
-    scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=12)
+    # CosineAnnealingWarmRestarts (Loshchilov & Hutter, 2017)
+    # T_0=25: primer ciclo de 25 epocas, T_mult=2: cada ciclo dobla duración
+    # eta_min=1e-7: LR minimo al final de cada ciclo
+    # Permite escapar de minimos locales periodicamente — mejor que ReduceLROnPlateau
+    # con datos escasos donde val_loss es ruidosa
+    COSINE_T0   = 25
+    COSINE_MULT = 2
+    scheduler = CosineAnnealingWarmRestarts(
+        optimizer, T_0=COSINE_T0, T_mult=COSINE_MULT, eta_min=1e-7
+    )
 
     # ── Loss ──────────────────────────────────────────────────────────
     FOCAL_GAMMA = 2.0
-    # criterion = FocalDiceLoss(num_classes=config.num_classes, gamma=FOCAL_GAMMA, device=device).to(device)
-    criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
+    LABEL_SMOOTHING = 0.05
+    criterion = FocalDiceLoss(
+        num_classes=config.num_classes,
+        gamma=FOCAL_GAMMA,
+        label_smoothing=LABEL_SMOOTHING,
+        device=device,
+    ).to(device)
+    # criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
     # criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
 
     loss_name = criterion.__class__.__name__
@@ -220,7 +235,7 @@ def train(config: ExperimentConfig) -> None:
         iou_comb_str  = f"{iou_sargassum:.4f}" if not np.isnan(iou_sargassum) else "  n/a  "
         lr_actual     = optimizer.param_groups[0]["lr"]
 
-        scheduler.step(v_loss)
+        scheduler.step(epoch)  # CosineAnnealing usa epoca, no val_loss
         lr_nuevo = optimizer.param_groups[0]["lr"]
         lr_str   = f"  [LR: {lr_actual:.2e}" + (f" -> {lr_nuevo:.2e}]" if lr_nuevo != lr_actual else "]")
 
@@ -259,6 +274,10 @@ def train(config: ExperimentConfig) -> None:
                     # VSCP
                     "vscp":                 True,
                     "vscp_mode":            "batch_level",
+                    "scheduler":            "CosineAnnealingWarmRestarts",
+                    "cosine_T0":            COSINE_T0,
+                    "cosine_T_mult":        COSINE_MULT,
+                    "label_smoothing":      LABEL_SMOOTHING,
                     # WeightedSampler
                     "sargassum_weight":     SARGASSUM_WEIGHT,
                     # Mejor epoch

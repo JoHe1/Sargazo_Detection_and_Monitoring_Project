@@ -50,13 +50,15 @@ class FocalDiceLoss(nn.Module):
     def __init__(
         self,
         num_classes: int = 16,
-        gamma: float = 1.5,
+        gamma: float = 2.0,
+        label_smoothing: float = 0.05,
         device: str = "cpu",
     ) -> None:
         super().__init__()
-        self.num_classes = num_classes
-        self.gamma       = gamma
-        self.ignore_index = 0
+        self.num_classes     = num_classes
+        self.gamma           = gamma
+        self.label_smoothing = label_smoothing
+        self.ignore_index    = 0
 
         pesos = torch.ones(num_classes, device=device)
         for clase, peso in self.CLASS_WEIGHTS.items():
@@ -115,11 +117,20 @@ class FocalDiceLoss(nn.Module):
         # ── Término Focal (reemplaza al CE) ─────────────────────────
         fl_loss = self.focal_loss(inputs, targets)
 
-        # ── Término Dice (idéntico a CrossEntropyDiceLoss) ──────────
+        # ── Término Dice con Label Smoothing ────────────────────────
+        # Label smoothing (paper chino Wang et al. 2025): suaviza GT de 0/1
+        # a epsilon/(C-1) / (1-epsilon) para reducir sobreconfianza del modelo
+        # con anotaciones imperfectas y datos escasos.
+        # epsilon=0.05: GT positivo -> 0.95, GT negativo -> 0.05/(C-1)
         mascara_anotada = (targets != 0).unsqueeze(1).float()
         probs           = torch.softmax(inputs, dim=1)
         targets_ohe     = F.one_hot(targets, num_classes=self.num_classes)
         targets_ohe     = targets_ohe.permute(0, 3, 1, 2).float()
+
+        # Aplicar label smoothing a los targets OHE
+        if self.label_smoothing > 0:
+            eps = self.label_smoothing
+            targets_ohe = targets_ohe * (1.0 - eps) + eps / self.num_classes
 
         smooth    = 0.1
         dice_loss = 0.0
