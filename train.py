@@ -145,7 +145,7 @@ def train(config: ExperimentConfig) -> None:
 
     # ── Loss ──────────────────────────────────────────────────────────
     FOCAL_GAMMA = 2.0
-    LABEL_SMOOTHING = 0.05
+    LABEL_SMOOTHING = 0
     criterion = FocalDiceLoss(
         num_classes=config.num_classes,
         gamma=FOCAL_GAMMA,
