@@ -174,20 +174,8 @@ def train(config: ExperimentConfig) -> None:
             images = images.to(device)
             masks  = masks.to(device)
             optimizer.zero_grad()
-            # Deep Supervision: model devuelve (main, aux3, aux4) en train
-            # En val/inferencia devuelve solo main (model.eval())
-            out = model(images)
-            if isinstance(out, tuple):
-                pred_main, pred_aux3, pred_aux4 = out
-                loss_main = criterion(pred_main, masks)
-                loss_aux3 = criterion(pred_aux3, masks)
-                loss_aux4 = criterion(pred_aux4, masks)
-                # Pesos: main=1.0, aux3=0.4, aux4=0.2 (Wang et al. 2025)
-                loss = loss_main + 0.4 * loss_aux3 + 0.2 * loss_aux4
-                outputs = pred_main  # para metricas
-            else:
-                outputs = out
-                loss = criterion(outputs, masks)
+            outputs = model(images)
+            loss    = criterion(outputs, masks)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
@@ -207,7 +195,7 @@ def train(config: ExperimentConfig) -> None:
             for images, masks in val_loader:
                 images = images.to(device)
                 masks  = masks.to(device)
-                outputs = model(images)  # model.eval() -> devuelve solo pred_main
+                outputs = model(images)
                 loss    = criterion(outputs, masks)
                 val_loss += loss.item()
 
@@ -271,9 +259,6 @@ def train(config: ExperimentConfig) -> None:
                     # VSCP
                     "vscp":                 True,
                     "vscp_mode":            "batch_level",
-                    "deep_supervision":     True,
-                    "ds_weight_aux3":       0.4,
-                    "ds_weight_aux4":       0.2,
                     # WeightedSampler
                     "sargassum_weight":     SARGASSUM_WEIGHT,
                     # Mejor epoch

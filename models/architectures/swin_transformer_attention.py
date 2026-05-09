@@ -104,24 +104,6 @@ class SwinAttSegmenter(BaseModel):
         
         self.head = nn.Conv2d(32, num_classes, kernel_size=1)
 
-        # ── Deep Supervision (Wang et al. 2025) ──────────────────────
-        # Cabezas auxiliares en resoluciones intermedias del decoder.
-        # Solo activas durante entrenamiento — en inferencia se ignoran.
-        # aux_head_up3: después de up3 (28x28, 128ch) → num_classes
-        # aux_head_up4: después de up4 (14x14, 256ch) → num_classes
-        self.aux_head_up3 = nn.Sequential(
-            nn.Conv2d(128, 64, kernel_size=3, padding=1),
-            nn.BatchNorm2d(64),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(64, num_classes, kernel_size=1),
-        )
-        self.aux_head_up4 = nn.Sequential(
-            nn.Conv2d(256, 128, kernel_size=3, padding=1),
-            nn.BatchNorm2d(128),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(128, num_classes, kernel_size=1),
-        )
-
     def reshape_hidden(self, tensor: torch.Tensor, h: int, w: int) -> torch.Tensor:
         """ Función auxiliar para doblar parches en mapas 2D (Usada en tu base_model) """
         tensor = tensor.transpose(1, 2) # (B, C, L)
@@ -138,28 +120,13 @@ class SwinAttSegmenter(BaseModel):
         s3 = self.reshape_hidden(outputs.last_hidden_state, 7, 7)
 
         # 3. Paso por el Decoder con Atención
-        x4 = self.up4(s3, s2)  # (B, 256, 14, 14)
-        x3 = self.up3(x4, s1)  # (B, 128, 28, 28)
-        x2 = self.up2(x3, s0)  # (B,  64, 56, 56)
-
+        x = self.up4(s3, s2)  # 14x14
+        x = self.up3(x, s1)   # 28x28
+        x = self.up2(x, s0)   # 56x56
+        
         # 4. Reconstrucción final y clasificación
-        x  = self.up1(x2)      # (B,  32, 224, 224)
-        pred_main = self.head(x)
-
-        # Deep Supervision — solo en train, ignorado en eval/inferencia
-        if self.training:
-            # Upsample auxiliares a 224x224 para calcular loss con mismo GT
-            pred_aux3 = torch.nn.functional.interpolate(
-                self.aux_head_up3(x3), size=(224, 224),
-                mode='bilinear', align_corners=True
-            )
-            pred_aux4 = torch.nn.functional.interpolate(
-                self.aux_head_up4(x4), size=(224, 224),
-                mode='bilinear', align_corners=True
-            )
-            return pred_main, pred_aux3, pred_aux4
-
-        return pred_main
+        x = self.up1(x)       # 224x224
+        return self.head(x)
 
     def configure_optimizers(self, config):
         """ Configura el optimizador AdamW usando el objeto config de train.py """
