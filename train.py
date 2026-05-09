@@ -20,7 +20,7 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from core.config.experiment_config import ExperimentConfig
 from core.config.paths import check_paths, SARGASSUM_READY
@@ -139,9 +139,8 @@ def train(config: ExperimentConfig) -> None:
     # con datos escasos donde val_loss es ruidosa
     COSINE_T0   = 25
     COSINE_MULT = 2
-    scheduler = CosineAnnealingWarmRestarts(
-        optimizer, T_0=COSINE_T0, T_mult=COSINE_MULT, eta_min=1e-7
-    )
+    scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.5, patience=12)
+
 
     # ── Loss ──────────────────────────────────────────────────────────
     FOCAL_GAMMA = 2.0
@@ -235,7 +234,7 @@ def train(config: ExperimentConfig) -> None:
         iou_comb_str  = f"{iou_sargassum:.4f}" if not np.isnan(iou_sargassum) else "  n/a  "
         lr_actual     = optimizer.param_groups[0]["lr"]
 
-        scheduler.step(epoch)  # CosineAnnealing usa epoca, no val_loss
+        scheduler.step(v_loss)
         lr_nuevo = optimizer.param_groups[0]["lr"]
         lr_str   = f"  [LR: {lr_actual:.2e}" + (f" -> {lr_nuevo:.2e}]" if lr_nuevo != lr_actual else "]")
 
@@ -274,9 +273,7 @@ def train(config: ExperimentConfig) -> None:
                     # VSCP
                     "vscp":                 True,
                     "vscp_mode":            "batch_level",
-                    "scheduler":            "CosineAnnealingWarmRestarts",
-                    "cosine_T0":            COSINE_T0,
-                    "cosine_T_mult":        COSINE_MULT,
+                    "scheduler":            "ReduceLROnPlateau",
                     "label_smoothing":      LABEL_SMOOTHING,
                     # WeightedSampler
                     "sargassum_weight":     SARGASSUM_WEIGHT,
