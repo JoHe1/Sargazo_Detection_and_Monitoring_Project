@@ -1,0 +1,28 @@
+{
+  "_experimento": {
+    "descripcion": "Swin Transformer con atención sin label smoothing, focal loss con gamma=2.0 y peso de sargassum=10.0, usando CosineAnnealingWarmRestarts con T0=25 y T_mult=2. Se utilizó VSCP a nivel de batch.",
+    "modelo": "Swin Transformer Attention",
+    "checkpoint": "experiments\\runs\\20260509_205136_swin_transformer_attention_mados",
+    "run_name": "20260509_205136",
+    "loss_function": "FocalDiceLoss",
+    "best_epoch": 132,
+    "umbral": 0.8,
+    "umbral_fai": -0.01,
+    "sigma": 1.0,
+    "min_pixels": 0,
+    "split": "test",
+    "tta": true,
+    "timestamp": "2026-05-10 00:23:25"
+  },
+  "Swin Transformer Attention": {
+    "precision": 0.1903,
+    "recall": 0.953,
+    "f1": 0.3173,
+    "iou_sargazo_global": 0.1885,
+    "iou_sargazo_medio": 0.1586,
+    "tp_total": 18509,
+    "fp_total": 78752,
+    "fn_total": 913,
+    "tiles_evaluados": 45
+  }
+}
