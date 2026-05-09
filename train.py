@@ -136,8 +136,8 @@ def train(config: ExperimentConfig) -> None:
 
     # ── Loss ──────────────────────────────────────────────────────────
     FOCAL_GAMMA = 2.0
-    criterion = FocalDiceLoss(num_classes=config.num_classes, gamma=FOCAL_GAMMA, device=device).to(device)
-    # criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
+    # criterion = FocalDiceLoss(num_classes=config.num_classes, gamma=FOCAL_GAMMA, device=device).to(device)
+    criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
     # criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
 
     loss_name = criterion.__class__.__name__
