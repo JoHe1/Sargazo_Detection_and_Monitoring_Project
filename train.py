@@ -27,6 +27,7 @@ from core.config.paths import check_paths, SARGASSUM_READY
 from core.utils.metrics import compute_metrics, iou_per_class
 from datasets.sources.mados_dataset import MADOSDataset
 from datasets.sources.mados_dataset_swir import MADOSDatasetSWIR, SARGASSUM_READY_SWIR
+from datasets.sources.mados_dataset_11bands import MADOSDataset11Bands, SARGASSUM_READY_11BANDS
 from models.losses.cross_entropy_dice import CrossEntropyDiceLoss
 from models.losses.focal_dice import FocalDiceLoss
 from models.losses.cross_entropy_dice_tversky import CrossEntropyDiceTverskyLoss
@@ -89,9 +90,17 @@ def train(config: ExperimentConfig) -> None:
 
     # ── Datasets ──────────────────────────────────────────────────────
     print("\n[train] Cargando datasets...")
-    usa_swir = "swir" in config.model_name.lower()
-    DatasetClass = MADOSDatasetSWIR if usa_swir else MADOSDataset
-    dataset_root = SARGASSUM_READY_SWIR if usa_swir else SARGASSUM_READY
+    usa_swir    = "swir" in config.model_name.lower()
+    usa_11bands = "11bands" in config.model_name.lower()
+    if usa_11bands:
+        DatasetClass = MADOSDataset11Bands
+        dataset_root = SARGASSUM_READY_11BANDS
+    elif usa_swir:
+        DatasetClass = MADOSDatasetSWIR
+        dataset_root = SARGASSUM_READY_SWIR
+    else:
+        DatasetClass = MADOSDataset
+        dataset_root = SARGASSUM_READY
 
     train_dataset = DatasetClass(
         root_path=dataset_root, split="train",
@@ -271,6 +280,7 @@ def train(config: ExperimentConfig) -> None:
                     # EMA
                     "ema_alpha":            EMA_ALPHA,
                     # VSCP
+                    "input_channels":       11 if usa_11bands else (6 if usa_swir else 4),
                     "vscp":                 True,
                     "vscp_mode":            "batch_level",
                     "scheduler":            "ReduceLROnPlateau",
