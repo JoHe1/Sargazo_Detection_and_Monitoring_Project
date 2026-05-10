@@ -35,6 +35,7 @@ from models.architectures.swin_transformer import SwinSegmenter
 from models.architectures.segformer import SegFormerSegmenter
 from models.architectures.swin_transformer_attention import SwinAttSegmenter
 from models.architectures.swin_transformer_attention_swir import SwinAttSegmenterSWIR
+from models.architectures.swin_transformer_attention_base_11bands import SwinBaseAtt11Bands
 
 
 class ModelRegistry:
@@ -53,6 +54,7 @@ class ModelRegistry:
         "swin_transformer_attention": SwinAttSegmenter,
         "segformer":        SegFormerSegmenter,
         "swin_transformer_attention_swir": SwinAttSegmenterSWIR,
+        "swin_base_att_11bands":           SwinBaseAtt11Bands,
     }
 
     # ── API pública ───────────────────────────────────────────────────

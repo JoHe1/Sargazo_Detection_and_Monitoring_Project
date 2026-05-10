@@ -23,6 +23,7 @@ ENV/
 datasets/data/MADOS/
 datasets/data/Sargassum_Ready_Dataset/
 datasets/data/Sargassum_Ready_Dataset_SWIR
+datasets/data/Sargassum_Ready_Dataset_11bands/
 datasets/data/sentinel_downloads/
 datasets/data/sentinel_caribbean/
 
@@ -51,6 +52,7 @@ estadisticas_globales.png
 /experiments/results
 /datasets/data/Sargassum_Ready_Dataset.zip
 /datasets/data/Sargassum_Ready_Dataset_SWIR.zip
+/datasets/data/Sargassum_Ready_Dataset_11bands.zip
 
 # ── IDEs ─────────────────────────────────────────────────────────────
 .vscode/settings.json
