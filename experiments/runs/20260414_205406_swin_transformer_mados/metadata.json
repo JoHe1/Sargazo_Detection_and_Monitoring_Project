@@ -20,7 +20,7 @@
   "checkpoint_dir": "experiments/runs/20260414_205406_swin_transformer_mados",
   "use_amp": false,
   "seed": 42,
-  "loss_function":"dice_loss",
+  "loss_function":"FocalDiceLoss",
   "best_epoch": 29,
   "best_val_loss": 1.73052,
   "iou_sargassum": 0.00036,

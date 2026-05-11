@@ -20,7 +20,7 @@
   "checkpoint_dir": "experiments/runs/20260408_235303_swin_transformer_mados",
   "use_amp": false,
   "seed": 42,
-  "loss_function":"dice_loss",
+  "loss_function":"CrossEntropyDiceLoss",
   "best_epoch": 48,
   "best_val_loss": 1.52308,
   "iou_sargassum": 0.00428,
