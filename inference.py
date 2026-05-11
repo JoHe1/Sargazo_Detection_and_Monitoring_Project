@@ -36,6 +36,8 @@ from scipy.ndimage import binary_fill_holes, binary_erosion, gaussian_filter, la
 from skimage.morphology import skeletonize, dilation, disk
 
 from core.config.paths import SARGASSUM_READY, CHECKPOINTS_DIR, RESULTS_DIR
+from datasets.sources.mados_dataset_11bands import SARGASSUM_READY_11BANDS
+from datasets.sources.mados_dataset_swir import SARGASSUM_READY_SWIR
 from core.utils.visualization import MADOS_CLASSES
 from models.architectures.swin_transformer import SwinSegmenter
 
@@ -66,8 +68,10 @@ def preprocesar(img_path: str) -> tuple[np.ndarray, torch.Tensor]:
     """
     img = np.load(img_path).astype(np.float32)
     img = np.nan_to_num(img, nan=0.0, posinf=1.0, neginf=0.0)
-    # Reordenar canales según número disponible (4 canales o 6 con SWIR)
-    if img.shape[2] == 6:
+    # Reordenar canales según número disponible
+    if img.shape[2] == 11:
+        img = img[:, :, [3, 2, 1, 0, 4, 5, 6, 7, 8, 9, 10]]  # B4→R, B3→G, B2→B + resto
+    elif img.shape[2] == 6:
         img = img[:, :, [2, 1, 0, 3, 4, 5]]  # (B,G,R,NIR,SWIR1,SWIR2) → (R,G,B,NIR,SWIR1,SWIR2)
     else:
         img = img[:, :, [2, 1, 0, 3]]         # (B,G,R,NIR) → (R,G,B,NIR)
@@ -501,6 +505,7 @@ def main() -> None:
         "swin_transformer":           "swin_transformer",
         "swin_transformer_attention": "swin_transformer_attention",
         "swin_transformer_attention_swir": "swin_transformer_attention_swir",
+        "swin_base_att_11bands":           "swin_base_att_11bands",
         "segformer":                  "segformer",
     }
 
@@ -530,9 +535,16 @@ def main() -> None:
     print(f"[inference] {DEVICE.upper()} | TTA: {'ON' if usar_tta else 'OFF'} | "
           f"Umbral: {args.umbral:.0%} | Sigma: {args.sigma}")
 
-    # ── Seleccionar imágenes ──────────────────────────────────────────
-    img_dir   = f"{args.dataset}/{args.split}/images"
-    mask_dir  = f"{args.dataset}/{args.split}/masks"
+    # ── Seleccionar dataset según modelo ──────────────────────────────
+    if "11bands" in model_name:
+        dataset_base = str(SARGASSUM_READY_11BANDS)
+    elif "swir" in model_name:
+        dataset_base = str(SARGASSUM_READY_SWIR)
+    else:
+        dataset_base = args.dataset
+
+    img_dir  = f"{dataset_base}/{args.split}/images"
+    mask_dir = f"{dataset_base}/{args.split}/masks"
     img_paths = sorted(glob.glob(f"{img_dir}/*.npy"))
 
     if not img_paths:
