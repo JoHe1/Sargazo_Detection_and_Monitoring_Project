@@ -33,5 +33,6 @@
   "iou_sargassum": 0.00412,
   "iou_algas": 0.00089,
   "iou_sargassum_combinado": 0.00251,
-  "mIoU": 0.02077
+  "mIoU": 0.02077,
+  "description": "SegFormer trained on the MADOS dataset with a combination of Focal Loss and Dice Loss, using an AdamW optimizer and a ReduceLROnPlateau scheduler. The model achieved its best performance at epoch 14 with a validation loss of 2.26679 and a mean IoU of 0.02077."
 }
