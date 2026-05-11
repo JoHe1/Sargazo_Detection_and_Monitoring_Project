@@ -33,5 +33,6 @@
   "iou_sargassum": 0.00672,
   "iou_algas": 0.00341,
   "iou_sargassum_combinado": 0.00506,
-  "mIoU": 0.01766
+  "mIoU": 0.01766,
+  "description": "SegFormer trained on the MADOS dataset with a combination of CrossEntropy and Dice loss, using the AdamW optimizer and ReduceLROnPlateau scheduler. The model achieved a best validation loss of 0.98754 at epoch 41, with IoU scores of 0.00672 for Sargassum, 0.00341 for Algas, and a combined IoU of 0.00506, resulting in a mean IoU of 0.01766."
 }
