@@ -1,0 +1,28 @@
+{
+  "_experimento": {
+    "descripcion": "sin descripción",
+    "modelo": "Swin Transformer",
+    "checkpoint": "experiments\\runs\\20260416_102901_swin_transformer_mados",
+    "run_name": "20260416_102901",
+    "loss_function": "tversky_loss",
+    "best_epoch": 70,
+    "umbral": 0.95,
+    "umbral_fai": -0.01,
+    "sigma": 1.0,
+    "min_pixels": 0,
+    "split": "test",
+    "tta": true,
+    "timestamp": "2026-05-11 19:18:24"
+  },
+  "Swin Transformer": {
+    "precision": 0.2457,
+    "recall": 0.8295,
+    "f1": 0.3791,
+    "iou_sargazo_global": 0.2339,
+    "iou_sargazo_medio": 0.2043,
+    "tp_total": 16110,
+    "fp_total": 49455,
+    "fn_total": 3312,
+    "tiles_evaluados": 45
+  }
+}

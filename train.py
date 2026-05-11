@@ -83,7 +83,7 @@ class EMA:
         }
 
 
-def train(config: ExperimentConfig) -> None:
+def train(config: ExperimentConfig, use_ema: bool = True, use_vscp: bool = True, loss_name_arg: str = "focal") -> None:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     config.print_summary()
     print(f"[train] Dispositivo: {device.upper()}")
@@ -118,11 +118,19 @@ def train(config: ExperimentConfig) -> None:
     # Guardar sargassum_weight para metadata
     SARGASSUM_WEIGHT = 10.0
 
-    train_loader = train_dataset.get_loader(
-        batch_size=config.batch_size,
-        num_workers=config.num_workers,
-        sargassum_weight=SARGASSUM_WEIGHT,
-    )
+    if not use_vscp:
+        from torch.utils.data import DataLoader, WeightedRandomSampler
+        weights = train_dataset._compute_sample_weights(SARGASSUM_WEIGHT)
+        sampler = WeightedRandomSampler(weights=weights, num_samples=len(weights), replacement=True)
+        train_loader = DataLoader(train_dataset, batch_size=config.batch_size,
+                                  sampler=sampler, num_workers=config.num_workers, pin_memory=True)
+        print(f"[train] VSCP desactivado (baseline)")
+    else:
+        train_loader = train_dataset.get_loader(
+            batch_size=config.batch_size,
+            num_workers=config.num_workers,
+            sargassum_weight=SARGASSUM_WEIGHT,
+        )
     val_loader = val_dataset.get_loader(
         batch_size=config.batch_size,
         num_workers=config.num_workers,
@@ -154,15 +162,16 @@ def train(config: ExperimentConfig) -> None:
     # ── Loss ──────────────────────────────────────────────────────────
     FOCAL_GAMMA = 2.0
     LABEL_SMOOTHING = 0
-    #criterion = FocalDiceLoss(
-        #num_classes=config.num_classes,
-        #gamma=FOCAL_GAMMA,
-        #label_smoothing=LABEL_SMOOTHING,
-        #device=device,
-    #).to(device)
-    criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
-    # criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
-
+    if loss_name_arg == "focal":
+        criterion = FocalDiceLoss(
+            num_classes=config.num_classes, gamma=FOCAL_GAMMA,
+            label_smoothing=LABEL_SMOOTHING, device=device,
+        ).to(device)
+    elif loss_name_arg == "tversky":
+        criterion = CrossEntropyDiceTverskyLoss(num_classes=config.num_classes, device=device).to(device)
+    else:
+        criterion = CrossEntropyDiceLoss(num_classes=config.num_classes, device=device).to(device)
+    print(f"[train] Loss: {criterion.__class__.__name__}")
     loss_name = criterion.__class__.__name__
 
     # ── Preparar directorio de checkpoint ────────────────────────────
@@ -202,12 +211,13 @@ def train(config: ExperimentConfig) -> None:
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
-            ema.update(model)
+            if ema: ema.update(model)
             train_loss += loss.item()
 
-        # — Validacion con pesos EMA —
-        backup = ema.backup_params(model)
-        ema.apply(model)
+        # — Validacion (con EMA si activo) —
+        if ema:
+            backup = ema.backup_params(model)
+            ema.apply(model)
         model.eval()
 
         val_loss  = 0.0
@@ -229,7 +239,7 @@ def train(config: ExperimentConfig) -> None:
                         iou_acum[c]  += iou
                         iou_count[c] += 1
 
-        ema.restore(model, backup)
+        if ema: ema.restore(model, backup)
 
         t_loss = train_loss / len(train_loader)
         v_loss = val_loss   / len(val_loader)
@@ -268,8 +278,9 @@ def train(config: ExperimentConfig) -> None:
         if v_loss < mejor_val_loss:
             mejor_val_loss     = v_loss
             epocas_sin_mejorar = 0
-            backup_save = ema.backup_params(model)
-            ema.apply(model)
+            if ema:
+                backup_save = ema.backup_params(model)
+                ema.apply(model)
             model.save(
                 checkpoint_dir=ckpt_dir,
                 metadata={
@@ -278,11 +289,12 @@ def train(config: ExperimentConfig) -> None:
                     "loss_function":        loss_name,
                     "focal_gamma":          FOCAL_GAMMA,
                     # EMA
-                    "ema_alpha":            EMA_ALPHA,
+                    "ema_alpha":            EMA_ALPHA if use_ema else None,
+                    "ema_activo":           use_ema,
                     # VSCP
                     "input_channels":       11 if usa_11bands else (6 if usa_swir else 4),
-                    "vscp":                 True,
-                    "vscp_mode":            "batch_level",
+                    "vscp":                 use_vscp,
+                    "vscp_mode":            "batch_level" if use_vscp else None,
                     "scheduler":            "ReduceLROnPlateau",
                     "label_smoothing":      LABEL_SMOOTHING,
                     # WeightedSampler
@@ -297,8 +309,8 @@ def train(config: ExperimentConfig) -> None:
                     "mIoU":                 round(mean_iou, 5),
                 }
             )
-            ema.restore(model, backup_save)
-            print(f"  Mejora -> checkpoint EMA guardado (val_loss={mejor_val_loss:.4f})")
+            if ema: ema.restore(model, backup_save)
+            print(f"  Mejora -> checkpoint {'EMA ' if ema else ''}guardado (val_loss={mejor_val_loss:.4f})")
         else:
             epocas_sin_mejorar += 1
             print(f"  Sin mejora ({epocas_sin_mejorar}/{config.patience})")
@@ -325,6 +337,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lr",       type=float, default=5e-5)
     parser.add_argument("--batch",    type=int,   default=8)
     parser.add_argument("--patience", type=int,   default=8)
+    parser.add_argument("--no-ema",   action="store_true", default=False,
+                        help="Desactiva EMA — útil para entrenamientos baseline")
+    parser.add_argument("--no-vscp",  action="store_true", default=False,
+                        help="Desactiva VSCP — útil para entrenamientos baseline")
+    parser.add_argument("--loss",     type=str,   default="focal",
+                        choices=["focal", "ce_dice", "tversky"],
+                        help="Loss: focal (FocalDice), ce_dice (CE+Dice), tversky")
     return parser.parse_args()
 
 
@@ -341,4 +360,9 @@ if __name__ == "__main__":
             batch_size   = args.batch,
             patience     = args.patience,
         )
-    train(config)
+    train(
+        config,
+        use_ema       = not args.no_ema,
+        use_vscp      = not args.no_vscp,
+        loss_name_arg = args.loss,
+    )
