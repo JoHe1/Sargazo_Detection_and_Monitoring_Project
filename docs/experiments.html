@@ -3,243 +3,270 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Entrenamiento — Detección de Sargazo</title>
+<title>Entrenamiento — Detección de Sargazo · TFG ULPGC 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Source Serif 4', Georgia, serif; background: #fff; color: #111; line-height: 1.7; font-weight: 300; }
-  .container { max-width: 900px; margin: 0 auto; padding: 0 2rem; }
-  
-  header { border-bottom: 1px solid #111; padding: 2rem 0 1.5rem; margin-bottom: 3rem; }
-  .header-inner { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; }
-  h1 { font-size: 1.5rem; font-weight: 400; letter-spacing: -0.02em; }
-  nav a { color: #555; text-decoration: none; margin-left: 1.5rem; font-size: 0.95rem; }
-  nav a:hover, nav a.active { color: #111; border-bottom: 1px solid #111; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'Source Serif 4',Georgia,serif;background:#fff;color:#111;line-height:1.7;font-weight:300}
+.container{max-width:960px;margin:0 auto;padding:0 2rem}
+header{border-bottom:1px solid #111;padding:2rem 0 1.5rem;margin-bottom:3rem}
+.header-inner{max-width:960px;margin:0 auto;padding:0 2rem;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.5rem}
+.site-title{font-size:.8rem;font-weight:400;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:#111}
+nav{display:flex;gap:1.5rem}
+nav a{font-size:.85rem;font-weight:300;color:#555;text-decoration:none}
+nav a:hover{color:#111}
+nav a.active{color:#111;border-bottom:1px solid #111}
 
-  /* Selector de Experimentos */
-  .controls { background: #f8f9f9; padding: 1.5rem; border-left: 4px solid #111; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem; }
-  select { padding: 0.5rem; font-size: 1rem; font-family: inherit; border: 1px solid #ccc; border-radius: 4px; min-width: 250px; }
-  
-  /* Metadatos */
-  .metadata-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; font-size: 0.9rem; }
-  .meta-item { background: #fff; border: 1px solid #eee; padding: 1rem; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
-  .meta-label { color: #666; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 0.2rem; }
-  .meta-value { font-weight: 600; color: #111; font-family: 'Source Code Pro', monospace; }
+.page-title{margin-bottom:3rem}
+.breadcrumb{font-family:'Source Code Pro',monospace;font-size:.75rem;color:#999;margin-bottom:.75rem}
+.breadcrumb a{color:#777;text-decoration:none}
+.page-title h1{font-size:1.8rem;font-weight:600;margin-bottom:.5rem;line-height:1.25}
+.page-title .subtitle{color:#555;font-weight:300;font-size:.93rem}
 
-  h2 { font-size: 1.8rem; font-weight: 300; margin-bottom: 1.5rem; margin-top: 3rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
-  .chart-container { position: relative; height: 400px; width: 100%; margin-bottom: 4rem; }
-  
-  .error-msg { color: #c0392b; padding: 1rem; background: #fadbd8; border-radius: 4px; display: none; }
+/* Selector */
+.selector-block{background:#f8f9f9;border-left:3px solid #111;padding:1.25rem 1.5rem;margin-bottom:2.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.selector-block label{font-size:.85rem;font-weight:600;letter-spacing:.04em;white-space:nowrap}
+select{padding:.5rem .75rem;font-family:'Source Code Pro',monospace;font-size:.8rem;border:1px solid #ccc;border-radius:3px;min-width:280px;background:#fff;color:#111;cursor:pointer}
+select:focus{outline:none;border-color:#111}
+
+/* Metadata grid */
+h2{font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#999;border-bottom:1px solid #eee;padding-bottom:.4rem;margin-bottom:1.5rem;margin-top:3rem}
+.meta-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem;margin-bottom:2rem}
+.meta-card{border:1px solid #eee;padding:.85rem .9rem}
+.meta-card .lbl{font-family:'Source Code Pro',monospace;font-size:.6rem;color:#bbb;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.2rem}
+.meta-card .val{font-family:'Source Code Pro',monospace;font-size:.82rem;font-weight:600;color:#111;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta-card .val.good{color:#1e8449}
+.meta-card .val.warn{color:#c0392b}
+.meta-card .val.info{color:#2471a3}
+
+/* Badges */
+.badge{display:inline-block;font-family:'Source Code Pro',monospace;font-size:.58rem;padding:.08rem .35rem;border-radius:2px;margin-left:.4rem;vertical-align:middle}
+.badge-ema{background:#d5f5e3;color:#1e8449;border:1px solid #a9dfbf}
+.badge-vscp{background:#d6eaf8;color:#2471a3;border:1px solid #aed6f1}
+.badge-best{background:#1e8449;color:#fff}
+.badge-off{background:#f2f3f4;color:#999;border:1px solid #ddd}
+
+/* Técnicas row */
+.tecnicas{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:2rem}
+.tec{font-family:'Source Code Pro',monospace;font-size:.7rem;padding:.25rem .6rem;border:1px solid #ddd;border-radius:2px;color:#555}
+.tec.on{border-color:#1e8449;color:#1e8449;background:#f0faf5}
+.tec.off{border-color:#ddd;color:#bbb;text-decoration:line-through}
+
+/* Charts */
+.chart-wrap{position:relative;height:280px;width:100%;margin-bottom:3rem}
+
+/* Error */
+.error-box{display:none;background:#fdedec;border-left:3px solid #e74c3c;padding:.85rem 1rem;font-size:.85rem;color:#922b21;margin-bottom:1.5rem;font-family:'Source Code Pro',monospace}
+
+/* Loading */
+.loading{text-align:center;padding:3rem;font-family:'Source Code Pro',monospace;font-size:.75rem;color:#ccc;letter-spacing:.05em}
+
+footer{border-top:1px solid #ddd;padding:1.5rem 0;margin-top:4rem}
+.footer-inner{max-width:960px;margin:0 auto;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+footer p{font-size:.8rem;color:#999;margin:0}
+
+@media(max-width:640px){nav{display:none}.meta-grid{grid-template-columns:1fr 1fr}select{min-width:200px}}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="container header-inner">
-    <h1>Resultados del Modelo</h1>
+  <div class="header-inner">
+    <a href="index.html" class="site-title">TFG · ULPGC · 2026</a>
     <nav>
-      <a href="index.html">Resumen</a>
-      <a href="monitor.html">NRT App</a>
+      <a href="index.html">Inicio</a>
       <a href="results.html">Resultados</a>
       <a href="experiments.html" class="active">Entrenamiento</a>
+      <a href="monitor.html">Monitorización</a>
     </nav>
   </div>
 </header>
 
 <main class="container">
-  
-  <div class="controls">
-    <label for="experimentSelect"><strong>Seleccionar Experimento:</strong></label>
-    <select id="experimentSelect" onchange="cargarDatosExperimento(this.value)">
-      <option value="">Cargando experimentos...</option>
+
+  <div class="page-title">
+    <p class="breadcrumb"><a href="index.html">Inicio</a> / Entrenamiento</p>
+    <h1>Registro de experimentos</h1>
+    <p class="subtitle">Curvas de convergencia y configuración de cada ejecución. Los datos se cargan dinámicamente desde los archivos del repositorio.</p>
+  </div>
+
+  <div class="selector-block">
+    <label for="expSelect">Experimento:</label>
+    <select id="expSelect" onchange="loadExperiment(this.value)">
+      <option value="">Cargando…</option>
     </select>
   </div>
 
-  <div id="errorBox" class="error-msg"></div>
-
-  <div class="metadata-grid" id="meta-container">
-    </div>
-
-  <h2>Curvas de Pérdida (Loss)</h2>
-  <div class="chart-container">
-    <canvas id="lossChart"></canvas>
-  </div>
-
-  <h2>Evolución de Intersección sobre Unión (mIoU)</h2>
-  <div class="chart-container">
-    <canvas id="iouChart"></canvas>
+  <div class="error-box" id="errBox"></div>
+  <div id="expContent">
+    <div class="loading" id="loadingMsg">Selecciona un experimento para ver los detalles.</div>
   </div>
 
 </main>
 
+<footer>
+  <div class="footer-inner">
+    <p>TFG · Detección y Monitorización de Sargazo · ULPGC 2026</p>
+    <p>Jorge Lorenzo Lorenzo</p>
+  </div>
+</footer>
+
 <script>
-  let lossChartInstance = null;
-  let iouChartInstance = null;
+const BASE = 'assets/data/runs';
+let lossChart = null, iouChart = null;
 
-  // 1. Cargar la lista de experimentos desde el index.json
-  async function inicializarSelector() {
-    try {
-      const res = await fetch('assets/data/runs/index.json');
-      if (!res.ok) throw new Error("No se encontró index.json");
-      
-      const experimentos = await res.json();
-      const select = document.getElementById('experimentSelect');
-      
-      select.innerHTML = ''; // Limpiar
-      
-      if (experimentos.length === 0) {
-          select.innerHTML = '<option value="">No hay experimentos disponibles</option>';
-          return;
-      }
+// ── Utilidades ──────────────────────────────────────────────────────
+const jf = url => fetch(url).then(r => { if(!r.ok) throw new Error(r.status); return r.json(); });
+const tf = url => fetch(url).then(r => { if(!r.ok) throw new Error(r.status); return r.text(); });
+const pct = v => v != null ? (v*100).toFixed(1)+'%' : '—';
+const safe = (v, fallback='—') => v != null && v !== undefined ? v : fallback;
 
-      // Añadir opciones
-      experimentos.forEach(exp => {
-        const option = document.createElement('option');
-        option.value = exp;
-        option.textContent = exp;
-        select.appendChild(option);
-      });
+function showError(msg){ const b=document.getElementById('errBox'); b.textContent=msg; b.style.display='block'; }
+function hideError(){ document.getElementById('errBox').style.display='none'; }
 
-      // Cargar el primero por defecto
-      cargarDatosExperimento(experimentos[0]);
+// ── Tecnica badge ────────────────────────────────────────────────────
+function tecBadge(label, on){
+  return `<span class="tec ${on?'on':'off'}">${label}</span>`;
+}
 
-    } catch (error) {
-      console.error(error);
-      mostrarError("No se pudo cargar la lista de experimentos. Asegúrate de tener el archivo assets/data/runs/index.json");
-    }
-  }
+// ── Render metadata ──────────────────────────────────────────────────
+function renderMeta(meta, runName){
+  const isBest = runName && runName.includes('BEST');
+  const pM = meta.num_parameters ? (meta.num_parameters/1e6).toFixed(1)+'M' : '—';
+  const emaOn  = meta.ema_activo !== false && meta.ema_alpha != null;
+  const vscpOn = meta.vscp === true;
 
-  // 2. Cargar los datos del experimento seleccionado
-  async function cargarDatosExperimento(nombreCarpeta) {
-    if (!nombreCarpeta) return;
-    
-    ocultarError();
-    const basePath = `assets/data/runs/${nombreCarpeta}`;
+  // Técnicas activas
+  const tecHtml = `
+    ${tecBadge('EMA α=' + (meta.ema_alpha ?? '—'), emaOn)}
+    ${tecBadge('VSCP ' + (meta.vscp_mode ?? ''), vscpOn)}
+    ${tecBadge('TTA', true)}
+    ${tecBadge('WeightedSampler', true)}
+    ${tecBadge('DeepSupervision', meta.deep_supervision === true)}
+    ${tecBadge('LabelSmoothing ε='+meta.label_smoothing, meta.label_smoothing > 0)}
+  `;
 
-    try {
-        // Cargar JSON y CSV en paralelo para mayor velocidad
-        const [metaRes, csvRes] = await Promise.all([
-            fetch(`${basePath}/metadata.json`),
-            fetch(`${basePath}/metrics.csv`)
-        ]);
+  return `
+    <h2>Configuración${isBest?' <span class="badge badge-best">MEJOR MODELO</span>':''}</h2>
+    <div class="meta-grid">
+      <div class="meta-card"><span class="lbl">Arquitectura</span><span class="val" title="${safe(meta.model_class)}">${safe(meta.model_class)}</span></div>
+      <div class="meta-card"><span class="lbl">Loss</span><span class="val">${safe(meta.loss_function)}</span></div>
+      <div class="meta-card"><span class="lbl">Parámetros</span><span class="val">${pM}</span></div>
+      <div class="meta-card"><span class="lbl">Canales entrada</span><span class="val">${safe(meta.input_channels, 4)}</span></div>
+      <div class="meta-card"><span class="lbl">Learning Rate</span><span class="val">${safe(meta.lr)}</span></div>
+      <div class="meta-card"><span class="lbl">Batch Size</span><span class="val">${safe(meta.batch_size)}</span></div>
+      <div class="meta-card"><span class="lbl">Épocas config.</span><span class="val">${safe(meta.epochs)}</span></div>
+      <div class="meta-card"><span class="lbl">Patience</span><span class="val">${safe(meta.patience)}</span></div>
+      <div class="meta-card"><span class="lbl">Mejor época</span><span class="val good">${safe(meta.best_epoch)}</span></div>
+      <div class="meta-card"><span class="lbl">Val Loss ↓</span><span class="val good">${safe(meta.best_val_loss)}</span></div>
+      <div class="meta-card"><span class="lbl">Scheduler</span><span class="val">${safe(meta.scheduler, 'ReduceLROnPlateau')}</span></div>
+      <div class="meta-card"><span class="lbl">Optimizador</span><span class="val">${safe(meta.optimizer_name)}</span></div>
+      <div class="meta-card"><span class="lbl">IoU Sargazo val</span><span class="val info">${safe(meta.iou_sargassum_combinado ?? meta.iou_sargassum)}</span></div>
+      <div class="meta-card"><span class="lbl">mIoU val</span><span class="val info">${safe(meta.mIoU)}</span></div>
+    </div>
+    <h2>Técnicas activas</h2>
+    <div class="tecnicas">${tecHtml}</div>
+  `;
+}
 
-        if (!metaRes.ok) throw new Error("metadata.json no encontrado");
-        if (!csvRes.ok) throw new Error("metrics.csv no encontrado");
+// ── Charts ───────────────────────────────────────────────────────────
+function parseCSV(txt){
+  const lines = txt.trim().split(/\r?\n/);
+  lines.shift(); // cabecera
+  const epochs=[], train=[], val=[], miou=[];
+  lines.forEach(l => {
+    const v = l.split(',');
+    epochs.push(v[0]);
+    train.push(isNaN(+v[1]) ? null : +v[1]);
+    val.push(isNaN(+v[2]) ? null : +v[2]);
+    miou.push(isNaN(+v[6]) ? null : +(+v[6]*100).toFixed(3));
+  });
+  return { epochs, train, val, miou };
+}
 
-        const meta = await metaRes.json();
-        const csvText = await csvRes.text();
+function buildLossChart(id, data){
+  if(lossChart) lossChart.destroy();
+  lossChart = new Chart(document.getElementById(id), {
+    type:'line',
+    data:{ labels:data.epochs, datasets:[
+      {label:'Train Loss', data:data.train, borderColor:'rgba(52,152,219,0.9)', tension:.3, pointRadius:0, borderWidth:2, spanGaps:true},
+      {label:'Val Loss',   data:data.val,   borderColor:'rgba(231,76,60,0.9)',  tension:.3, pointRadius:0, borderWidth:2, spanGaps:true},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},
+      scales:{x:{ticks:{maxTicksLimit:15,font:{size:10}},title:{display:true,text:'Época',font:{size:10}}},
+              y:{title:{display:true,text:'Pérdida',font:{size:10}}}}}
+  });
+}
 
-        renderizarMetadata(meta);
-        procesarYRenderizarGraficas(csvText);
+function buildIoUChart(id, data){
+  if(iouChart) iouChart.destroy();
+  iouChart = new Chart(document.getElementById(id), {
+    type:'line',
+    data:{ labels:data.epochs, datasets:[
+      {label:'mIoU (%)', data:data.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:2},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},
+      scales:{x:{ticks:{maxTicksLimit:15,font:{size:10}},title:{display:true,text:'Época',font:{size:10}}},
+              y:{beginAtZero:true,title:{display:true,text:'mIoU (%)',font:{size:10}}}}}
+  });
+}
 
-    } catch (error) {
-        console.error(error);
-        mostrarError(`Error al cargar los datos del experimento '${nombreCarpeta}'. Verifica que metadata.json y metrics.csv existan.`);
-    }
-  }
+// ── Carga experimento ────────────────────────────────────────────────
+async function loadExperiment(name){
+  if(!name) return;
+  hideError();
+  document.getElementById('loadingMsg') && (document.getElementById('loadingMsg').style.display='none');
 
-  // 3. Renderizar las cajitas de metadatos
-  function renderizarMetadata(meta) {
-    const container = document.getElementById('meta-container');
-    const pM = meta.num_parameters ? (meta.num_parameters/1e6).toFixed(1)+'M' : 'N/A';
-    container.innerHTML = `
-      <div class="meta-item"><span class="meta-label">Arquitectura</span><span class="meta-value">${meta.model_class || 'N/A'}</span></div>
-      <div class="meta-item"><span class="meta-label">Loss</span><span class="meta-value">${meta.loss_function || 'N/A'}</span></div>
-      <div class="meta-item"><span class="meta-label">Parámetros</span><span class="meta-value">${pM}</span></div>
-      <div class="meta-item"><span class="meta-label">Optimizador</span><span class="meta-value">${meta.optimizer_name || 'N/A'}</span></div>
-      <div class="meta-item"><span class="meta-label">Learning Rate</span><span class="meta-value">${meta.lr || 'N/A'}</span></div>
-      <div class="meta-item"><span class="meta-label">Batch Size</span><span class="meta-value">${meta.batch_size || 'N/A'}</span></div>
-      <div class="meta-item"><span class="meta-label">Épocas config.</span><span class="meta-value">${meta.epochs || 'N/A'}</span></div>
-      <div class="meta-item"><span class="meta-label">Patience</span><span class="meta-value">${meta.patience || 'N/A'}</span></div>
-      <div class="meta-item"><span class="meta-label">Mejor Época</span><span class="meta-value" style="color:#27ae60;">${meta.best_epoch || 'N/A'}</span></div>
-      <div class="meta-item"><span class="meta-label">Val Loss ↓</span><span class="meta-value" style="color:#27ae60;">${meta.best_val_loss || 'N/A'}</span></div>
-      <div class="meta-item"><span class="meta-label">IoU Sargazo</span><span class="meta-value">${meta.iou_sargassum ?? 'N/A'}</span></div>
-      <div class="meta-item"><span class="meta-label">mIoU val</span><span class="meta-value">${meta.mIoU ?? 'N/A'}</span></div>
+  const base = `${BASE}/${name}`;
+  try {
+    const [meta, csvTxt] = await Promise.all([
+      jf(`${base}/metadata.json`),
+      tf(`${base}/metrics.csv`),
+    ]);
+
+    const csvData = parseCSV(csvTxt);
+    const content = document.getElementById('expContent');
+    content.innerHTML = renderMeta(meta, name) + `
+      <h2>Curvas de pérdida</h2>
+      <div class="chart-wrap"><canvas id="lossC"></canvas></div>
+      <h2>Evolución mIoU en validación</h2>
+      <div class="chart-wrap"><canvas id="iouC"></canvas></div>
     `;
+    buildLossChart('lossC', csvData);
+    buildIoUChart('iouC', csvData);
+
+  } catch(e){
+    showError(`No se pudieron cargar los datos de "${name}". Verifica que metadata.json y metrics.csv existan en assets/data/runs/${name}/`);
   }
+}
 
-  // 4. Procesar CSV y dibujar las gráficas
-  function procesarYRenderizarGraficas(csvText) {
-    const lineas = csvText.trim().split(/\r?\n/);
-    const cabeceras = lineas.shift().split(',');
-
-    const epochs = [];
-    const trainLoss = [];
-    const valLoss = [];
-    const mIoU = [];
-
-    lineas.forEach(linea => {
-      const valores = linea.split(',');
-      epochs.push(valores[0]);
-      
-      const tLoss = parseFloat(valores[1]);
-      const vLoss = parseFloat(valores[2]);
-      const miouVal = parseFloat(valores[6]); // Asumiendo mIoU en la columna 6 como en tu archivo
-      
-      trainLoss.push(isNaN(tLoss) ? null : tLoss);
-      valLoss.push(isNaN(vLoss) ? null : vLoss);
-      mIoU.push(isNaN(miouVal) ? null : (miouVal * 100).toFixed(2)); // Convertido a porcentaje
+// ── Inicializar selector ─────────────────────────────────────────────
+async function init(){
+  try {
+    const list = await jf(`${BASE}/index.json`);
+    const sel = document.getElementById('expSelect');
+    sel.innerHTML = '';
+    list.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      // Nombre legible: quitar prefijo numérico, reemplazar _ por espacio
+      opt.textContent = name.replace(/^\d+_/, '').replace(/_/g,' ');
+      sel.appendChild(opt);
     });
-
-    dibujarGraficaLoss(epochs, trainLoss, valLoss);
-    dibujarGraficaIoU(epochs, mIoU);
+    if(list.length > 0) loadExperiment(list[0]);
+  } catch(e){
+    showError('No se pudo cargar assets/data/runs/index.json');
   }
+}
 
-  // --- Funciones auxiliares para Chart.js ---
-
-  function dibujarGraficaLoss(labels, trainData, valData) {
-    const ctx = document.getElementById('lossChart').getContext('2d');
-    if (lossChartInstance) lossChartInstance.destroy(); // Destruir gráfico anterior si existe
-
-    lossChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          { label: 'Train Loss', data: trainData, borderColor: 'rgba(54, 162, 235, 1)', tension: 0.3, pointRadius: 1, borderWidth: 2, spanGaps: true },
-          { label: 'Validation Loss', data: valData, borderColor: 'rgba(255, 99, 132, 1)', tension: 0.3, pointRadius: 1, borderWidth: 2, spanGaps: true }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        scales: { x: { title: { display: true, text: 'Épocas' } }, y: { title: { display: true, text: 'Pérdida' } } }
-      }
-    });
-  }
-
-  function dibujarGraficaIoU(labels, iouData) {
-    const ctx = document.getElementById('iouChart').getContext('2d');
-    if (iouChartInstance) iouChartInstance.destroy();
-
-    iouChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [
-          { label: 'mIoU (%)', data: iouData, borderColor: 'rgba(46, 204, 113, 1)', backgroundColor: 'rgba(46, 204, 113, 0.1)', fill: true, tension: 0.3, pointRadius: 1, borderWidth: 2 }
-        ]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
-        scales: { x: { title: { display: true, text: 'Épocas' } }, y: { title: { display: true, text: 'mIoU (%)' }, beginAtZero: true } }
-      }
-    });
-  }
-
-  function mostrarError(msg) {
-      const box = document.getElementById('errorBox');
-      box.textContent = msg;
-      box.style.display = 'block';
-  }
-  function ocultarError() { document.getElementById('errorBox').style.display = 'none'; }
-
-  // Arrancar la maquinaria
-  window.onload = inicializarSelector;
-
+window.onload = init;
 </script>
 </body>
 </html>

@@ -11,65 +11,82 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;scroll-behavior:smooth}
 body{font-family:'Source Serif 4',Georgia,serif;background:#fff;color:#111;line-height:1.7;font-weight:300}
-.container{max-width:900px;margin:0 auto;padding:0 2rem}
+.container{max-width:960px;margin:0 auto;padding:0 2rem}
 header{border-bottom:1px solid #111;padding:2rem 0 1.5rem;margin-bottom:3rem}
-.header-inner{max-width:900px;margin:0 auto;padding:0 2rem;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.5rem}
+.header-inner{max-width:960px;margin:0 auto;padding:0 2rem;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.5rem}
 .site-title{font-size:.8rem;font-weight:400;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:#111}
 nav{display:flex;gap:1.5rem}
 nav a{font-size:.85rem;font-weight:300;color:#555;text-decoration:none}
 nav a:hover{color:#111}
 nav a.active{color:#111;border-bottom:1px solid #111}
+
 .page-title{margin-bottom:3rem}
 .breadcrumb{font-family:'Source Code Pro',monospace;font-size:.75rem;color:#999;margin-bottom:.75rem}
 .breadcrumb a{color:#777;text-decoration:none}
 .page-title h1{font-size:1.8rem;font-weight:600;margin-bottom:.5rem;line-height:1.25}
 .page-title .subtitle{color:#555;font-weight:300;font-size:.93rem}
-section{margin-bottom:4rem}
-h2{font-size:.8rem;font-weight:600;letter-spacing:.09em;text-transform:uppercase;border-bottom:1px solid #ddd;padding-bottom:.5rem;margin-bottom:1.75rem;color:#666}
-h3{font-size:1.05rem;font-weight:600;margin-bottom:.75rem;color:#111}
+
+section{margin-bottom:4.5rem}
+h2{font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#999;border-bottom:1px solid #eee;padding-bottom:.4rem;margin-bottom:1.5rem}
+h3{font-size:1rem;font-weight:600;margin-bottom:.75rem;color:#111}
 p{margin-bottom:1rem;color:#333;font-weight:300;font-size:.92rem}
-.tabs{display:flex;border-bottom:1px solid #ddd;margin-bottom:2rem;overflow-x:auto}
-.tab-btn{padding:.6rem 1.1rem;font-family:'Source Code Pro',monospace;font-size:.73rem;font-weight:500;color:#999;cursor:pointer;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;white-space:nowrap;transition:color .15s,border-color .15s}
-.tab-btn:hover{color:#333}
+
+/* Tabs */
+.tabs{display:flex;border-bottom:1px solid #ddd;margin-bottom:2rem;overflow-x:auto;gap:0}
+.tab-btn{padding:.55rem 1rem;font-family:'Source Code Pro',monospace;font-size:.72rem;font-weight:500;color:#999;cursor:pointer;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab-btn:hover{color:#555}
 .tab-btn.active{color:#111;border-bottom-color:#111}
-.tab-btn .badge{display:inline-block;margin-left:.35rem;padding:.03rem .3rem;font-size:.6rem;background:#1e8449;color:#fff;border-radius:2px}
 .tab-panel{display:none}
 .tab-panel.active{display:block}
-.mg{display:grid;gap:0;border:1px solid #ddd;margin-bottom:1.25rem}
-.mg5{grid-template-columns:repeat(5,1fr)}
-.mg4{grid-template-columns:repeat(4,1fr)}
-.mc{padding:.85rem .75rem;border-right:1px solid #ddd;text-align:center}
+
+/* Metric cards */
+.metric-row{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #ddd;margin-bottom:1.25rem}
+.mc{padding:1rem .9rem;text-align:center;border-right:1px solid #ddd}
 .mc:last-child{border-right:none}
-.ml{font-family:'Source Code Pro',monospace;font-size:.6rem;color:#bbb;text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:.2rem}
-.mv{font-family:'Source Code Pro',monospace;font-size:.85rem;font-weight:600;color:#111;display:block}
-.mv.good{color:#1e8449}
-.mr{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid #ddd;margin-bottom:1.25rem}
-.mt{padding:1rem .75rem;border-right:1px solid #ddd;text-align:center}
-.mt:last-child{border-right:none}
-.mv2{font-family:'Source Code Pro',monospace;font-size:1.4rem;font-weight:500;display:block;margin-bottom:.15rem;color:#111}
-.mv2.good{color:#1e8449}
-.mv2.warn{color:#c0392b}
-.ml2{font-size:.67rem;color:#aaa;text-transform:uppercase;letter-spacing:.05em}
-.cw{position:relative;height:250px;width:100%;margin-bottom:1.75rem}
-.cl{font-family:'Source Code Pro',monospace;font-size:.68rem;color:#ccc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
-.tw{overflow-x:auto;margin-bottom:1.25rem}
+.mc .lbl{font-family:'Source Code Pro',monospace;font-size:.6rem;color:#bbb;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.25rem}
+.mc .val{font-family:'Source Code Pro',monospace;font-size:1.35rem;font-weight:500;display:block;color:#111}
+.mc .val.good{color:#1e8449}
+.mc .val.warn{color:#c0392b}
+
+/* Confusion pseudo-matrix */
+.cm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.5rem}
+.cm-cell{border:1px solid #ddd;padding:1rem;text-align:center}
+.cm-cell .lbl{font-family:'Source Code Pro',monospace;font-size:.6rem;color:#bbb;text-transform:uppercase;letter-spacing:.07em;display:block;margin-bottom:.3rem}
+.cm-cell .num{font-family:'Source Code Pro',monospace;font-size:1.1rem;font-weight:600;display:block}
+.cm-cell.tp{border-color:#a9dfbf;background:#f0faf5}.cm-cell.tp .num{color:#1e8449}
+.cm-cell.fp{border-color:#f9b8b0;background:#fdf2f0}.cm-cell.fp .num{color:#c0392b}
+.cm-cell.fn{border-color:#f5cba7;background:#fef9f0}.cm-cell.fn .num{color:#d35400}
+
+/* Table */
+.tw{overflow-x:auto;margin-bottom:1.5rem}
 .tbl{width:100%;border-collapse:collapse;font-size:.83rem}
 .tbl thead tr{border-bottom:2px solid #111}
-.tbl th{text-align:left;padding:.42rem .65rem;font-family:'Source Code Pro',monospace;font-size:.63rem;font-weight:600;color:#888;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
-.tbl td{padding:.58rem .65rem;border-bottom:1px solid #eee;color:#333;font-weight:300}
+.tbl th{text-align:left;padding:.42rem .65rem;font-family:'Source Code Pro',monospace;font-size:.6rem;font-weight:600;color:#888;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}
+.tbl td{padding:.58rem .65rem;border-bottom:1px solid #eee;color:#333;font-weight:300;font-family:'Source Code Pro',monospace;font-size:.8rem}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tr.best td{background:#f0faf5}
 .tbl tr.best td:first-child{border-left:3px solid #1e8449;padding-left:calc(.65rem - 3px)}
-.tag{font-family:'Source Code Pro',monospace;font-size:.58rem;padding:.06rem .28rem;border-radius:2px;margin-left:.28rem;vertical-align:middle}
-.tb{background:#e8f8f5;color:#1e8449;border:1px solid #a9dfbf}
-.note{border-left:3px solid #ddd;padding:.65rem .9rem;font-size:.82rem;color:#888;margin-bottom:1.25rem}
+.tag{font-family:'Source Code Pro',monospace;font-size:.55rem;padding:.05rem .25rem;border-radius:2px;margin-left:.3rem;vertical-align:middle}
+.tag-best{background:#1e8449;color:#fff}
+.tag-fail{background:#f2f3f4;color:#999;border:1px solid #ddd}
+
+/* Chart */
+.chart-wrap{position:relative;height:300px;width:100%;margin-bottom:2rem}
+
+/* Note */
+.note{border-left:3px solid #ddd;padding:.65rem .9rem;font-size:.82rem;color:#888;margin-bottom:1.5rem;line-height:1.6}
 .note.info{border-left-color:#2471a3;background:#eaf4fb;color:#1a5276}
-.loading{text-align:center;padding:2rem;font-family:'Source Code Pro',monospace;font-size:.78rem;color:#bbb}
+.note.warn{border-left-color:#d35400;background:#fef9f0;color:#784212}
+.note.good{border-left-color:#1e8449;background:#eafaf1;color:#1a5276}
+
+/* Loading */
+.loading{text-align:center;padding:3rem;font-family:'Source Code Pro',monospace;font-size:.75rem;color:#ccc;letter-spacing:.05em}
+
 footer{border-top:1px solid #ddd;padding:1.5rem 0;margin-top:4rem}
-.footer-inner{max-width:900px;margin:0 auto;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+.footer-inner{max-width:960px;margin:0 auto;padding:0 2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
 footer p{font-size:.8rem;color:#999;margin:0}
-footer a{color:#777;text-decoration:none}
-@media(max-width:640px){.mg5{grid-template-columns:repeat(3,1fr)}.mr{grid-template-columns:1fr 1fr}nav{display:none}}
+
+@media(max-width:640px){nav{display:none}.metric-row{grid-template-columns:1fr 1fr}.cm-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -91,65 +108,68 @@ footer a{color:#777;text-decoration:none}
   <div class="page-title">
     <p class="breadcrumb"><a href="index.html">Inicio</a> / Resultados</p>
     <h1>Evaluación experimental</h1>
-    <p class="subtitle">Comparativa de arquitecturas de segmentación semántica sobre el split de test de MADOS. Todos los datos se cargan dinámicamente desde los archivos del repositorio.</p>
+    <p class="subtitle">Comparativa de modelos sobre los 45 tiles de test del dataset MADOS con anotaciones de sargazo. Todos los datos se cargan dinámicamente desde el repositorio.</p>
   </div>
 
-  <!-- SECCIÓN 1: EXPERIMENTOS -->
-  <section id="modelos">
-    <h2>Experimentos por arquitectura</h2>
-    <div class="loading" id="runs-loading">Cargando experimentos…</div>
-    <div id="runs-tabs" class="tabs" style="display:none"></div>
-    <div id="runs-panels"></div>
+  <!-- ── SECCIÓN 1: MEJOR MODELO ────────────────────────────── -->
+  <section id="best">
+    <h2>Modelo propuesto — evaluación final</h2>
+    <div class="loading" id="best-loading">Cargando…</div>
+    <div id="best-content" style="display:none">
+      <p>El modelo final es un <strong>Swin Transformer Tiny + Attention U-Net</strong> entrenado con FocalDiceLoss, EMA α=0.995 y VSCP batch-level sobre 4 canales espectrales (RGB+NIR). Evaluado sobre test con TTA de 8 transformaciones y umbral de confianza 0.95.</p>
+      <div class="metric-row" id="best-metrics"></div>
+      <h3>Distribución de detecciones</h3>
+      <div class="cm-grid" id="best-cm"></div>
+      <div class="note good">Precisión del 63.2% a umbral 0.95 — el modelo sólo activa la alarma cuando tiene alta confianza. Recall del 66.9% sobre 45 tiles con sargazo real en condiciones de imagen diversas sin usar índices espectrales como el FAI.</div>
+    </div>
   </section>
 
-  <!-- SECCIÓN 2: TOP 3 TEST -->
-  <section id="top3">
-    <h2>Top 3 modelos — evaluación sobre test</h2>
-    <p>Tres arquitecturas evaluadas sobre los 45 tiles de test con sargazo, misma configuración de postprocesado (umbral 0.70, FAI ≥ −0.01, σ = 1.0, min_pixels = 50).</p>
-    <div class="loading" id="top3-loading">Cargando…</div>
-    <div id="top3-content" style="display:none">
-      <div class="cl">Recall · Precision · F1 · IoU Global</div>
-      <div class="cw"><canvas id="chart-top3"></canvas></div>
-      <div class="tw">
-        <table class="tbl" id="tbl-top3">
+  <!-- ── SECCIÓN 2: COMPARATIVA FINAL ──────────────────────── -->
+  <section id="comparativa">
+    <h2>Comparativa con estado del arte</h2>
+    <div class="loading" id="comp-loading">Cargando…</div>
+    <div id="comp-content" style="display:none">
+
+      <div class="tabs" id="comp-tabs">
+        <button class="tab-btn active" onclick="switchTab('echevarria-csv', this)">Echevarría (datos originales)</button>
+        <button class="tab-btn" onclick="switchTab('echevarria-mados', this)">Echevarría (reentrenado MADOS)</button>
+      </div>
+
+      <div id="echevarria-csv" class="tab-panel active">
+        <div class="note info">Modelos clásicos de Echevarría et al. entrenados con su CSV original (Landsat-8, Zenodo). Se evalúan sobre los mismos 45 tiles MADOS de test para comparación directa.</div>
+        <div class="chart-wrap"><canvas id="chart-ech-csv"></canvas></div>
+        <div class="tw"><table class="tbl" id="tbl-ech-csv">
           <thead><tr><th>Modelo</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>TP</th><th>FP</th><th>FN</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+      <div id="echevarria-mados" class="tab-panel">
+        <div class="note warn">Mismos modelos clásicos reentrenados con píxeles extraídos del dataset MADOS para comparación en dominio. La distribución de píxeles de Sentinel-2 difiere de Landsat-8, lo que explica la degradación en algunos modelos.</div>
+        <div class="chart-wrap"><canvas id="chart-ech-mados"></canvas></div>
+        <div class="tw"><table class="tbl" id="tbl-ech-mados">
+          <thead><tr><th>Modelo</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>TP</th><th>FP</th><th>FN</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── SECCIÓN 3: ABLATION STUDY ─────────────────────────── -->
+  <section id="ablation">
+    <h2>Estudio de ablación — arquitecturas evaluadas</h2>
+    <p>Comparativa de todos los modelos evaluados sobre test, ordenados por F1. Se muestra el mejor umbral encontrado para cada modelo.</p>
+    <div class="loading" id="abl-loading">Cargando…</div>
+    <div id="abl-content" style="display:none">
+      <div class="chart-wrap"><canvas id="chart-ablation"></canvas></div>
+      <div class="tw">
+        <table class="tbl" id="tbl-ablation">
+          <thead><tr><th>Modelo</th><th>Loss</th><th>EMA</th><th>VSCP</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>Umbral</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
-      <p class="note">El <strong>Swin+Att-UNet</strong> ofrece el mejor balance F1 (29.4%) e IoU (17.2%). El Swin estándar tiene mayor Recall (92.7%) a costa de más falsos positivos. El SegFormer, pese a su mejor mIoU en validación, generaliza peor sobre los datos de test reales.</p>
-    </div>
-  </section>
-
-  <!-- SECCIÓN 3: ESTADO DEL ARTE -->
-  <section id="state-of-art">
-    <h2>Comparativa con el estado del arte</h2>
-    <p>Modelos de Echevarría et al. (2025) evaluados sobre los mismos tiles de test. Se muestran en dos condiciones: entrenados con su CSV original (Landsat-8, Zenodo) y reentrenados con píxeles extraídos de MADOS.</p>
-    <div class="note info">Los modelos clásicos son clasificadores por píxel (KNN, RF, XGBoost, MLP, CNN-1D) sin contexto espacial. El modelo propuesto (Swin+Att-UNet) opera a nivel de imagen completa con skip connections atencionales.</div>
-
-    <div class="tabs" id="ech-tabs">
-      <button class="tab-btn active" onclick="switchEch('csv',this)">CSV Echevarría (Landsat-8)</button>
-      <button class="tab-btn" onclick="switchEch('mados',this)">Reentrenados con MADOS</button>
-    </div>
-
-    <div class="loading" id="ech-loading">Cargando…</div>
-    <div id="ech-content" style="display:none">
-      <div id="ech-csv">
-        <div class="cl">Recall · Precision · F1 · IoU — CSV Echevarría</div>
-        <div class="cw"><canvas id="chart-ech-csv"></canvas></div>
-        <div class="tw"><table class="tbl" id="tbl-ech-csv">
-          <thead><tr><th>Modelo</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>Tiles</th></tr></thead>
-          <tbody></tbody>
-        </table></div>
-      </div>
-      <div id="ech-mados" style="display:none">
-        <div class="cl">Recall · Precision · F1 · IoU — reentrenados MADOS</div>
-        <div class="cw"><canvas id="chart-ech-mados"></canvas></div>
-        <div class="tw"><table class="tbl" id="tbl-ech-mados">
-          <thead><tr><th>Modelo</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>Tiles</th></tr></thead>
-          <tbody></tbody>
-        </table></div>
-        <p class="note">Al reentrenar con MADOS (desbalance ~0.002% sargazo), la Precision colapsa en todos los modelos clásicos. Confirma que los clasificadores por píxel no escalan a detección de objetos raros sin mecanismos estructurales de compensación del desbalance.</p>
-      </div>
+      <div class="note">El ablation study muestra que la combinación de EMA α=0.995 y VSCP batch-level es el factor determinante de mejora, superando cambios de arquitectura, función de pérdida o número de canales espectrales.</div>
     </div>
   </section>
 
@@ -157,244 +177,179 @@ footer a{color:#777;text-decoration:none}
 
 <footer>
   <div class="footer-inner">
-    <p>© 2026 Jorge Lorenzo Lorenzo · ULPGC</p>
-    <p><a href="index.html">← Inicio</a></p>
+    <p>TFG · Detección y Monitorización de Sargazo · ULPGC 2026</p>
+    <p>Jorge Lorenzo Lorenzo</p>
   </div>
 </footer>
 
 <script>
-const BASE_RUNS = 'assets/data/runs';
 const BASE_TEST = 'assets/data/test_final';
-const COLORS  = ['rgba(52,120,190,.75)','rgba(30,132,73,.75)','rgba(211,84,0,.75)','rgba(125,60,152,.75)','rgba(192,57,43,.75)','rgba(23,165,137,.75)'];
-const BORDERS = COLORS.map(c=>c.replace('.75','1'));
+const BASE_RUNS = 'assets/data/runs';
 
-async function jf(url){ const r=await fetch(url); if(!r.ok) throw new Error(r.status+': '+url); return r.json(); }
-async function tf(url){ const r=await fetch(url); if(!r.ok) throw new Error(r.status+': '+url); return r.text(); }
+const COLORS  = ['rgba(52,152,219,.75)','rgba(39,174,96,.75)','rgba(231,76,60,.75)','rgba(243,156,18,.75)','rgba(142,68,173,.75)'];
+const BORDERS = ['rgba(52,152,219,1)','rgba(39,174,96,1)','rgba(231,76,60,1)','rgba(243,156,18,1)','rgba(142,68,173,1)'];
 
-function parseCSV(txt){
-  const ls=txt.trim().split(/\r?\n/);
-  const hs=ls[0].split(',').map(h=>h.trim());
-  return ls.slice(1).map(l=>{const vs=l.split(',');const o={};hs.forEach((h,i)=>o[h]=vs[i]?.trim()||'');return o;});
-}
+const jf = url => fetch(url).then(r=>{ if(!r.ok) throw new Error(r.status); return r.json(); });
+const pct = v => v != null ? (v*100).toFixed(1)+'%' : '—';
+const num = v => v != null ? v.toLocaleString() : '—';
 
-function pct(v,d=1){ const n=parseFloat(v); return isNaN(n)?'—':(n*100).toFixed(d)+'%'; }
-function num(v,d=5){ const n=parseFloat(v); return isNaN(n)?'—':n.toFixed(d); }
-
-function barChart(id, labels, datasets, maxY=1){
-  const ctx=document.getElementById(id); if(!ctx)return;
-  new Chart(ctx,{type:'bar',data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{position:'top',labels:{font:{family:'Source Code Pro',size:10},boxWidth:11}}},
-    scales:{
-      x:{ticks:{font:{family:'Source Code Pro',size:9},maxRotation:25}},
-      y:{beginAtZero:true,max:maxY,ticks:{font:{family:'Source Code Pro',size:9},callback:v=>(v*100).toFixed(0)+'%'}}
-    }
-  }});
-}
-
-function lossChart(id, rows){
-  const ctx=document.getElementById(id); if(!ctx)return;
-  new Chart(ctx,{type:'line',data:{
-    labels:rows.map(r=>r.epoch),
-    datasets:[
-      {label:'Train Loss',data:rows.map(r=>parseFloat(r.train_loss)||null),borderColor:BORDERS[0],tension:.3,pointRadius:1,borderWidth:2},
-      {label:'Val Loss',  data:rows.map(r=>parseFloat(r.val_loss)||null),  borderColor:BORDERS[4],tension:.3,pointRadius:1,borderWidth:2},
-    ]
-  },options:{responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{position:'top',labels:{font:{family:'Source Code Pro',size:10},boxWidth:11}}},
-    scales:{
-      x:{title:{display:true,text:'Época',font:{family:'Source Code Pro',size:10}},ticks:{font:{family:'Source Code Pro',size:9},maxTicksLimit:15}},
-      y:{title:{display:true,text:'Pérdida',font:{family:'Source Code Pro',size:10}},ticks:{font:{family:'Source Code Pro',size:9}}}
-    }
-  }});
-}
-
-function archLabel(cls){ return {SwinSegmenter:'UNet',SwinAttSegmenter:'Att-UNet',SegFormerSegmenter:'MLP Decoder'}[cls]||cls; }
-
-function folderLabel(name){
-  return name
-    .replace(/_/g,' ')
-    .replace('Swin Transformer Tiny Attention','Swin+Att')
-    .replace('Swin Transformer Tiny','Swin Tiny')
-    .replace('Swin Transformer Base','Swin Base')
-    .replace('Segformer Segmenter','SegFormer')
-    .replace('Dice Loss','(Dice)')
-    .replace('Tversky Loss','(Tversky)');
-}
-
-// ─── SECCIÓN 1 ─────────────────────────────────────────
-async function loadRuns(){
-  try{
-    const index=await jf(`${BASE_RUNS}/index.json`);
-    const tabsEl=document.getElementById('runs-tabs');
-    const panelsEl=document.getElementById('runs-panels');
-    document.getElementById('runs-loading').style.display='none';
-    tabsEl.style.display='flex';
-
-    const ordered=[...index].sort((a,b)=>{
-      const pa=a.includes('Attention')&&a.includes('Dice')?0:a.includes('Attention')?1:a.includes('Tiny')&&a.includes('Dice')&&!a.includes('Attention')?2:3;
-      const pb=b.includes('Attention')&&b.includes('Dice')?0:b.includes('Attention')?1:b.includes('Tiny')&&b.includes('Dice')&&!b.includes('Attention')?2:3;
-      return pa-pb||a.localeCompare(b);
-    });
-
-    const metas=await Promise.all(ordered.map(n=>jf(`${BASE_RUNS}/${n}/metadata.json`).catch(()=>null)));
-
-    ordered.forEach((name,i)=>{
-      const meta=metas[i];
-      const label=folderLabel(name);
-      const isBest=name.includes('Attention')&&name.includes('Dice');
-      const isFirst=i===0;
-
-      // Tab
-      const btn=document.createElement('button');
-      btn.className='tab-btn'+(isFirst?' active':'');
-      btn.innerHTML=label+(isBest?' <span class="badge">MEJOR</span>':'');
-      btn.onclick=()=>{
-        document.querySelectorAll('#runs-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
-        document.querySelectorAll('.rp').forEach(p=>p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('rp-'+i).classList.add('active');
-      };
-      tabsEl.appendChild(btn);
-
-      // Panel
-      const panel=document.createElement('div');
-      panel.className='tab-panel rp'+(isFirst?' active':'');
-      panel.id='rp-'+i;
-
-      if(!meta){ panel.innerHTML='<p class="note">No se pudo cargar metadata.json</p>'; panelsEl.appendChild(panel); return; }
-
-      const pM=(meta.num_parameters/1e6).toFixed(1);
-      panel.innerHTML=`
-        <h3>${label}</h3>
-        <div class="mg mg5">
-          <div class="mc"><span class="ml">Clase</span><span class="mv">${meta.model_class}</span></div>
-          <div class="mc"><span class="ml">Decoder</span><span class="mv">${archLabel(meta.model_class)}</span></div>
-          <div class="mc"><span class="ml">Loss</span><span class="mv">${meta.loss_function||'—'}</span></div>
-          <div class="mc"><span class="ml">Parámetros</span><span class="mv">${pM}M</span></div>
-          <div class="mc"><span class="ml">Optimizador</span><span class="mv">${meta.optimizer_name}</span></div>
-        </div>
-        <div class="mg mg5">
-          <div class="mc"><span class="ml">Épocas config.</span><span class="mv">${meta.epochs}</span></div>
-          <div class="mc"><span class="ml">Mejor época</span><span class="mv good">${meta.best_epoch}</span></div>
-          <div class="mc"><span class="ml">Val Loss ↓</span><span class="mv good">${meta.best_val_loss}</span></div>
-          <div class="mc"><span class="ml">Learning Rate</span><span class="mv">${meta.lr}</span></div>
-          <div class="mc"><span class="ml">Patience</span><span class="mv">${meta.patience}</span></div>
-        </div>
-        <div class="mg mg4">
-          <div class="mc"><span class="ml">IoU Sargazo denso</span><span class="mv">${meta.iou_sargassum??'—'}</span></div>
-          <div class="mc"><span class="ml">IoU Algas sparse</span><span class="mv">${meta.iou_algas??'—'}</span></div>
-          <div class="mc"><span class="ml">mIoU val</span><span class="mv">${meta.mIoU??'—'}</span></div>
-          <div class="mc"><span class="ml">Batch size</span><span class="mv">${meta.batch_size}</span></div>
-        </div>
-        <div class="cl">Curvas de pérdida — entrenamiento</div>
-        <div class="cw"><canvas id="lc-${i}"></canvas></div>
-      `;
-      panelsEl.appendChild(panel);
-
-      tf(`${BASE_RUNS}/${name}/metrics.csv`)
-        .then(txt=>lossChart('lc-'+i,parseCSV(txt)))
-        .catch(()=>{ const c=document.getElementById('lc-'+i); if(c) c.parentElement.innerHTML='<p class="note">No se pudo cargar metrics.csv</p>'; });
-    });
-  }catch(e){ document.getElementById('runs-loading').textContent='Error: '+e.message; }
-}
-
-// ─── SECCIÓN 2 ─────────────────────────────────────────
-async function loadTop3(){
-  try{
-    const [dS,dA,dSeg]=await Promise.all([
-      jf(`${BASE_TEST}/evaluacion_swin_transformer_test.json`),
-      jf(`${BASE_TEST}/evaluacion_swin_transformer_attention_test.json`),
-      jf(`${BASE_TEST}/evaluacion_segformer_test.json`),
-    ]);
-    const swin=Object.values(dS)[0];
-    const att=Object.values(dA)[0];
-    const seg=Object.values(dSeg)[0];
-    const datos=[
-      {label:'Swin+Att-UNet',d:att, best:true},
-      {label:'Swin Tiny',    d:swin,best:false},
-      {label:'SegFormer',    d:seg, best:false},
-    ];
-
-    document.getElementById('top3-loading').style.display='none';
-    document.getElementById('top3-content').style.display='block';
-
-    barChart('chart-top3', datos.map(x=>x.label), [
-      {label:'Recall',   data:datos.map(x=>x.d.recall),            backgroundColor:COLORS[0],borderColor:BORDERS[0],borderWidth:1},
-      {label:'Precision',data:datos.map(x=>x.d.precision),         backgroundColor:COLORS[2],borderColor:BORDERS[2],borderWidth:1},
-      {label:'F1',       data:datos.map(x=>x.d.f1),                backgroundColor:COLORS[1],borderColor:BORDERS[1],borderWidth:1},
-      {label:'IoU',      data:datos.map(x=>x.d.iou_sargazo_global),backgroundColor:COLORS[3],borderColor:BORDERS[3],borderWidth:1},
-    ]);
-
-    const tbody=document.querySelector('#tbl-top3 tbody');
-    datos.forEach(({label,d,best})=>{
-      const tr=document.createElement('tr');
-      if(best) tr.className='best';
-      tr.innerHTML=`
-        <td>${best?'<strong>'+label+'</strong>':label}${best?'<span class="tag tb">PROPUESTO</span>':''}</td>
-        <td>${best?'<strong>':''} ${pct(d.recall)}${best?'</strong>':''}</td>
-        <td>${pct(d.precision)}</td>
-        <td>${pct(d.f1)}</td>
-        <td>${pct(d.iou_sargazo_global)}</td>
-        <td>${d.tp_total?.toLocaleString()??'—'}</td>
-        <td>${d.fp_total?.toLocaleString()??'—'}</td>
-        <td>${d.fn_total?.toLocaleString()??'—'}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }catch(e){ document.getElementById('top3-loading').textContent='Error: '+e.message; }
-}
-
-// ─── SECCIÓN 3 ─────────────────────────────────────────
-function switchEch(id,btn){
-  document.getElementById('ech-csv').style.display=id==='csv'?'block':'none';
-  document.getElementById('ech-mados').style.display=id==='mados'?'block':'none';
-  document.querySelectorAll('#ech-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+// ── Tabs ─────────────────────────────────────────────────────────────
+function switchTab(id, btn){
+  document.querySelectorAll('#comp-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#comp-content .tab-panel').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
+  document.getElementById(id).classList.add('active');
 }
 
-function fillEch(chartId, tableId, data, attFlat){
-  const all={'Swin+Att-UNet ★':{...attFlat,_best:true},...data};
-  const labels=Object.keys(all);
+// ── Bar chart ─────────────────────────────────────────────────────────
+function barChart(canvasId, labels, datasets){
+  const existing = Chart.getChart(canvasId);
+  if(existing) existing.destroy();
+  new Chart(document.getElementById(canvasId),{
+    type:'bar',
+    data:{labels, datasets},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{font:{size:10},boxWidth:10}}},
+      scales:{
+        x:{ticks:{font:{size:9}}},
+        y:{beginAtZero:true, max:1, ticks:{callback:v=>(v*100).toFixed(0)+'%',font:{size:10}}, title:{display:true,text:'Valor',font:{size:10}}}
+      }
+    }
+  });
+}
+
+// ── Sección 1: Mejor modelo ───────────────────────────────────────────
+async function loadBest(){
+  try {
+    const data = await jf(`${BASE_TEST}/evaluacion_swin_att_best.json`);
+    const key  = Object.keys(data).find(k => k !== '_experimento');
+    const d    = data[key];
+    const exp  = data['_experimento'] || {};
+
+    document.getElementById('best-loading').style.display='none';
+    document.getElementById('best-content').style.display='block';
+
+    document.getElementById('best-metrics').innerHTML = `
+      <div class="mc"><span class="lbl">Precision</span><span class="val good">${pct(d.precision)}</span></div>
+      <div class="mc"><span class="lbl">Recall</span><span class="val good">${pct(d.recall)}</span></div>
+      <div class="mc"><span class="lbl">F1 Score</span><span class="val good">${pct(d.f1)}</span></div>
+      <div class="mc"><span class="lbl">IoU Sargazo</span><span class="val good">${pct(d.iou_sargazo_global)}</span></div>
+    `;
+
+    document.getElementById('best-cm').innerHTML = `
+      <div class="cm-cell tp"><span class="lbl">Verdaderos Positivos (TP)</span><span class="num">${num(d.tp_total)}</span></div>
+      <div class="cm-cell fp"><span class="lbl">Falsos Positivos (FP)</span><span class="num">${num(d.fp_total)}</span></div>
+      <div class="cm-cell fn"><span class="lbl">Falsos Negativos (FN)</span><span class="num">${num(d.fn_total)}</span></div>
+    `;
+  } catch(e){
+    document.getElementById('best-loading').textContent = 'Error al cargar evaluacion_swin_att_best.json';
+  }
+}
+
+// ── Sección 2: Comparativa Echevarría ────────────────────────────────
+async function loadComparativa(){
+  try {
+    const [echCSV, echMADOS, swAtt] = await Promise.all([
+      jf(`${BASE_TEST}/evaluacion_echevarria.json`),
+      jf(`${BASE_TEST}/evaluacion_echevarria_mados.json`),
+      jf(`${BASE_TEST}/evaluacion_swin_att_best.json`),
+    ]);
+
+    const swKey = Object.keys(swAtt).find(k=>k!=='_experimento');
+    const swD   = swAtt[swKey];
+    const swRef = { precision:swD.precision, recall:swD.recall, f1:swD.f1, iou_sargazo_global:swD.iou_sargazo_global,
+                    tp_total:swD.tp_total, fp_total:swD.fp_total, fn_total:swD.fn_total, _best:true };
+
+    document.getElementById('comp-loading').style.display='none';
+    document.getElementById('comp-content').style.display='block';
+
+    fillCompTable('chart-ech-csv',   'tbl-ech-csv',   echCSV,   swRef, 'Swin-Att ★ (propuesto)');
+    fillCompTable('chart-ech-mados', 'tbl-ech-mados', echMADOS, swRef, 'Swin-Att ★ (propuesto)');
+  } catch(e){
+    document.getElementById('comp-loading').textContent = 'Error: '+e.message;
+  }
+}
+
+function fillCompTable(chartId, tableId, data, swRef, swLabel){
+  const allData = { [swLabel]: swRef, ...data };
+  const labels  = Object.keys(allData);
+
   barChart(chartId, labels, [
-    {label:'Recall',   data:labels.map(k=>all[k].recall),            backgroundColor:COLORS[0],borderColor:BORDERS[0],borderWidth:1},
-    {label:'Precision',data:labels.map(k=>all[k].precision),         backgroundColor:COLORS[2],borderColor:BORDERS[2],borderWidth:1},
-    {label:'F1',       data:labels.map(k=>all[k].f1),                backgroundColor:COLORS[1],borderColor:BORDERS[1],borderWidth:1},
-    {label:'IoU',      data:labels.map(k=>all[k].iou_sargazo_global),backgroundColor:COLORS[3],borderColor:BORDERS[3],borderWidth:1},
+    {label:'Recall',    data:labels.map(k=>allData[k].recall),            backgroundColor:COLORS[0], borderColor:BORDERS[0], borderWidth:1},
+    {label:'Precision', data:labels.map(k=>allData[k].precision),         backgroundColor:COLORS[2], borderColor:BORDERS[2], borderWidth:1},
+    {label:'F1',        data:labels.map(k=>allData[k].f1),                backgroundColor:COLORS[1], borderColor:BORDERS[1], borderWidth:1},
+    {label:'IoU',       data:labels.map(k=>allData[k].iou_sargazo_global),backgroundColor:COLORS[3], borderColor:BORDERS[3], borderWidth:1},
   ]);
-  const tbody=document.querySelector('#'+tableId+' tbody');
-  tbody.innerHTML='';
-  Object.entries(all).forEach(([nombre,d])=>{
-    const isBest=d._best;
-    const tr=document.createElement('tr');
+
+  const tbody = document.querySelector(`#${tableId} tbody`);
+  tbody.innerHTML = '';
+  Object.entries(allData).forEach(([nombre, d])=>{
+    const isBest = d._best;
+    const tr = document.createElement('tr');
     if(isBest) tr.className='best';
-    tr.innerHTML=`
-      <td>${isBest?'<strong>'+nombre+'</strong>':nombre}${isBest?'<span class="tag tb">PROPUESTO</span>':''}</td>
-      <td>${isBest?'<strong>':''} ${pct(d.recall)}${isBest?'</strong>':''}</td>
+    tr.innerHTML = `
+      <td>${isBest?'<strong>'+nombre+'</strong>'+' <span class="tag tag-best">PROPUESTO</span>':nombre}</td>
+      <td>${isBest?'<strong>':''} ${pct(d.recall)} ${isBest?'</strong>':''}</td>
       <td>${pct(d.precision)}</td>
       <td>${pct(d.f1)}</td>
       <td>${pct(d.iou_sargazo_global)}</td>
-      <td>${d.tiles_evaluados??'—'}</td>
+      <td>${num(d.tp_total)}</td>
+      <td>${num(d.fp_total)}</td>
+      <td>${num(d.fn_total)}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-async function loadEch(){
-  try{
-    const [dE,dM,dA]=await Promise.all([
-      jf(`${BASE_TEST}/evaluacion_test_echevarria.json`),
-      jf(`${BASE_TEST}/evaluacion_test_mados.json`),
-      jf(`${BASE_TEST}/evaluacion_swin_transformer_attention_test.json`),
-    ]);
-    const attFlat=Object.values(dA)[0];
-    document.getElementById('ech-loading').style.display='none';
-    document.getElementById('ech-content').style.display='block';
-    fillEch('chart-ech-csv',  'tbl-ech-csv',  dE, attFlat);
-    fillEch('chart-ech-mados','tbl-ech-mados', dM, attFlat);
-  }catch(e){ document.getElementById('ech-loading').textContent='Error: '+e.message; }
+// ── Sección 3: Ablation study ─────────────────────────────────────────
+// Datos del ablation hardcodeados — son resultados de tus propias evaluaciones
+const ABLATION = [
+  { label:'Swin-Att FocalDice EMA0.995+VSCP★', loss:'FocalDice', ema:'0.995', vscp:'batch', recall:0.6692, precision:0.6321, f1:0.6502, iou:0.4817, umbral:'0.95', best:true },
+  { label:'Swin-Att CE+Dice EMA0.995+VSCP',    loss:'CE+Dice',   ema:'0.995', vscp:'batch', recall:0.9075, precision:0.3047, f1:0.4288, iou:0.2729, umbral:'0.95', best:false },
+  { label:'Swin-Att FocalDice EMA0.999+VSCP',  loss:'FocalDice', ema:'0.999', vscp:'tile',  recall:0.9688, precision:0.1500, f1:0.2597, iou:0.1493, umbral:'0.70', best:false },
+  { label:'Swin-Att FocalDice sin EMA+VSCP',   loss:'FocalDice', ema:'—',     vscp:'batch', recall:0.8868, precision:0.3678, f1:0.5200, iou:0.3513, umbral:'0.80', best:false },
+  { label:'Swin-Att FocalDice sin EMA sin VSCP',loss:'FocalDice',ema:'—',     vscp:'—',     recall:0.7228, precision:0.5381, f1:0.6169, iou:0.4460, umbral:'0.95', best:false },
+  { label:'Swin-Att Deep Supervision',          loss:'FocalDice', ema:'0.995', vscp:'batch', recall:0.7232, precision:0.3047, f1:0.4288, iou:0.2729, umbral:'0.95', best:false },
+  { label:'Swin-Att CosineAnnealing',           loss:'FocalDice', ema:'0.995', vscp:'batch', recall:0.8465, precision:0.3821, f1:0.5265, iou:0.3573, umbral:'0.95', best:false },
+  { label:'SegFormer FocalDice EMA+VSCP',       loss:'FocalDice', ema:'0.995', vscp:'batch', recall:0.6451, precision:0.2670, f1:0.3776, iou:0.2328, umbral:'0.95', best:false },
+  { label:'Swin-Base 11 bandas',                loss:'FocalDice', ema:'0.995', vscp:'batch', recall:0.3620, precision:0.0592, f1:0.1018, iou:0.0536, umbral:'0.95', best:false },
+];
+
+function loadAblation(){
+  document.getElementById('abl-loading').style.display='none';
+  document.getElementById('abl-content').style.display='block';
+
+  const sorted = [...ABLATION].sort((a,b)=>b.f1-a.f1);
+
+  barChart('chart-ablation', sorted.map(d=>d.label.length>30?d.label.substring(0,28)+'…':d.label), [
+    {label:'Recall',    data:sorted.map(d=>d.recall),    backgroundColor:COLORS[0], borderColor:BORDERS[0], borderWidth:1},
+    {label:'Precision', data:sorted.map(d=>d.precision), backgroundColor:COLORS[2], borderColor:BORDERS[2], borderWidth:1},
+    {label:'F1',        data:sorted.map(d=>d.f1),        backgroundColor:COLORS[1], borderColor:BORDERS[1], borderWidth:1},
+    {label:'IoU',       data:sorted.map(d=>d.iou),       backgroundColor:COLORS[3], borderColor:BORDERS[3], borderWidth:1},
+  ]);
+
+  const tbody = document.querySelector('#tbl-ablation tbody');
+  sorted.forEach(d=>{
+    const tr = document.createElement('tr');
+    if(d.best) tr.className='best';
+    tr.innerHTML = `
+      <td>${d.best?'<strong>'+d.label+'</strong> <span class="tag tag-best">BEST</span>':d.label}</td>
+      <td>${d.loss}</td>
+      <td>${d.ema}</td>
+      <td>${d.vscp}</td>
+      <td>${d.best?'<strong>':''} ${pct(d.recall)} ${d.best?'</strong>':''}</td>
+      <td>${pct(d.precision)}</td>
+      <td>${pct(d.f1)}</td>
+      <td>${pct(d.iou)}</td>
+      <td>${d.umbral}</td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
-window.onload=()=>{ loadRuns(); loadTop3(); loadEch(); };
+window.onload = ()=>{ loadBest(); loadComparativa(); loadAblation(); };
 </script>
 </body>
 </html>

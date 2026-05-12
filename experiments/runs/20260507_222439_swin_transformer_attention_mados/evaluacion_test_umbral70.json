@@ -6,23 +6,23 @@
     "run_name": "20260507_222439",
     "loss_function": "FocalDiceLoss",
     "best_epoch": 35,
-    "umbral": 0.9,
+    "umbral": 0.7,
     "umbral_fai": -0.01,
     "sigma": 1.0,
     "min_pixels": 0,
     "split": "test",
     "tta": true,
-    "timestamp": "2026-05-12 00:04:44"
+    "timestamp": "2026-05-12 00:05:19"
   },
   "Swin Transformer Attention": {
-    "precision": 0.729,
-    "recall": 0.5167,
-    "f1": 0.6048,
-    "iou_sargazo_global": 0.4334,
-    "iou_sargazo_medio": 0.3097,
-    "tp_total": 10035,
-    "fp_total": 3730,
-    "fn_total": 9387,
+    "precision": 0.5151,
+    "recall": 0.7735,
+    "f1": 0.6183,
+    "iou_sargazo_global": 0.4475,
+    "iou_sargazo_medio": 0.3548,
+    "tp_total": 15022,
+    "fp_total": 14144,
+    "fn_total": 4400,
     "tiles_evaluados": 45
   }
 }

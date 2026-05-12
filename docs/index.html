@@ -246,6 +246,7 @@ footer a:hover { color: #111; }
     <nav>
       <a href="index.html" class="active">Inicio</a>
       <a href="results.html">Resultados</a>
+      <a href="experiments.html">Entrenamiento</a>
       <a href="monitor.html">Monitorización</a>
     </nav>
   </div>
@@ -272,7 +273,7 @@ footer a:hover { color: #111; }
     <div class="stat"><span class="stat-val">2.803</span><span class="stat-lbl">Tiles de entrenamiento</span></div>
     <div class="stat"><span class="stat-val">16</span><span class="stat-lbl">Clases semánticas</span></div>
     <div class="stat"><span class="stat-val">4</span><span class="stat-lbl">Bandas espectrales</span></div>
-    <div class="stat"><span class="stat-val">34M</span><span class="stat-lbl">Parámetros del modelo</span></div>
+    <div class="stat"><span class="stat-val">31.9M</span><span class="stat-lbl">Parámetros del modelo</span></div>
   </div>
 
   <section id="descripcion">
@@ -291,8 +292,9 @@ footer a:hover { color: #111; }
     </p>
     <p>
       El canal Infrarrojo Cercano (NIR, 833 nm) es clave para maximizar la detectabilidad de la
-      biomasa flotante, aprovechando el índice FAI (Floating Algae Index = NIR − Rojo) como
-      filtro físico complementario a la predicción del modelo.
+      biomasa flotante. El modelo aprende a detectar sargazo directamente desde los 4 canales
+      espectrales sin depender de índices calculados como el FAI, demostrando que la atención
+      global del Swin Transformer captura las representaciones espectrales relevantes.
     </p>
   </section>
 
@@ -369,7 +371,7 @@ footer a:hover { color: #111; }
       <span class="tech-tag">Streamlit</span>
       <span class="tech-tag">Folium</span>
       <span class="tech-tag">MADOS Dataset</span>
-      <span class="tech-tag">CrossEntropy + Dice Loss</span>
+      <span class="tech-tag">FocalDice Loss</span>
       <span class="tech-tag">Transfer Learning</span>
       <span class="tech-tag">WeightedRandomSampler</span>
       <span class="tech-tag">FAI · IoU · mIoU</span>

@@ -1,0 +1,28 @@
+{
+  "_experimento": {
+    "descripcion": "sin descripción",
+    "modelo": "Swin Transformer Attention",
+    "checkpoint": "experiments\\runs\\20260509_205136_swin_transformer_attention_mados",
+    "run_name": "20260509_205136",
+    "loss_function": "FocalDiceLoss",
+    "best_epoch": 132,
+    "umbral": 0.95,
+    "umbral_fai": -0.01,
+    "sigma": 1.0,
+    "min_pixels": 0,
+    "split": "test",
+    "tta": true,
+    "timestamp": "2026-05-10 00:21:19"
+  },
+  "Swin Transformer Attention": {
+    "precision": 0.3821,
+    "recall": 0.8465,
+    "f1": 0.5265,
+    "iou_sargazo_global": 0.3573,
+    "iou_sargazo_medio": 0.2822,
+    "tp_total": 16441,
+    "fp_total": 26588,
+    "fn_total": 2981,
+    "tiles_evaluados": 45
+  }
+}

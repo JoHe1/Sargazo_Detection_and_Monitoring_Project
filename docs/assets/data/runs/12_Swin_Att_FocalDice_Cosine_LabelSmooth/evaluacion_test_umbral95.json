@@ -1,0 +1,28 @@
+{
+  "_experimento": {
+    "descripcion": "Swin Transformer con atención añadiendo CosineAnnealing, batch 16 y Label Smoothing",
+    "modelo": "Swin Transformer Attention",
+    "checkpoint": "experiments\\runs\\20260509_181320_swin_transformer_attention_mados",
+    "run_name": "20260509_181320",
+    "loss_function": "FocalDiceLoss",
+    "best_epoch": 94,
+    "umbral": 0.95,
+    "umbral_fai": -0.01,
+    "sigma": 1.0,
+    "min_pixels": 0,
+    "split": "test",
+    "tta": true,
+    "timestamp": "2026-05-09 21:12:31"
+  },
+  "Swin Transformer Attention": {
+    "precision": 0.5351,
+    "recall": 0.6861,
+    "f1": 0.6012,
+    "iou_sargazo_global": 0.4298,
+    "iou_sargazo_medio": 0.336,
+    "tp_total": 13326,
+    "fp_total": 11580,
+    "fn_total": 6096,
+    "tiles_evaluados": 45
+  }
+}

@@ -1,9 +1,16 @@
 [
-    "Segformer_Segmenter_Dice_Loss",
-    "Segformer_Segmenter_Tversky_Loss",
-    "Swin_Transformer_Base_Dice_Loss",
-    "Swin_Transformer_Tiny_Attention_Dice_Loss",
-    "Swin_Transformer_Tiny_Attention_Tversky_Loss",
-    "Swin_Transformer_Tiny_Dice_Loss",
-    "Swin_Transformer_Tiny_Tversky_Loss"
+  "01_Swin_Tiny_CE_Dice_Baseline",
+  "02_Swin_Tiny_FocalDice_Baseline",
+  "03_Swin_Tiny_Tversky_Baseline",
+  "04_SegFormer_FocalDice_EMA_VSCP",
+  "05_SegFormer_CE_Dice_EMA_VSCP",
+  "06_Swin_Att_FocalDice_Baseline",
+  "07_Swin_Att_FocalDice_EMA999_VSCP",
+  "08_Swin_Att_FocalDice_VSCP",
+  "09_Swin_Att_FocalDice_EMA995_VSCP_BEST",
+  "10_Swin_Att_CE_Dice_EMA995_VSCP",
+  "11_Swin_Att_FocalDice_DeepSupervision",
+  "12_Swin_Att_FocalDice_Cosine_LabelSmooth",
+  "13_Swin_Att_FocalDice_Cosine",
+  "14_Swin_Base_11Bands"
 ]

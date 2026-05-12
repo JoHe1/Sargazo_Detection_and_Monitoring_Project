@@ -1,0 +1,28 @@
+{
+  "_experimento": {
+    "descripcion": "Swin Transformer con atennción pero con dice loss para comparar con focal loss, con VSCP batch level y con un peso de 10 para la clase sargassum",
+    "modelo": "Swin Transformer Attention",
+    "checkpoint": "experiments\\runs\\20260509_101212_swin_transformer_attention_mados",
+    "run_name": "20260509_101212",
+    "loss_function": "CrossEntropyDiceLoss",
+    "best_epoch": 94,
+    "umbral": 0.7,
+    "umbral_fai": -0.01,
+    "sigma": 1.0,
+    "min_pixels": 0,
+    "split": "test",
+    "tta": true,
+    "timestamp": "2026-05-12 00:11:37"
+  },
+  "Swin Transformer Attention": {
+    "precision": 0.1339,
+    "recall": 0.8817,
+    "f1": 0.2325,
+    "iou_sargazo_global": 0.1315,
+    "iou_sargazo_medio": 0.1556,
+    "tp_total": 17125,
+    "fp_total": 110780,
+    "fn_total": 2297,
+    "tiles_evaluados": 45
+  }
+}

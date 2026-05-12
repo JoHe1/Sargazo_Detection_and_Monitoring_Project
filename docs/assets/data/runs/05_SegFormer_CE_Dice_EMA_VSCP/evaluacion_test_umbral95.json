@@ -1,0 +1,28 @@
+{
+  "_experimento": {
+    "descripcion": "sin descripción",
+    "modelo": "Segformer",
+    "checkpoint": "experiments\\runs\\20260511_173045_segformer_mados",
+    "run_name": "20260511_173045",
+    "loss_function": "CrossEntropyDiceLoss",
+    "best_epoch": 41,
+    "umbral": 0.95,
+    "umbral_fai": -0.01,
+    "sigma": 1.0,
+    "min_pixels": 0,
+    "split": "test",
+    "tta": true,
+    "timestamp": "2026-05-11 19:05:10"
+  },
+  "Segformer": {
+    "precision": 0.2316,
+    "recall": 0.6416,
+    "f1": 0.3404,
+    "iou_sargazo_global": 0.2051,
+    "iou_sargazo_medio": 0.1879,
+    "tp_total": 12462,
+    "fp_total": 41339,
+    "fn_total": 6960,
+    "tiles_evaluados": 45
+  }
+}

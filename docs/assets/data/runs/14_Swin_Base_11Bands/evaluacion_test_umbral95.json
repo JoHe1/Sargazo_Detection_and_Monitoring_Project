@@ -1,0 +1,28 @@
+{
+  "_experimento": {
+    "descripcion": "Swin Base con atención y 11 bandas en el dataset MADOS. Se utilizó FocalDiceLoss con gamma=2.0 y un peso de 10.0 para la clase sargazo. Se entrenó durante 150 épocas con un batch size de 8 y una tasa de aprendizaje de 3e-05. El mejor modelo se obtuvo en la época 29 con una pérdida de validación de 1.97813 y un mIoU de 0.00856.",
+    "modelo": "Swin Base Att 11Bands",
+    "checkpoint": "experiments\\runs\\20260510_201831_swin_base_att_11bands_mados",
+    "run_name": "20260510_201831",
+    "loss_function": "FocalDiceLoss",
+    "best_epoch": 29,
+    "umbral": 0.95,
+    "umbral_fai": -0.01,
+    "sigma": 1.0,
+    "min_pixels": 0,
+    "split": "test",
+    "tta": true,
+    "timestamp": "2026-05-11 00:30:29"
+  },
+  "Swin Base Att 11Bands": {
+    "precision": 0.0592,
+    "recall": 0.362,
+    "f1": 0.1018,
+    "iou_sargazo_global": 0.0536,
+    "iou_sargazo_medio": 0.0438,
+    "tp_total": 908,
+    "fp_total": 14419,
+    "fn_total": 1600,
+    "tiles_evaluados": 45
+  }
+}
