@@ -159,13 +159,21 @@ footer p{font-size:.8rem;color:#999;margin:0}
   <!-- ── SECCIÓN 3: ABLATION STUDY ─────────────────────────── -->
   <section id="ablation">
     <h2>Estudio de ablación — arquitecturas evaluadas</h2>
-    <p>Comparativa de todos los modelos evaluados sobre test, ordenados por F1. Se muestra el mejor umbral encontrado para cada modelo.</p>
-    <div class="loading" id="abl-loading">Cargando…</div>
+    <p>Comparativa de todos los modelos evaluados sobre test, ordenados por F1. Selecciona el umbral de confianza para actualizar todas las métricas simultáneamente.</p>
+    <div class="selector-block" style="margin-bottom:1.5rem">
+      <label for="umbralSelect" style="font-size:.85rem;font-weight:600;white-space:nowrap">Umbral de confianza:</label>
+      <select id="umbralSelect" onchange="reloadAblation(this.value)" style="padding:.4rem .7rem;font-family:'Source Code Pro',monospace;font-size:.8rem;border:1px solid #ccc;border-radius:3px;background:#fff">
+        <option value="95">0.95</option>
+        <option value="90">0.90</option>
+        <option value="70">0.70</option>
+      </select>
+    </div>
+    <div class="loading" id="abl-loading">Cargando experimentos…</div>
     <div id="abl-content" style="display:none">
       <div class="chart-wrap"><canvas id="chart-ablation"></canvas></div>
       <div class="tw">
         <table class="tbl" id="tbl-ablation">
-          <thead><tr><th>Modelo</th><th>Loss</th><th>EMA</th><th>VSCP</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>Umbral</th></tr></thead>
+          <thead><tr><th>Modelo</th><th>Loss</th><th>EMA</th><th>VSCP</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -303,53 +311,96 @@ function fillCompTable(chartId, tableId, data, swRef, swLabel){
   });
 }
 
-// ── Sección 3: Ablation study ─────────────────────────────────────────
-// Datos del ablation hardcodeados — son resultados de tus propias evaluaciones
-const ABLATION = [
-  { label:'Swin-Att FocalDice EMA0.995+VSCP★', loss:'FocalDice', ema:'0.995', vscp:'batch', recall:0.6692, precision:0.6321, f1:0.6502, iou:0.4817, umbral:'0.95', best:true },
-  { label:'Swin-Att CE+Dice EMA0.995+VSCP',    loss:'CE+Dice',   ema:'0.995', vscp:'batch', recall:0.9075, precision:0.3047, f1:0.4288, iou:0.2729, umbral:'0.95', best:false },
-  { label:'Swin-Att FocalDice EMA0.999+VSCP',  loss:'FocalDice', ema:'0.999', vscp:'tile',  recall:0.9688, precision:0.1500, f1:0.2597, iou:0.1493, umbral:'0.70', best:false },
-  { label:'Swin-Att FocalDice sin EMA+VSCP',   loss:'FocalDice', ema:'—',     vscp:'batch', recall:0.8868, precision:0.3678, f1:0.5200, iou:0.3513, umbral:'0.80', best:false },
-  { label:'Swin-Att FocalDice sin EMA sin VSCP',loss:'FocalDice',ema:'—',     vscp:'—',     recall:0.7228, precision:0.5381, f1:0.6169, iou:0.4460, umbral:'0.95', best:false },
-  { label:'Swin-Att Deep Supervision',          loss:'FocalDice', ema:'0.995', vscp:'batch', recall:0.7232, precision:0.3047, f1:0.4288, iou:0.2729, umbral:'0.95', best:false },
-  { label:'Swin-Att CosineAnnealing',           loss:'FocalDice', ema:'0.995', vscp:'batch', recall:0.8465, precision:0.3821, f1:0.5265, iou:0.3573, umbral:'0.95', best:false },
-  { label:'SegFormer FocalDice EMA+VSCP',       loss:'FocalDice', ema:'0.995', vscp:'batch', recall:0.6451, precision:0.2670, f1:0.3776, iou:0.2328, umbral:'0.95', best:false },
-  { label:'Swin-Base 11 bandas',                loss:'FocalDice', ema:'0.995', vscp:'batch', recall:0.3620, precision:0.0592, f1:0.1018, iou:0.0536, umbral:'0.95', best:false },
-];
+// ── Sección 3: Ablation study — carga dinámica ───────────────────────
+let runList = [];
 
-function loadAblation(){
+// Extrae metadatos de configuración del metadata.json
+function metaLabel(meta){
+  const loss  = meta.loss_function ? meta.loss_function.replace('Loss','') : '—';
+  const ema   = meta.ema_alpha ?? (meta.ema_activo === false ? '—' : '—');
+  const vscp  = meta.vscp ? (meta.vscp_mode ?? 'sí') : '—';
+  return { loss, ema: String(ema), vscp };
+}
+
+// Carga el JSON de evaluación de un run para un umbral dado
+async function fetchRunEval(runName, umbral){
+  const url = `${BASE_RUNS}/${runName}/evaluacion_test_umbral${umbral}.json`;
+  try {
+    const data = await jf(url);
+    const key  = Object.keys(data).find(k => k !== '_experimento');
+    return data[key] || null;
+  } catch(e){
+    return null; // umbral no disponible para este run
+  }
+}
+
+async function reloadAblation(umbral){
+  if(!runList.length) return;
+  document.getElementById('abl-loading').style.display='block';
+  document.getElementById('abl-content').style.display='none';
+
+  // Cargar metadata + evaluación de cada run en paralelo
+  const results = await Promise.all(runList.map(async name => {
+    try {
+      const [meta, eval_] = await Promise.all([
+        jf(`${BASE_RUNS}/${name}/metadata.json`),
+        fetchRunEval(name, umbral),
+      ]);
+      if(!eval_) return null;
+      const { loss, ema, vscp } = metaLabel(meta);
+      const label = name.replace(/^\d+_/, '').replace(/_/g, ' ');
+      const isBest = name.includes('BEST');
+      return { name, label, loss, ema, vscp, isBest,
+               recall: eval_.recall, precision: eval_.precision,
+               f1: eval_.f1, iou: eval_.iou_sargazo_global,
+               tp: eval_.tp_total, fp: eval_.fp_total, fn: eval_.fn_total };
+    } catch(e){ return null; }
+  }));
+
+  const valid = results.filter(Boolean).sort((a,b) => b.f1 - a.f1);
+
   document.getElementById('abl-loading').style.display='none';
   document.getElementById('abl-content').style.display='block';
 
-  const sorted = [...ABLATION].sort((a,b)=>b.f1-a.f1);
-
-  barChart('chart-ablation', sorted.map(d=>d.label.length>30?d.label.substring(0,28)+'…':d.label), [
-    {label:'Recall',    data:sorted.map(d=>d.recall),    backgroundColor:COLORS[0], borderColor:BORDERS[0], borderWidth:1},
-    {label:'Precision', data:sorted.map(d=>d.precision), backgroundColor:COLORS[2], borderColor:BORDERS[2], borderWidth:1},
-    {label:'F1',        data:sorted.map(d=>d.f1),        backgroundColor:COLORS[1], borderColor:BORDERS[1], borderWidth:1},
-    {label:'IoU',       data:sorted.map(d=>d.iou),       backgroundColor:COLORS[3], borderColor:BORDERS[3], borderWidth:1},
+  // Gráfica
+  const shortLabels = valid.map(d => d.label.length > 28 ? d.label.substring(0,26)+'…' : d.label);
+  barChart('chart-ablation', shortLabels, [
+    {label:'Recall',    data:valid.map(d=>d.recall),    backgroundColor:COLORS[0], borderColor:BORDERS[0], borderWidth:1},
+    {label:'Precision', data:valid.map(d=>d.precision), backgroundColor:COLORS[2], borderColor:BORDERS[2], borderWidth:1},
+    {label:'F1',        data:valid.map(d=>d.f1),        backgroundColor:COLORS[1], borderColor:BORDERS[1], borderWidth:1},
+    {label:'IoU',       data:valid.map(d=>d.iou),       backgroundColor:COLORS[3], borderColor:BORDERS[3], borderWidth:1},
   ]);
 
+  // Tabla
   const tbody = document.querySelector('#tbl-ablation tbody');
-  sorted.forEach(d=>{
+  tbody.innerHTML = '';
+  valid.forEach(d => {
     const tr = document.createElement('tr');
-    if(d.best) tr.className='best';
+    if(d.isBest) tr.className = 'best';
     tr.innerHTML = `
-      <td>${d.best?'<strong>'+d.label+'</strong> <span class="tag tag-best">BEST</span>':d.label}</td>
+      <td>${d.isBest ? '<strong>'+d.label+'</strong> <span class="tag tag-best">BEST</span>' : d.label}</td>
       <td>${d.loss}</td>
       <td>${d.ema}</td>
       <td>${d.vscp}</td>
-      <td>${d.best?'<strong>':''} ${pct(d.recall)} ${d.best?'</strong>':''}</td>
+      <td>${d.isBest?'<strong>':''} ${pct(d.recall)} ${d.isBest?'</strong>':''}</td>
       <td>${pct(d.precision)}</td>
       <td>${pct(d.f1)}</td>
       <td>${pct(d.iou)}</td>
-      <td>${d.umbral}</td>
     `;
     tbody.appendChild(tr);
   });
 }
 
-window.onload = ()=>{ loadBest(); loadComparativa(); loadAblation(); };
+async function initAblation(){
+  try {
+    runList = await jf(`${BASE_RUNS}/index.json`);
+    await reloadAblation('95'); // umbral por defecto
+  } catch(e){
+    document.getElementById('abl-loading').textContent = 'Error al cargar index.json';
+  }
+}
+
+window.onload = ()=>{ loadBest(); loadComparativa(); initAblation(); };
 </script>
 </body>
 </html>
