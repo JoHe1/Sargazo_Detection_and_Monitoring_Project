@@ -84,6 +84,23 @@ p{margin-bottom:1rem;color:#333;font-weight:300;font-size:.92rem}
 .note.warn{border-left-color:#d35400;background:#fef9f0;color:#784212}
 .note.good{border-left-color:#1e8449;background:#eafaf1;color:#1a5276}
 
+/* Model selector checkboxes */
+.model-selector{border:1px solid #eee;padding:1rem 1.25rem;margin-bottom:1.5rem;background:#fafafa}
+.model-selector-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem}
+.model-selector-header span{font-family:'Source Code Pro',monospace;font-size:.65rem;color:#888;letter-spacing:.06em;text-transform:uppercase}
+.model-selector-actions{display:flex;gap:.5rem}
+.ms-btn{font-family:'Source Code Pro',monospace;font-size:.65rem;padding:.2rem .5rem;border:1px solid #ccc;background:#fff;color:#555;cursor:pointer;border-radius:2px}
+.ms-btn:hover{border-color:#111;color:#111}
+.model-checkboxes{display:flex;flex-wrap:wrap;gap:.4rem}
+.model-cb-label{display:flex;align-items:center;gap:.3rem;font-family:'Source Code Pro',monospace;font-size:.68rem;padding:.25rem .55rem;border:1px solid #ddd;border-radius:2px;cursor:pointer;user-select:none;transition:border-color .12s,background .12s;color:#555}
+.model-cb-label:hover{border-color:#888}
+.model-cb-label.checked{border-color:#1e8449;background:#f0faf5;color:#1e8449}
+.model-cb-label.is-best{border-color:#1e8449}
+.model-cb-label input{display:none}
+.dl-individual{margin-top:1rem;padding-top:1rem;border-top:1px solid #eee}
+.dl-individual-title{font-family:'Source Code Pro',monospace;font-size:.65rem;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
+.dl-individual-btns{display:flex;flex-wrap:wrap;gap:.35rem}
+
 /* Loading */
 .loading{text-align:center;padding:3rem;font-family:'Source Code Pro',monospace;font-size:.75rem;color:#ccc;letter-spacing:.05em}
 
@@ -166,25 +183,56 @@ footer p{font-size:.8rem;color:#999;margin:0}
   <!-- ── SECCIÓN 3: ABLATION STUDY ─────────────────────────── -->
   <section id="ablation">
     <h2>Estudio de ablación — arquitecturas evaluadas</h2>
-    <p>Comparativa de todos los modelos evaluados sobre test, ordenados por F1. Selecciona el umbral de confianza para actualizar todas las métricas simultáneamente.</p>
-    <div class="selector-block" style="margin-bottom:1.5rem">
-      <label for="umbralSelect" style="font-size:.85rem;font-weight:600;white-space:nowrap">Umbral de confianza:</label>
-      <select id="umbralSelect" onchange="reloadAblation(this.value)" style="padding:.4rem .7rem;font-family:'Source Code Pro',monospace;font-size:.8rem;border:1px solid #ccc;border-radius:3px;background:#fff">
-        <option value="95">0.95</option>
-        <option value="90">0.90</option>
-        <option value="70">0.70</option>
-      </select>
+    <p>Comparativa de modelos evaluados sobre test. Selecciona el umbral y los modelos que quieres visualizar. Descarga la gráfica global o gráficas individuales por modelo.</p>
+
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:flex-end;margin-bottom:1.5rem">
+      <div class="selector-block" style="margin-bottom:0">
+        <label for="umbralSelect" style="font-size:.85rem;font-weight:600;white-space:nowrap">Umbral:</label>
+        <select id="umbralSelect" onchange="onUmbralChange(this.value)" style="padding:.4rem .7rem;font-family:'Source Code Pro',monospace;font-size:.8rem;border:1px solid #ccc;border-radius:3px;background:#fff">
+          <option value="95">0.95</option>
+          <option value="90">0.90</option>
+          <option value="70">0.70</option>
+        </select>
+      </div>
     </div>
+
     <div class="loading" id="abl-loading">Cargando experimentos…</div>
     <div id="abl-content" style="display:none">
-      <button class="dl-btn" onclick="downloadChart('chart-ablation','ablation_study')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar</button>
-        <div class="chart-wrap"><canvas id="chart-ablation"></canvas></div>
+
+      <!-- Selector de modelos -->
+      <div class="model-selector">
+        <div class="model-selector-header">
+          <span>Modelos visibles en la gráfica</span>
+          <div class="model-selector-actions">
+            <button class="ms-btn" onclick="selectAllModels()">Todos</button>
+            <button class="ms-btn" onclick="selectNoneModels()">Ninguno</button>
+            <button class="ms-btn" onclick="selectBestOnly()">Solo mejor</button>
+          </div>
+        </div>
+        <div class="model-checkboxes" id="model-checkboxes"></div>
+      </div>
+
+      <!-- Gráfica global -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">
+        <span style="font-family:'Source Code Pro',monospace;font-size:.65rem;color:#888;text-transform:uppercase;letter-spacing:.06em">Comparativa global — modelos seleccionados</span>
+        <button class="dl-btn" onclick="downloadChart('chart-ablation','ablation_seleccion')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar gráfica global</button>
+      </div>
+      <div class="chart-wrap"><canvas id="chart-ablation"></canvas></div>
+
+      <!-- Tabla -->
       <div class="tw">
         <table class="tbl" id="tbl-ablation">
           <thead><tr><th>Modelo</th><th>Loss</th><th>EMA</th><th>VSCP</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
+
+      <!-- Descarga individual por modelo -->
+      <div class="dl-individual">
+        <div class="dl-individual-title">Descargar gráfica individual por modelo</div>
+        <div class="dl-individual-btns" id="dl-individual-btns"></div>
+      </div>
+
       <div class="note">El ablation study muestra que la combinación de EMA α=0.995 y VSCP batch-level es el factor determinante de mejora, superando cambios de arquitectura, función de pérdida o número de canales espectrales.</div>
     </div>
   </section>
@@ -329,27 +377,179 @@ function fillCompTable(chartId, tableId, data, swRef, swLabel){
   });
 }
 
-// ── Sección 3: Ablation study — carga dinámica ───────────────────────
-let runList = [];
+// ── Sección 3: Ablation study — carga dinámica con selector ─────────
+let runList     = [];
+let allData     = [];   // todos los modelos cargados
+let selectedSet = new Set(); // nombres de modelos seleccionados
+let currentUmbral = '95';
 
-// Extrae metadatos de configuración del metadata.json
 function metaLabel(meta){
-  const loss  = meta.loss_function ? meta.loss_function.replace('Loss','') : '—';
-  const ema   = meta.ema_alpha ?? (meta.ema_activo === false ? '—' : '—');
-  const vscp  = meta.vscp ? (meta.vscp_mode ?? 'sí') : '—';
+  const loss = meta.loss_function ? meta.loss_function.replace('Loss','') : '—';
+  const ema  = meta.ema_alpha ?? '—';
+  const vscp = meta.vscp ? (meta.vscp_mode ?? 'sí') : '—';
   return { loss, ema: String(ema), vscp };
 }
 
-// Carga el JSON de evaluación de un run para un umbral dado
 async function fetchRunEval(runName, umbral){
   const url = `${BASE_RUNS}/${runName}/evaluacion_test_umbral${umbral}.json`;
   try {
     const data = await jf(url);
     const key  = Object.keys(data).find(k => k !== '_experimento');
     return data[key] || null;
-  } catch(e){
-    return null; // umbral no disponible para este run
+  } catch(e){ return null; }
+}
+
+// Renderiza checkboxes de selección de modelos
+function renderModelSelector(){
+  const container = document.getElementById('model-checkboxes');
+  container.innerHTML = '';
+  allData.forEach(d => {
+    const checked = selectedSet.has(d.name);
+    const lbl = document.createElement('label');
+    lbl.className = 'model-cb-label' + (checked?' checked':'') + (d.isBest?' is-best':'');
+    lbl.title = d.label;
+    lbl.innerHTML = `<input type="checkbox" ${checked?'checked':''} onchange="toggleModel('${d.name}',this.checked)">${d.isBest?'★ ':''}${d.label.length>22?d.label.substring(0,20)+'…':d.label}`;
+    container.appendChild(lbl);
+  });
+}
+
+function toggleModel(name, checked){
+  if(checked) selectedSet.add(name); else selectedSet.delete(name);
+  // Actualizar clase del label
+  document.querySelectorAll('.model-cb-label').forEach(lbl => {
+    const cb = lbl.querySelector('input');
+    lbl.classList.toggle('checked', cb && cb.checked);
+  });
+  renderAblationChart();
+}
+
+function selectAllModels(){
+  allData.forEach(d => selectedSet.add(d.name));
+  document.querySelectorAll('.model-cb-label input').forEach(cb => cb.checked=true);
+  document.querySelectorAll('.model-cb-label').forEach(l => l.classList.add('checked'));
+  renderAblationChart();
+}
+
+function selectNoneModels(){
+  selectedSet.clear();
+  document.querySelectorAll('.model-cb-label input').forEach(cb => cb.checked=false);
+  document.querySelectorAll('.model-cb-label').forEach(l => l.classList.remove('checked'));
+  renderAblationChart();
+}
+
+function selectBestOnly(){
+  selectedSet.clear();
+  allData.filter(d=>d.isBest).forEach(d=>selectedSet.add(d.name));
+  document.querySelectorAll('.model-cb-label').forEach(lbl => {
+    const cb = lbl.querySelector('input');
+    const name = lbl.title ? allData.find(d=>d.label===lbl.title)?.name : null;
+    if(cb) cb.checked = name && selectedSet.has(name);
+    lbl.classList.toggle('checked', cb && cb.checked);
+  });
+  renderAblationChart();
+}
+
+// Renderiza gráfica y tabla con los modelos seleccionados
+function renderAblationChart(){
+  const visible = allData.filter(d => selectedSet.has(d.name)).sort((a,b)=>b.f1-a.f1);
+
+  if(visible.length === 0){
+    const existing = Chart.getChart('chart-ablation');
+    if(existing) existing.destroy();
+    document.querySelector('#tbl-ablation tbody').innerHTML =
+      '<tr><td colspan="8" style="text-align:center;color:#bbb;font-style:italic">Selecciona al menos un modelo</td></tr>';
+    return;
   }
+
+  const shortLabels = visible.map(d => d.label.length>28?d.label.substring(0,26)+'…':d.label);
+  barChart('chart-ablation', shortLabels, [
+    {label:'Recall',    data:visible.map(d=>d.recall),    backgroundColor:COLORS[0], borderColor:BORDERS[0], borderWidth:1},
+    {label:'Precision', data:visible.map(d=>d.precision), backgroundColor:COLORS[2], borderColor:BORDERS[2], borderWidth:1},
+    {label:'F1',        data:visible.map(d=>d.f1),        backgroundColor:COLORS[1], borderColor:BORDERS[1], borderWidth:1},
+    {label:'IoU',       data:visible.map(d=>d.iou),       backgroundColor:COLORS[3], borderColor:BORDERS[3], borderWidth:1},
+  ]);
+
+  const tbody = document.querySelector('#tbl-ablation tbody');
+  tbody.innerHTML = '';
+  visible.forEach(d => {
+    const tr = document.createElement('tr');
+    if(d.isBest) tr.className = 'best';
+    tr.innerHTML = `
+      <td>${d.isBest?'<strong>'+d.label+'</strong> <span class="tag tag-best">BEST</span>':d.label}</td>
+      <td>${d.loss}</td><td>${d.ema}</td><td>${d.vscp}</td>
+      <td>${d.isBest?'<strong>':''} ${pct(d.recall)} ${d.isBest?'</strong>':''}</td>
+      <td>${pct(d.precision)}</td><td>${pct(d.f1)}</td><td>${pct(d.iou)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Botones de descarga individual
+  renderIndividualDownloads(visible);
+}
+
+// Genera un canvas offscreen para un solo modelo y lo descarga
+function downloadSingleModel(d){
+  const tempId = 'chart-temp-dl';
+  let wrap = document.getElementById('temp-chart-wrap');
+  if(!wrap){
+    wrap = document.createElement('div');
+    wrap.id = 'temp-chart-wrap';
+    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:600px;height:320px';
+    document.body.appendChild(wrap);
+  }
+  wrap.innerHTML = `<canvas id="${tempId}" width="600" height="320"></canvas>`;
+
+  const ch = new Chart(document.getElementById(tempId), {
+    type:'bar',
+    data:{
+      labels:['Recall','Precision','F1','IoU'],
+      datasets:[{
+        label: d.label,
+        data:[d.recall, d.precision, d.f1, d.iou],
+        backgroundColor:[COLORS[0],COLORS[2],COLORS[1],COLORS[3]],
+        borderColor:[BORDERS[0],BORDERS[2],BORDERS[1],BORDERS[3]],
+        borderWidth:1,
+      }]
+    },
+    options:{
+      responsive:false, animation:false,
+      plugins:{
+        legend:{display:true,labels:{font:{size:11}}},
+        title:{display:true,text:d.label+(d.isBest?' ★ BEST':''),font:{size:12,weight:'bold'}},
+      },
+      scales:{
+        y:{beginAtZero:true,max:1,
+           ticks:{callback:v=>(v*100).toFixed(0)+'%',font:{size:10}},
+           title:{display:true,text:'Valor',font:{size:10}}}
+      }
+    }
+  });
+
+  // Esperar un tick para que Chart.js pinte
+  setTimeout(()=>{
+    const a = document.createElement('a');
+    a.download = 'modelo_'+(d.name.replace(/[^a-z0-9]/gi,'_'))+'.png';
+    a.href = document.getElementById(tempId).toDataURL('image/png',1.0);
+    a.click();
+    ch.destroy();
+  }, 150);
+}
+
+function renderIndividualDownloads(visible){
+  const container = document.getElementById('dl-individual-btns');
+  container.innerHTML = '';
+  visible.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'dl-btn';
+    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>${d.isBest?'★ ':''}${d.label.length>20?d.label.substring(0,18)+'…':d.label}`;
+    btn.onclick = () => downloadSingleModel(d);
+    container.appendChild(btn);
+  });
+}
+
+async function onUmbralChange(umbral){
+  currentUmbral = umbral;
+  await reloadAblation(umbral);
 }
 
 async function reloadAblation(umbral){
@@ -357,7 +557,6 @@ async function reloadAblation(umbral){
   document.getElementById('abl-loading').style.display='block';
   document.getElementById('abl-content').style.display='none';
 
-  // Cargar metadata + evaluación de cada run en paralelo
   const results = await Promise.all(runList.map(async name => {
     try {
       const [meta, eval_] = await Promise.all([
@@ -365,54 +564,31 @@ async function reloadAblation(umbral){
         fetchRunEval(name, umbral),
       ]);
       if(!eval_) return null;
-      const { loss, ema, vscp } = metaLabel(meta);
-      const label = name.replace(/^\d+_/, '').replace(/_/g, ' ');
+      const {loss,ema,vscp} = metaLabel(meta);
+      const label = name.replace(/^\d+_/,'').replace(/_/g,' ');
       const isBest = name.includes('BEST');
       return { name, label, loss, ema, vscp, isBest,
-               recall: eval_.recall, precision: eval_.precision,
-               f1: eval_.f1, iou: eval_.iou_sargazo_global,
-               tp: eval_.tp_total, fp: eval_.fp_total, fn: eval_.fn_total };
+               recall:eval_.recall, precision:eval_.precision,
+               f1:eval_.f1, iou:eval_.iou_sargazo_global };
     } catch(e){ return null; }
   }));
 
-  const valid = results.filter(Boolean).sort((a,b) => b.f1 - a.f1);
+  allData = results.filter(Boolean).sort((a,b)=>b.f1-a.f1);
+
+  // Primera carga: seleccionar todos
+  if(selectedSet.size === 0) allData.forEach(d => selectedSet.add(d.name));
 
   document.getElementById('abl-loading').style.display='none';
   document.getElementById('abl-content').style.display='block';
 
-  // Gráfica
-  const shortLabels = valid.map(d => d.label.length > 28 ? d.label.substring(0,26)+'…' : d.label);
-  barChart('chart-ablation', shortLabels, [
-    {label:'Recall',    data:valid.map(d=>d.recall),    backgroundColor:COLORS[0], borderColor:BORDERS[0], borderWidth:1},
-    {label:'Precision', data:valid.map(d=>d.precision), backgroundColor:COLORS[2], borderColor:BORDERS[2], borderWidth:1},
-    {label:'F1',        data:valid.map(d=>d.f1),        backgroundColor:COLORS[1], borderColor:BORDERS[1], borderWidth:1},
-    {label:'IoU',       data:valid.map(d=>d.iou),       backgroundColor:COLORS[3], borderColor:BORDERS[3], borderWidth:1},
-  ]);
-
-  // Tabla
-  const tbody = document.querySelector('#tbl-ablation tbody');
-  tbody.innerHTML = '';
-  valid.forEach(d => {
-    const tr = document.createElement('tr');
-    if(d.isBest) tr.className = 'best';
-    tr.innerHTML = `
-      <td>${d.isBest ? '<strong>'+d.label+'</strong> <span class="tag tag-best">BEST</span>' : d.label}</td>
-      <td>${d.loss}</td>
-      <td>${d.ema}</td>
-      <td>${d.vscp}</td>
-      <td>${d.isBest?'<strong>':''} ${pct(d.recall)} ${d.isBest?'</strong>':''}</td>
-      <td>${pct(d.precision)}</td>
-      <td>${pct(d.f1)}</td>
-      <td>${pct(d.iou)}</td>
-    `;
-    tbody.appendChild(tr);
-  });
+  renderModelSelector();
+  renderAblationChart();
 }
 
 async function initAblation(){
   try {
     runList = await jf(`${BASE_RUNS}/index.json`);
-    await reloadAblation('95'); // umbral por defecto
+    await reloadAblation('95');
   } catch(e){
     document.getElementById('abl-loading').textContent = 'Error al cargar index.json';
   }
