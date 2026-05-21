@@ -97,9 +97,7 @@ p{margin-bottom:1rem;color:#333;font-weight:300;font-size:.92rem}
 .model-cb-label.checked{border-color:#1e8449;background:#f0faf5;color:#1e8449}
 .model-cb-label.is-best{border-color:#1e8449}
 .model-cb-label input{display:none}
-.dl-individual{margin-top:1rem;padding-top:1rem;border-top:1px solid #eee}
-.dl-individual-title{font-family:'Source Code Pro',monospace;font-size:.65rem;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.5rem}
-.dl-individual-btns{display:flex;flex-wrap:wrap;gap:.35rem}
+
 
 /* Loading */
 .loading{text-align:center;padding:3rem;font-family:'Source Code Pro',monospace;font-size:.75rem;color:#ccc;letter-spacing:.05em}
@@ -225,12 +223,6 @@ footer p{font-size:.8rem;color:#999;margin:0}
           <thead><tr><th>Modelo</th><th>Loss</th><th>EMA</th><th>VSCP</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th></tr></thead>
           <tbody></tbody>
         </table>
-      </div>
-
-      <!-- Descarga individual por modelo -->
-      <div class="dl-individual">
-        <div class="dl-individual-title">Descargar gráfica individual por modelo</div>
-        <div class="dl-individual-btns" id="dl-individual-btns"></div>
       </div>
 
       <div class="note">El ablation study muestra que la combinación de EMA α=0.995 y VSCP batch-level es el factor determinante de mejora, superando cambios de arquitectura, función de pérdida o número de canales espectrales.</div>
@@ -483,68 +475,6 @@ function renderAblationChart(){
     tbody.appendChild(tr);
   });
 
-  // Botones de descarga individual
-  renderIndividualDownloads(visible);
-}
-
-// Genera un canvas offscreen para un solo modelo y lo descarga
-function downloadSingleModel(d){
-  const tempId = 'chart-temp-dl';
-  let wrap = document.getElementById('temp-chart-wrap');
-  if(!wrap){
-    wrap = document.createElement('div');
-    wrap.id = 'temp-chart-wrap';
-    wrap.style.cssText = 'position:fixed;left:-9999px;top:0;width:600px;height:320px';
-    document.body.appendChild(wrap);
-  }
-  wrap.innerHTML = `<canvas id="${tempId}" width="600" height="320"></canvas>`;
-
-  const ch = new Chart(document.getElementById(tempId), {
-    type:'bar',
-    data:{
-      labels:['Recall','Precision','F1','IoU'],
-      datasets:[{
-        label: d.label,
-        data:[d.recall, d.precision, d.f1, d.iou],
-        backgroundColor:[COLORS[0],COLORS[2],COLORS[1],COLORS[3]],
-        borderColor:[BORDERS[0],BORDERS[2],BORDERS[1],BORDERS[3]],
-        borderWidth:1,
-      }]
-    },
-    options:{
-      responsive:false, animation:false,
-      plugins:{
-        legend:{display:true,labels:{font:{size:11}}},
-        title:{display:true,text:d.label+(d.isBest?' ★ BEST':''),font:{size:12,weight:'bold'}},
-      },
-      scales:{
-        y:{beginAtZero:true,max:1,
-           ticks:{callback:v=>(v*100).toFixed(0)+'%',font:{size:10}},
-           title:{display:true,text:'Valor',font:{size:10}}}
-      }
-    }
-  });
-
-  // Esperar un tick para que Chart.js pinte
-  setTimeout(()=>{
-    const a = document.createElement('a');
-    a.download = 'modelo_'+(d.name.replace(/[^a-z0-9]/gi,'_'))+'.png';
-    a.href = document.getElementById(tempId).toDataURL('image/png',1.0);
-    a.click();
-    ch.destroy();
-  }, 150);
-}
-
-function renderIndividualDownloads(visible){
-  const container = document.getElementById('dl-individual-btns');
-  container.innerHTML = '';
-  visible.forEach(d => {
-    const btn = document.createElement('button');
-    btn.className = 'dl-btn';
-    btn.innerHTML = `<svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>${d.isBest?'★ ':''}${d.label.length>20?d.label.substring(0,18)+'…':d.label}`;
-    btn.onclick = () => downloadSingleModel(d);
-    container.appendChild(btn);
-  });
 }
 
 async function onUmbralChange(umbral){
