@@ -73,6 +73,11 @@ p{margin-bottom:1rem;color:#333;font-weight:300;font-size:.92rem}
 /* Chart */
 .chart-wrap{position:relative;height:300px;width:100%;margin-bottom:2rem}
 
+/* Download button */
+.dl-btn{display:inline-flex;align-items:center;gap:.35rem;font-family:'Source Code Pro',monospace;font-size:.68rem;padding:.3rem .7rem;border:1px solid #ccc;border-radius:2px;background:#fff;color:#555;cursor:pointer;transition:border-color .15s,color .15s;margin-bottom:.6rem}
+.dl-btn:hover{border-color:#111;color:#111}
+.dl-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
 /* Note */
 .note{border-left:3px solid #ddd;padding:.65rem .9rem;font-size:.82rem;color:#888;margin-bottom:1.5rem;line-height:1.6}
 .note.info{border-left-color:#2471a3;background:#eaf4fb;color:#1a5276}
@@ -137,6 +142,7 @@ footer p{font-size:.8rem;color:#999;margin:0}
 
       <div id="echevarria-csv" class="tab-panel active">
         <div class="note info">Modelos clásicos de Echevarría et al. entrenados con su CSV original (Landsat-8, Zenodo). Se evalúan sobre los mismos 45 tiles MADOS de test para comparación directa.</div>
+        <button class="dl-btn" onclick="downloadChart('chart-ech-csv','comparativa_echevarria_csv')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar</button>
         <div class="chart-wrap"><canvas id="chart-ech-csv"></canvas></div>
         <div class="tw"><table class="tbl" id="tbl-ech-csv">
           <thead><tr><th>Modelo</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>TP</th><th>FP</th><th>FN</th></tr></thead>
@@ -146,6 +152,7 @@ footer p{font-size:.8rem;color:#999;margin:0}
 
       <div id="echevarria-mados" class="tab-panel">
         <div class="note warn">Mismos modelos clásicos reentrenados con píxeles extraídos del dataset MADOS para comparación en dominio. La distribución de píxeles de Sentinel-2 difiere de Landsat-8, lo que explica la degradación en algunos modelos.</div>
+        <button class="dl-btn" onclick="downloadChart('chart-ech-mados','comparativa_echevarria_mados')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar</button>
         <div class="chart-wrap"><canvas id="chart-ech-mados"></canvas></div>
         <div class="tw"><table class="tbl" id="tbl-ech-mados">
           <thead><tr><th>Modelo</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th><th>TP</th><th>FP</th><th>FN</th></tr></thead>
@@ -170,7 +177,8 @@ footer p{font-size:.8rem;color:#999;margin:0}
     </div>
     <div class="loading" id="abl-loading">Cargando experimentos…</div>
     <div id="abl-content" style="display:none">
-      <div class="chart-wrap"><canvas id="chart-ablation"></canvas></div>
+      <button class="dl-btn" onclick="downloadChart('chart-ablation','ablation_study')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar</button>
+        <div class="chart-wrap"><canvas id="chart-ablation"></canvas></div>
       <div class="tw">
         <table class="tbl" id="tbl-ablation">
           <thead><tr><th>Modelo</th><th>Loss</th><th>EMA</th><th>VSCP</th><th>Recall ↑</th><th>Precision ↑</th><th>F1 ↑</th><th>IoU ↑</th></tr></thead>
@@ -207,6 +215,16 @@ function switchTab(id, btn){
   document.querySelectorAll('#comp-content .tab-panel').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById(id).classList.add('active');
+}
+
+// ── Descarga de gráfica ───────────────────────────────────────────────
+function downloadChart(canvasId, filename){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const a = document.createElement('a');
+  a.download = filename + '.png';
+  a.href = canvas.toDataURL('image/png', 1.0);
+  a.click();
 }
 
 // ── Bar chart ─────────────────────────────────────────────────────────

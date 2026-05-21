@@ -58,6 +58,11 @@ h2{font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase
 /* Charts */
 .chart-wrap{position:relative;height:280px;width:100%;margin-bottom:3rem}
 
+/* Download button */
+.dl-btn{display:inline-flex;align-items:center;gap:.35rem;font-family:'Source Code Pro',monospace;font-size:.68rem;padding:.3rem .7rem;border:1px solid #ccc;border-radius:2px;background:#fff;color:#555;cursor:pointer;transition:border-color .15s,color .15s;margin-bottom:.6rem}
+.dl-btn:hover{border-color:#111;color:#111}
+.dl-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
 /* Error */
 .error-box{display:none;background:#fdedec;border-left:3px solid #e74c3c;padding:.85rem 1rem;font-size:.85rem;color:#922b21;margin-bottom:1.5rem;font-family:'Source Code Pro',monospace}
 
@@ -172,6 +177,16 @@ function renderMeta(meta, runName){
   `;
 }
 
+// ── Descarga de gráfica ───────────────────────────────────────────────
+function downloadChart(canvasId, filename){
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const a = document.createElement('a');
+  a.download = filename + '.png';
+  a.href = canvas.toDataURL('image/png', 1.0);
+  a.click();
+}
+
 // ── Charts ───────────────────────────────────────────────────────────
 function parseCSV(txt){
   const lines = txt.trim().split(/\r?\n/);
@@ -233,10 +248,13 @@ async function loadExperiment(name){
 
     const csvData = parseCSV(csvTxt);
     const content = document.getElementById('expContent');
+    const safeName = name.replace(/[^a-z0-9_-]/gi,'_');
     content.innerHTML = renderMeta(meta, name) + `
       <h2>Curvas de pérdida</h2>
+      <button class="dl-btn" onclick="downloadChart('lossC','perdida_${safeName}')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar</button>
       <div class="chart-wrap"><canvas id="lossC"></canvas></div>
       <h2>Evolución mIoU en validación</h2>
+      <button class="dl-btn" onclick="downloadChart('iouC','miou_${safeName}')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar</button>
       <div class="chart-wrap"><canvas id="iouC"></canvas></div>
     `;
     buildLossChart('lossC', csvData);
