@@ -34,6 +34,25 @@ from core.config.paths import SARGASSUM_READY
 TARGET = 224
 ZOOM_LEVELS = [1, 2, 3, 4, 6, 8, 10, 12]
 
+# ── Paleta pastel gris clara ──────────────────────────────────────────
+BG_MAIN   = "#f0f0f0"   # fondo general
+BG_PANEL  = "#e2e4e6"   # panel lateral
+BG_HEADER = "#d4d7da"   # barra superior
+BG_CARD   = "#ffffff"   # fondo miniaturas / canvas
+FG_MAIN   = "#2c2c2c"   # texto principal
+FG_MUTED  = "#6b7280"   # texto secundario
+FG_GREEN  = "#1a7a3c"   # acento verde (Dense Sargassum)
+FG_LGREEN = "#3a9e5f"   # verde claro (Sparse Algae)
+FG_RED    = "#b91c1c"   # rojo (Borrar)
+FG_AMBER  = "#92610a"   # ámbar (FAI)
+BTN_SAVE  = "#2d6a4f"   # botón guardar
+BTN_SKIP  = "#6b7280"   # botón saltar
+BTN_UNDO  = "#3b5f8a"   # botón deshacer
+BTN_FAI   = "#92400e"   # botón aplicar FAI
+BTN_CLR   = "#7f1d1d"   # botón limpiar
+ACCENT    = "#4ade80"   # borde canvas
+# ─────────────────────────────────────────────────────────────────────
+
 CLASE_COLORES_RGBA = {
     0: (0,   0,   0,   0),
     2: (20,  200, 50,  180),
@@ -62,7 +81,6 @@ def _preparar_fai(img_raw: np.ndarray) -> np.ndarray:
     y0, x0 = (h - TARGET) // 2, (w - TARGET) // 2
     img = img[y0:y0+TARGET, x0:x0+TARGET, :]
     fai = img[:, :, 3] - img[:, :, 2]   # NIR - Rojo
-    # Normalizar a RGB para mostrar: verde=positivo, rojo=negativo
     vmax = max(abs(fai).max(), 0.02)
     norm = np.clip(fai / vmax, -1.0, 1.0)
     r = np.clip(-norm, 0, 1)
@@ -116,7 +134,7 @@ class GTEditorApp:
         self.saltados   = 0
 
         self.clase_activa = tk.IntVar(value=2)
-        self.zoom_idx     = 2           # zoom level index -> ZOOM_LEVELS[2] = 3
+        self.zoom_idx     = 2
         self.historial    = []
         self.mask_edit    = None
         self.mask_original = None
@@ -137,37 +155,40 @@ class GTEditorApp:
 
     def _build_ui(self) -> None:
         self.root.title("GT Editor — MADOS")
-        self.root.configure(bg="#111827")
+        self.root.configure(bg=BG_MAIN)
         self.root.bind("<Key>", self._on_key)
 
         # Barra superior
-        top = tk.Frame(self.root, bg="#1f2937", pady=4)
+        top = tk.Frame(self.root, bg=BG_HEADER, pady=6)
         top.pack(fill="x")
 
         self.lbl_titulo = tk.Label(
-            top, text="", bg="#1f2937", fg="white", font=("Courier", 10, "bold")
+            top, text="", bg=BG_HEADER, fg=FG_MAIN, font=("Courier", 10, "bold")
         )
         self.lbl_titulo.pack(side="left", padx=10)
 
-        tk.Label(top, text="S=guardar  X=saltar  Ctrl+Z=deshacer  A=Aplicar FAI  R=reset  Q=salir  |  Rueda=zoom  Espacio+drag=mover",
-                 bg="#1f2937", fg="#9ca3af", font=("Courier", 8)).pack(side="right", padx=10)
+        tk.Label(
+            top,
+            text="S=guardar  X=saltar  Ctrl+Z=deshacer  A=Aplicar FAI  R=reset  Q=salir  |  Rueda=zoom  Espacio+drag=mover",
+            bg=BG_HEADER, fg=FG_MUTED, font=("Courier", 8)
+        ).pack(side="right", padx=10)
 
         # Cuerpo principal
-        body = tk.Frame(self.root, bg="#111827")
+        body = tk.Frame(self.root, bg=BG_MAIN)
         body.pack(fill="both", expand=True)
 
         # Panel izquierdo con scrollbar
-        left_outer = tk.Frame(body, bg="#111827", width=260)
+        left_outer = tk.Frame(body, bg=BG_PANEL, width=260)
         left_outer.pack(side="left", fill="y", padx=4, pady=4)
         left_outer.pack_propagate(False)
 
-        left_canvas = tk.Canvas(left_outer, bg="#111827", width=245, highlightthickness=0)
+        left_canvas = tk.Canvas(left_outer, bg=BG_PANEL, width=245, highlightthickness=0)
         left_scrollbar = tk.Scrollbar(left_outer, orient="vertical", command=left_canvas.yview)
         left_canvas.configure(yscrollcommand=left_scrollbar.set)
         left_scrollbar.pack(side="right", fill="y")
         left_canvas.pack(side="left", fill="both", expand=True)
 
-        left = tk.Frame(left_canvas, bg="#111827", width=240)
+        left = tk.Frame(left_canvas, bg=BG_PANEL, width=240)
         left_canvas.create_window((0, 0), window=left, anchor="nw")
 
         def _update_scroll(event):
@@ -184,46 +205,46 @@ class GTEditorApp:
         left_canvas.bind("<Button-5>", _on_left_wheel)
         left.bind("<MouseWheel>", _on_left_wheel)
 
-        tk.Label(left, text="RGB", bg="#111827", fg="#9ca3af",
+        tk.Label(left, text="RGB", bg=BG_PANEL, fg=FG_MUTED,
                  font=("Courier", 8)).pack()
-        self.lbl_rgb = tk.Label(left, bg="#000")
+        self.lbl_rgb = tk.Label(left, bg=BG_CARD)
         self.lbl_rgb.pack(pady=2)
 
-        tk.Label(left, text="FAI  (verde=sargazo)", bg="#111827", fg="#9ca3af",
+        tk.Label(left, text="FAI  (verde=sargazo)", bg=BG_PANEL, fg=FG_MUTED,
                  font=("Courier", 8)).pack()
-        self.lbl_fai = tk.Label(left, bg="#000")
+        self.lbl_fai = tk.Label(left, bg=BG_CARD)
         self.lbl_fai.pack(pady=2)
 
-        tk.Label(left, text="GT original", bg="#111827", fg="#9ca3af",
+        tk.Label(left, text="GT original", bg=BG_PANEL, fg=FG_MUTED,
                  font=("Courier", 8)).pack()
-        self.lbl_orig = tk.Label(left, bg="#000")
+        self.lbl_orig = tk.Label(left, bg=BG_CARD)
         self.lbl_orig.pack(pady=2)
 
         # Clase activa
-        tk.Label(left, text="─── Clase activa ───", bg="#111827",
-                 fg="#4ade80", font=("Courier", 8, "bold")).pack(pady=(8, 2))
+        tk.Label(left, text="─── Clase activa ───", bg=BG_PANEL,
+                 fg=FG_GREEN, font=("Courier", 8, "bold")).pack(pady=(8, 2))
         for k, nombre in CLASE_NOMBRES.items():
-            color = {0: "#ef4444", 2: "#22c55e", 3: "#86efac"}[k]
+            color = {0: FG_RED, 2: FG_GREEN, 3: FG_LGREEN}[k]
             tk.Radiobutton(
                 left, text=nombre, variable=self.clase_activa, value=k,
-                bg="#111827", fg=color, selectcolor="#374151",
-                activebackground="#111827", activeforeground=color,
+                bg=BG_PANEL, fg=color, selectcolor=BG_MAIN,
+                activebackground=BG_PANEL, activeforeground=color,
                 font=("Courier", 9, "bold"),
             ).pack(anchor="w", padx=8)
 
-        tk.Label(left, text="─── Info ───", bg="#111827",
-                 fg="#9ca3af", font=("Courier", 8)).pack(pady=(10, 2))
+        tk.Label(left, text="─── Info ───", bg=BG_PANEL,
+                 fg=FG_MUTED, font=("Courier", 8)).pack(pady=(10, 2))
         self.lbl_stats = tk.Label(
-            left, text="", bg="#111827", fg="white", font=("Courier", 9),
+            left, text="", bg=BG_PANEL, fg=FG_MAIN, font=("Courier", 9),
             justify="left",
         )
         self.lbl_stats.pack(anchor="w", padx=8)
 
         # Botones
         for (txt, cmd, col) in [
-            ("S  Guardar →",  self._guardar,  "#166534"),
-            ("X  Saltar  →",  self._saltar,   "#374151"),
-            ("Z  Deshacer",   self._deshacer, "#1e3a5f"),
+            ("S  Guardar →",  self._guardar,  BTN_SAVE),
+            ("X  Saltar  →",  self._saltar,   BTN_SKIP),
+            ("Z  Deshacer",   self._deshacer, BTN_UNDO),
         ]:
             tk.Button(
                 left, text=txt, command=cmd,
@@ -231,68 +252,64 @@ class GTEditorApp:
                 relief="flat", cursor="hand2", pady=4,
             ).pack(fill="x", padx=6, pady=2)
 
-        # Auto-FAI (Botones en lugar de Slider para evitar bugs gráficos)
-        tk.Label(left, text="─── Pintar por FAI ───", bg="#111827",
-                 fg="#f59e0b", font=("Courier", 8, "bold")).pack(pady=(10, 2))
+        # Auto-FAI
+        tk.Label(left, text="─── Pintar por FAI ───", bg=BG_PANEL,
+                 fg=FG_AMBER, font=("Courier", 8, "bold")).pack(pady=(10, 2))
 
-        fai_frame = tk.Frame(left, bg="#111827")
+        fai_frame = tk.Frame(left, bg=BG_PANEL)
         fai_frame.pack(fill="x", padx=6)
-        
-        tk.Label(fai_frame, text="Umbral:", bg="#111827",
-                 fg="#9ca3af", font=("Courier", 8)).pack(side="left")
-        
-        self.fai_umbral = tk.DoubleVar(value=0.005) 
-        
-        # Botón Menos
+
+        tk.Label(fai_frame, text="Umbral:", bg=BG_PANEL,
+                 fg=FG_MUTED, font=("Courier", 8)).pack(side="left")
+
+        self.fai_umbral = tk.DoubleVar(value=0.005)
+
         tk.Button(fai_frame, text="-", command=lambda: self._cambiar_umbral(-0.001),
-                  bg="#374151", fg="white", font=("Courier", 8, "bold"),
+                  bg=BG_HEADER, fg=FG_MAIN, font=("Courier", 8, "bold"),
                   relief="flat", cursor="hand2", padx=4).pack(side="left", padx=2)
-                  
-        # Etiqueta del valor
-        self.lbl_fai_val = tk.Label(fai_frame, text="0.005", bg="#111827", width=6,
-                                     fg="#f59e0b", font=("Courier", 8, "bold"))
+
+        self.lbl_fai_val = tk.Label(fai_frame, text="0.005", bg=BG_PANEL, width=6,
+                                     fg=FG_AMBER, font=("Courier", 8, "bold"))
         self.lbl_fai_val.pack(side="left", padx=2)
-        
-        # Botón Más
+
         tk.Button(fai_frame, text="+", command=lambda: self._cambiar_umbral(0.001),
-                  bg="#374151", fg="white", font=("Courier", 8, "bold"),
+                  bg=BG_HEADER, fg=FG_MAIN, font=("Courier", 8, "bold"),
                   relief="flat", cursor="hand2", padx=4).pack(side="left", padx=2)
 
-
-        fai_clase_frame = tk.Frame(left, bg="#111827")
+        fai_clase_frame = tk.Frame(left, bg=BG_PANEL)
         fai_clase_frame.pack(fill="x", padx=6, pady=6)
-        tk.Label(fai_clase_frame, text="Como:", bg="#111827",
-                 fg="#9ca3af", font=("Courier", 8)).pack(side="left")
-        self.fai_clase = tk.IntVar(value=3) # Por defecto expande como Sparse Algae
-        for k, lbl, col in [(2, "Densa", "#22c55e"), (3, "Escasa", "#86efac")]:
+        tk.Label(fai_clase_frame, text="Como:", bg=BG_PANEL,
+                 fg=FG_MUTED, font=("Courier", 8)).pack(side="left")
+        self.fai_clase = tk.IntVar(value=3)
+        for k, lbl, col in [(2, "Densa", FG_GREEN), (3, "Escasa", FG_LGREEN)]:
             tk.Radiobutton(
                 fai_clase_frame, text=lbl, variable=self.fai_clase, value=k,
-                bg="#111827", fg=col, selectcolor="#374151",
-                activebackground="#111827", font=("Courier", 8),
+                bg=BG_PANEL, fg=col, selectcolor=BG_MAIN,
+                activebackground=BG_PANEL, font=("Courier", 8),
             ).pack(side="left", padx=2)
 
         tk.Button(
             left, text="A  Aplicar FAI",
             command=self._aplicar_fai,
-            bg="#92400e", fg="white", font=("Courier", 9, "bold"),
+            bg=BTN_FAI, fg="white", font=("Courier", 9, "bold"),
             relief="flat", cursor="hand2", pady=4,
         ).pack(fill="x", padx=6, pady=2)
 
         tk.Button(
             left, text="Limpiar todo",
             command=self._limpiar_todo,
-            bg="#450a0a", fg="#fca5a5", font=("Courier", 8),
+            bg=BTN_CLR, fg="#fca5a5", font=("Courier", 8),
             relief="flat", cursor="hand2", pady=3,
         ).pack(fill="x", padx=6, pady=1)
 
         # Canvas central de edicion
-        center = tk.Frame(body, bg="#111827")
+        center = tk.Frame(body, bg=BG_MAIN)
         center.pack(side="left", fill="both", expand=True, padx=4, pady=4)
 
         tk.Label(center, text="EDICION  (clic izq=pintar  clic der=borrar)",
-                 bg="#111827", fg="white", font=("Courier", 9, "bold")).pack()
+                 bg=BG_MAIN, fg=FG_MAIN, font=("Courier", 9, "bold")).pack()
 
-        self.canvas = tk.Canvas(center, bg="#000", cursor="crosshair",
+        self.canvas = tk.Canvas(center, bg=BG_CARD, cursor="crosshair",
                                 highlightthickness=1, highlightbackground="#4ade80")
         self.canvas.pack(fill="both", expand=True)
 
@@ -303,14 +320,12 @@ class GTEditorApp:
         self.canvas.bind("<B3-Motion>",       self._on_drag_r)
         self.canvas.bind("<ButtonRelease-3>", self._on_release)
         self.canvas.bind("<MouseWheel>",      self._on_wheel)
-        self.canvas.bind("<Button-4>",        self._on_wheel)   # Linux scroll up
-        self.canvas.bind("<Button-5>",        self._on_wheel)   # Linux scroll down
+        self.canvas.bind("<Button-4>",        self._on_wheel)
+        self.canvas.bind("<Button-5>",        self._on_wheel)
         self.canvas.bind("<Configure>",       lambda e: self._redraw())
-        # Pan con clic del medio
         self.canvas.bind("<Button-2>",        self._on_pan_start)
         self.canvas.bind("<B2-Motion>",       self._on_pan_move)
         self.canvas.bind("<ButtonRelease-2>", self._on_pan_end)
-        # Pan con barra espaciadora + arrastre
         self.root.bind("<space>",             self._on_space_press)
         self.root.bind("<KeyRelease-space>",  self._on_space_release)
 
@@ -320,7 +335,6 @@ class GTEditorApp:
 
     def _cambiar_umbral(self, delta: float) -> None:
         nuevo_valor = self.fai_umbral.get() + delta
-        # Limitamos entre -0.02 y 0.05
         nuevo_valor = max(-0.02, min(0.05, nuevo_valor))
         self.fai_umbral.set(nuevo_valor)
         self.lbl_fai_val.config(text=f"{nuevo_valor:.3f}")
@@ -347,14 +361,13 @@ class GTEditorApp:
 
         self.img_rgb  = _preparar_rgb(img_raw)
         self.img_fai  = _preparar_fai(img_raw)
-        self.fai_raw  = self._calcular_fai_raw(img_raw)  # valores numericos para auto-fill
+        self.fai_raw  = self._calcular_fai_raw(img_raw)
 
         n_tot = len(self.tiles)
         self.lbl_titulo.config(
             text=f"[{self.idx+1}/{n_tot}]  {img_path.name}"
         )
 
-        # Paneles pequeños (112x112)
         self._ph_rgb  = ImageTk.PhotoImage(
             Image.fromarray(self.img_rgb).resize((90, 90), Image.Resampling.NEAREST)
         )
@@ -381,7 +394,7 @@ class GTEditorApp:
         self.lbl_orig.config(image=self._ph_orig)
 
     # ─────────────────────────────────────────────────────────────────
-    # DIBUJO EN CANVAS
+    # DIBUJO EN CANVAS (sin cambios en lógica de imagen)
     # ─────────────────────────────────────────────────────────────────
 
     def _zoom(self) -> int:
@@ -406,7 +419,6 @@ class GTEditorApp:
         h_zoom = TARGET * z
         img_zoom = comp.resize((w_zoom, h_zoom), Image.Resampling.NEAREST)
 
-        # Offset base (centrado) + pan del usuario
         base_x = max(0, (cw - w_zoom) // 2)
         base_y = max(0, (ch - h_zoom) // 2)
         self._off_x = base_x + self._pan_x
@@ -418,7 +430,6 @@ class GTEditorApp:
                                   anchor="nw", image=self._ph_edit)
 
     def _canvas_a_pixel(self, cx: int, cy: int) -> tuple[int, int]:
-        """Convierte coordenadas de canvas a coordenadas de pixel de la imagen."""
         z  = self._zoom()
         px = (cx - self._off_x) // z
         py = (cy - self._off_y) // z
@@ -432,7 +443,6 @@ class GTEditorApp:
         y0_crop = (mh - TARGET_h) // 2
         x0_crop = (mw - TARGET_w) // 2
 
-        # Convertir de coordenadas de crop a coordenadas de mascara completa
         my = py + y0_crop
         mx = px + x0_crop
 
@@ -483,7 +493,6 @@ class GTEditorApp:
         self._guardado_historial_este_trazo = False
 
     def _on_wheel(self, event) -> None:
-        # Windows: event.delta  /  Linux: event.num
         if event.num == 4 or (hasattr(event, "delta") and event.delta > 0):
             self.zoom_idx = min(len(ZOOM_LEVELS) - 1, self.zoom_idx + 1)
         else:
@@ -518,7 +527,7 @@ class GTEditorApp:
             self._guardar()
         elif k == "x":
             self._saltar()
-        elif k == "z" and event.state & 0x4:   # Ctrl+Z
+        elif k == "z" and event.state & 0x4:
             self._deshacer()
         elif k == "a":
             self._aplicar_fai()
@@ -563,17 +572,15 @@ class GTEditorApp:
             self.historial.pop(0)
 
     def _calcular_fai_raw(self, img_raw: np.ndarray) -> np.ndarray:
-        """Devuelve el mapa FAI numerico (224x224) para uso en auto-fill."""
         img = img_raw.copy().astype(np.float32)
         if img.max() > 10.0:
             img /= 10000.0
         h, w = img.shape[:2]
         y0, x0 = (h - TARGET) // 2, (w - TARGET) // 2
         img = img[y0:y0+TARGET, x0:x0+TARGET, :]
-        return img[:, :, 3] - img[:, :, 2]   # NIR - Rojo (orden B,G,R,NIR)
+        return img[:, :, 3] - img[:, :, 2]
 
     def _aplicar_fai(self) -> None:
-        """Pinta automaticamente todos los pixeles donde FAI >= umbral."""
         umbral = self.fai_umbral.get()
         clase  = self.fai_clase.get()
         self._guardar_historial()
@@ -582,9 +589,8 @@ class GTEditorApp:
         y0_crop = (mh - TARGET) // 2
         x0_crop = (mw - TARGET) // 2
 
-        mascara_fai = self.fai_raw >= umbral   # (224, 224) bool
+        mascara_fai = self.fai_raw >= umbral
 
-        # Aplicar al area de crop de la mascara completa
         region = self.mask_edit[y0_crop:y0_crop+TARGET, x0_crop:x0_crop+TARGET]
         region[mascara_fai] = clase
         self.mask_edit[y0_crop:y0_crop+TARGET, x0_crop:x0_crop+TARGET] = region
@@ -595,7 +601,6 @@ class GTEditorApp:
         self._actualizar_stats()
 
     def _limpiar_todo(self) -> None:
-        """Borra todas las etiquetas de sargazo del tile actual."""
         self._guardar_historial()
         mh, mw = self.mask_edit.shape
         y0_crop = (mh - TARGET) // 2
