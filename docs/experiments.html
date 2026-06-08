@@ -223,7 +223,7 @@ function buildIoUChart(id, data){
   iouChart = new Chart(document.getElementById(id), {
     type:'line',
     data:{ labels:data.epochs, datasets:[
-      {label:'mIoU (%)', data:data.miou.map(v => v * 100), borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:2},
+      {label:'mIoU (%)', data:data.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:2},
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
