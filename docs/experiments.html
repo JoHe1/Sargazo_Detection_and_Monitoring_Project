@@ -179,12 +179,58 @@ function renderMeta(meta, runName){
 
 // ── Descarga de gráfica ───────────────────────────────────────────────
 function downloadChart(canvasId, filename){
-  const canvas = document.getElementById(canvasId);
-  if(!canvas) return;
-  const a = document.createElement('a');
-  a.download = filename + '.png';
-  a.href = canvas.toDataURL('image/png', 1.0);
-  a.click();
+  const originalCanvas = document.getElementById(canvasId);
+  if(!originalCanvas) return;
+
+  const W = 1400, H = 600;
+  const offscreen = document.createElement('canvas');
+  offscreen.width  = W;
+  offscreen.height = H;
+
+  const originalChart = Chart.getChart(canvasId);
+  if(!originalChart) {
+    const a = document.createElement('a');
+    a.download = filename + '.png';
+    a.href = originalCanvas.toDataURL('image/png', 1.0);
+    a.click();
+    return;
+  }
+
+  const cfg = JSON.parse(JSON.stringify(originalChart.config));
+  cfg.options = cfg.options || {};
+  cfg.options.animation = false;
+  cfg.options.plugins = cfg.options.plugins || {};
+  cfg.options.plugins.legend = cfg.options.plugins.legend || {};
+  cfg.options.plugins.legend.labels = {
+    ...(cfg.options.plugins.legend.labels || {}),
+    font: { size: 16 }
+  };
+  cfg.options.scales = cfg.options.scales || {};
+  ['x','y'].forEach(axis => {
+    cfg.options.scales[axis] = cfg.options.scales[axis] || {};
+    cfg.options.scales[axis].ticks = {
+      ...(cfg.options.scales[axis].ticks || {}),
+      font: { size: 13 }
+    };
+    cfg.options.scales[axis].title = {
+      ...(cfg.options.scales[axis].title || {}),
+      font: { size: 14 }
+    };
+  });
+
+  const ctx = offscreen.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  const hiResChart = new Chart(offscreen, cfg);
+
+  setTimeout(() => {
+    const a = document.createElement('a');
+    a.download = filename + '.png';
+    a.href = offscreen.toDataURL('image/png', 1.0);
+    a.click();
+    hiResChart.destroy();
+  }, 300);
 }
 
 // ── Charts ───────────────────────────────────────────────────────────
