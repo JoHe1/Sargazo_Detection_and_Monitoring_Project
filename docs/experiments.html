@@ -207,15 +207,15 @@ function buildLossChart(id, data){
   lossChart = new Chart(document.getElementById(id), {
     type:'line',
     data:{ labels:data.epochs, datasets:[
-      {label:'Train Loss', data:data.train, borderColor:'rgba(52,152,219,0.9)', tension:.3, pointRadius:0, borderWidth:5, spanGaps:true},
-      {label:'Val Loss',   data:data.val,   borderColor:'rgba(231,76,60,0.9)',  tension:.3, pointRadius:0, borderWidth:5, spanGaps:true},
+      {label:'Train Loss', data:data.train, borderColor:'rgba(52,152,219,0.9)', tension:.3, pointRadius:0, borderWidth:3, spanGaps:true},
+      {label:'Val Loss',   data:data.val,   borderColor:'rgba(231,76,60,0.9)',  tension:.3, pointRadius:0, borderWidth:3, spanGaps:true},
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{font:{size:32,weight:'bold'},boxWidth:24}}},
+      plugins:{legend:{labels:{font:{size:20,weight:'bold'},boxWidth:18}}},
       scales:{
-        x:{ticks:{maxTicksLimit:15,font:{size:28,weight:'bold'}},title:{display:true,text:'Época',font:{size:30,weight:'bold'}}},
-        y:{ticks:{font:{size:28,weight:'bold'}},title:{display:true,text:'Pérdida',font:{size:30,weight:'bold'}}}
+        x:{ticks:{maxTicksLimit:15,font:{size:17,weight:'bold'}},title:{display:true,text:'Época',font:{size:19,weight:'bold'}}},
+        y:{ticks:{font:{size:17,weight:'bold'}},title:{display:true,text:'Pérdida',font:{size:19,weight:'bold'}}}
       }
     }
   });
@@ -226,14 +226,14 @@ function buildIoUChart(id, data){
   iouChart = new Chart(document.getElementById(id), {
     type:'line',
     data:{ labels:data.epochs, datasets:[
-      {label:'mIoU (%)', data:data.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:5},
+      {label:'mIoU (%)', data:data.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:3},
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{font:{size:32,weight:'bold'},boxWidth:24}}},
+      plugins:{legend:{labels:{font:{size:20,weight:'bold'},boxWidth:18}}},
       scales:{
-        x:{ticks:{maxTicksLimit:15,font:{size:28,weight:'bold'}},title:{display:true,text:'Época',font:{size:30,weight:'bold'}}},
-        y:{ticks:{font:{size:28,weight:'bold'}},title:{display:true,text:'mIoU Sargazo (%)',font:{size:30,weight:'bold'}}}
+        x:{ticks:{maxTicksLimit:15,font:{size:17,weight:'bold'}},title:{display:true,text:'Época',font:{size:19,weight:'bold'}}},
+        y:{ticks:{font:{size:17,weight:'bold'}},title:{display:true,text:'mIoU Sargazo (%)',font:{size:19,weight:'bold'}}}
       }
     }
   });
