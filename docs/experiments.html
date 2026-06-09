@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;scroll-behavior:smooth}
@@ -106,6 +107,14 @@ footer p{font-size:.8rem;color:#999;margin:0}
     </select>
   </div>
 
+  <div style="margin-bottom:1.5rem">
+    <button class="dl-btn" onclick="downloadAllCharts()" id="btn-download-all">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Descargar todas las gráficas (ZIP)
+    </button>
+    <span id="dl-progress" style="font-family:'Source Code Pro',monospace;font-size:.75rem;color:#888;margin-left:1rem"></span>
+  </div>
+
   <div class="error-box" id="errBox"></div>
   <div id="expContent">
     <div class="loading" id="loadingMsg">Selecciona un experimento para ver los detalles.</div>
@@ -182,15 +191,10 @@ function renderMeta(meta, runName){
 function downloadChart(canvasId, filename){
   const canvas = document.getElementById(canvasId);
   if(!canvas) return;
-  const { jsPDF } = window.jspdf;
-  const imgData = canvas.toDataURL('image/png', 1.0);
-  const pdf = new jsPDF({
-    orientation: 'landscape',
-    unit: 'px',
-    format: [canvas.width, canvas.height]
-  });
-  pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-  pdf.save(filename + '.pdf');
+  const a = document.createElement('a');
+  a.download = filename + '.png';
+  a.href = canvas.toDataURL('image/png', 1.0);
+  a.click();
 }
 
 // ── Charts ───────────────────────────────────────────────────────────
@@ -293,6 +297,113 @@ async function init(){
     if(list.length > 0) loadExperiment(list[0]);
   } catch(e){
     showError('No se pudo cargar assets/data/runs/index.json');
+  }
+}
+
+// ── Descargar todas las gráficas en un ZIP ─────────────────────────
+async function downloadAllCharts(){
+  const btn = document.getElementById('btn-download-all');
+  const progress = document.getElementById('dl-progress');
+  btn.disabled = true;
+
+  try {
+    const list = await jf(`${BASE}/index.json`);
+    const zip  = new JSZip();
+
+    for(let i = 0; i < list.length; i++){
+      const name = list[i];
+      // Nombre de carpeta: Exp01, Exp02...
+      const num    = String(i + 1).padStart(2, '0');
+      const folder = zip.folder(`Exp${num}`);
+
+      progress.textContent = `Procesando ${i+1}/${list.length}: ${name}…`;
+
+      // Cargar datos del experimento
+      try {
+        const [meta, csvTxt] = await Promise.all([
+          jf(`${BASE}/${name}/metadata.json`),
+          tf(`${BASE}/${name}/metrics.csv`),
+        ]);
+        const csvData = parseCSV(csvTxt);
+        const safeName = name.replace(/[^a-z0-9_-]/gi,'_');
+
+        // Canvas temporal offscreen para Loss
+        const lossCanvas = document.createElement('canvas');
+        lossCanvas.width  = 1200;
+        lossCanvas.height = 500;
+        const lossCtx = lossCanvas.getContext('2d');
+        lossCtx.fillStyle = '#ffffff';
+        lossCtx.fillRect(0, 0, 1200, 500);
+
+        const lossC = new Chart(lossCanvas, {
+          type:'line',
+          data:{ labels:csvData.epochs, datasets:[
+            {label:'Train Loss', data:csvData.train, borderColor:'rgba(52,152,219,0.9)', tension:.3, pointRadius:0, borderWidth:3, spanGaps:true},
+            {label:'Val Loss',   data:csvData.val,   borderColor:'rgba(231,76,60,0.9)',  tension:.3, pointRadius:0, borderWidth:3, spanGaps:true},
+          ]},
+          options:{
+            responsive:false, animation:false,
+            plugins:{legend:{labels:{font:{size:19,weight:'bold'},boxWidth:14}}},
+            scales:{
+              x:{ticks:{maxTicksLimit:16,font:{size:17,weight:'bold'}},title:{display:true,text:'Época',font:{size:19,weight:'bold'}}},
+              y:{ticks:{font:{size:17,weight:'bold'}},title:{display:true,text:'Pérdida',font:{size:19,weight:'bold'}}}
+            }
+          }
+        });
+
+        // Canvas temporal offscreen para mIoU
+        const iouCanvas = document.createElement('canvas');
+        iouCanvas.width  = 1200;
+        iouCanvas.height = 500;
+        const iouCtx = iouCanvas.getContext('2d');
+        iouCtx.fillStyle = '#ffffff';
+        iouCtx.fillRect(0, 0, 1200, 500);
+
+        const iouC = new Chart(iouCanvas, {
+          type:'line',
+          data:{ labels:csvData.epochs, datasets:[
+            {label:'mIoU (%)', data:csvData.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:3},
+          ]},
+          options:{
+            responsive:false, animation:false,
+            plugins:{legend:{labels:{font:{size:19,weight:'bold'},boxWidth:14}}},
+            scales:{
+              x:{ticks:{maxTicksLimit:16,font:{size:17,weight:'bold'}},title:{display:true,text:'Época',font:{size:19,weight:'bold'}}},
+              y:{beginAtZero:true,ticks:{font:{size:17,weight:'bold'}},title:{display:true,text:'mIoU Sargazo (%)',font:{size:19,weight:'bold'}}}
+            }
+          }
+        });
+
+        // Esperar a que Chart.js renderice
+        await new Promise(r => setTimeout(r, 200));
+
+        // Añadir al ZIP
+        const lossPng = lossCanvas.toDataURL('image/png',1.0).split(',')[1];
+        const iouPng  = iouCanvas.toDataURL('image/png',1.0).split(',')[1];
+        folder.file(`perdida_${safeName}.png`, lossPng, {base64:true});
+        folder.file(`miou_${safeName}.png`,    iouPng,  {base64:true});
+
+        lossC.destroy();
+        iouC.destroy();
+
+      } catch(e){
+        progress.textContent = `Error en ${name} — saltando`;
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+
+    progress.textContent = 'Generando ZIP…';
+    const blob = await zip.generateAsync({type:'blob'});
+    const a = document.createElement('a');
+    a.download = 'graficas_experimentos.zip';
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    progress.textContent = '✅ Descarga completada';
+
+  } catch(e){
+    progress.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false;
   }
 }
 
