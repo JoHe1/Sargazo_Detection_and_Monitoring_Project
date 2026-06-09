@@ -331,8 +331,8 @@ def fig_raw_vs_procesado(raw: dict, procesado: dict, out_dir: str) -> None:
     ax_bar.set_ylim(0, max(vals_raw + [1]) * 1.18)
 
     plt.tight_layout()
-    ruta = os.path.join(out_dir, "0_resumen_raw_vs_procesado.png")
-    plt.savefig(ruta, dpi=150, bbox_inches="tight", facecolor="white")
+    ruta = os.path.join(out_dir, "0_resumen_raw_vs_procesado.pdf")
+    plt.savefig(ruta, format="pdf", bbox_inches="tight", facecolor="white")
     print(f"  [OK] {ruta}")
     plt.close()
 
@@ -383,8 +383,8 @@ def fig_tamanios_tiles(raw: dict, out_dir: str) -> None:
                           edgecolor="#aaaaaa", alpha=0.9))
 
     plt.tight_layout()
-    ruta = os.path.join(out_dir, "0b_tamanios_tifs_crudos.png")
-    plt.savefig(ruta, dpi=150, bbox_inches="tight", facecolor="white")
+    ruta = os.path.join(out_dir, "0b_tamanios_tifs_crudos.pdf")
+    plt.savefig(ruta, format="pdf", bbox_inches="tight", facecolor="white")
     print(f"  [OK] {ruta}")
     plt.close()
 
@@ -436,8 +436,8 @@ def fig_tiles_por_split(datos_splits: dict, out_dir: str) -> None:
                 ha="center", fontsize=9, color="#444444")
 
     plt.tight_layout()
-    ruta = os.path.join(out_dir, "1_distribucion_tiles_por_split.png")
-    plt.savefig(ruta, dpi=150, bbox_inches="tight", facecolor="white")
+    ruta = os.path.join(out_dir, "1_distribucion_tiles_por_split.pdf")
+    plt.savefig(ruta, format="pdf", bbox_inches="tight", facecolor="white")
     print(f"  [OK] {ruta}")
     plt.close()
 
@@ -508,8 +508,8 @@ def fig_pixeles_por_clase(conteo: np.ndarray, split: str, out_dir: str) -> None:
     ax_zoom.set_ylim(0, max(y_zoom) * 1.45)
 
     plt.tight_layout(rect=[0, 0.02, 1, 1])
-    ruta = os.path.join(out_dir, f"2_distribucion_pixeles_por_clase_{split}.png")
-    plt.savefig(ruta, dpi=150, bbox_inches="tight", facecolor="white")
+    ruta = os.path.join(out_dir, f"2_distribucion_pixeles_por_clase_{split}.pdf")
+    plt.savefig(ruta, format="pdf", bbox_inches="tight", facecolor="white")
     print(f"  [OK] {ruta}")
     plt.close()
 
@@ -581,8 +581,8 @@ def fig_desequilibrio(conteo: np.ndarray, split: str, out_dir: str) -> None:
     )
 
     plt.tight_layout()
-    ruta = os.path.join(out_dir, f"3_desequilibrio_clases_{split}.png")
-    plt.savefig(ruta, dpi=150, bbox_inches="tight", facecolor="white")
+    ruta = os.path.join(out_dir, f"3_desequilibrio_clases_{split}.pdf")
+    plt.savefig(ruta, format="pdf", bbox_inches="tight", facecolor="white")
     print(f"  [OK] {ruta}")
     plt.close()
 
@@ -630,8 +630,8 @@ def fig_tiles_apiladas(datos_splits: dict, out_dir: str) -> None:
     ax.set_ylim(0, max(totales) * 1.12)
 
     plt.tight_layout()
-    ruta = os.path.join(out_dir, "4_tiles_con_sargazo_por_split.png")
-    plt.savefig(ruta, dpi=150, bbox_inches="tight", facecolor="white")
+    ruta = os.path.join(out_dir, "4_tiles_con_sargazo_por_split.pdf")
+    plt.savefig(ruta, format="pdf", bbox_inches="tight", facecolor="white")
     print(f"  [OK] {ruta}")
     plt.close()
 
@@ -796,8 +796,8 @@ def fig_proporciones_split(datos_splits: dict, raw_data: dict, out_dir: str) -> 
     )
 
     plt.tight_layout(rect=[0, 0.04, 1, 1])
-    ruta = os.path.join(out_dir, "5_proporciones_train_val_test.png")
-    plt.savefig(ruta, dpi=150, bbox_inches="tight", facecolor="white")
+    ruta = os.path.join(out_dir, "5_proporciones_train_val_test.pdf")
+    plt.savefig(ruta, format="pdf", bbox_inches="tight", facecolor="white")
     print(f"  [OK] {ruta}")
     plt.close()
 
