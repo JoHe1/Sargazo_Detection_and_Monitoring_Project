@@ -58,6 +58,11 @@ h2{font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase
 /* Charts */
 .chart-wrap{position:relative;height:280px;width:100%;margin-bottom:3rem}
 
+/* Download button */
+.dl-btn{display:inline-flex;align-items:center;gap:.35rem;font-family:'Source Code Pro',monospace;font-size:.68rem;padding:.3rem .7rem;border:1px solid #ccc;border-radius:2px;background:#fff;color:#555;cursor:pointer;transition:border-color .15s,color .15s;margin-bottom:.6rem}
+.dl-btn:hover{border-color:#111;color:#111}
+.dl-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
 /* Error */
 .error-box{display:none;background:#fdedec;border-left:3px solid #e74c3c;padding:.85rem 1rem;font-size:.85rem;color:#922b21;margin-bottom:1.5rem;font-family:'Source Code Pro',monospace}
 
@@ -172,6 +177,62 @@ function renderMeta(meta, runName){
   `;
 }
 
+// ── Descarga de gráfica ───────────────────────────────────────────────
+function downloadChart(canvasId, filename){
+  const originalCanvas = document.getElementById(canvasId);
+  if(!originalCanvas) return;
+
+  const W = 1400, H = 600;
+  const offscreen = document.createElement('canvas');
+  offscreen.width  = W;
+  offscreen.height = H;
+
+  const originalChart = Chart.getChart(canvasId);
+  if(!originalChart) {
+    const a = document.createElement('a');
+    a.download = filename + '.png';
+    a.href = originalCanvas.toDataURL('image/png', 1.0);
+    a.click();
+    return;
+  }
+
+  const cfg = JSON.parse(JSON.stringify(originalChart.config));
+  cfg.options = cfg.options || {};
+  cfg.options.animation = false;
+  cfg.options.plugins = cfg.options.plugins || {};
+  cfg.options.plugins.legend = cfg.options.plugins.legend || {};
+  cfg.options.plugins.legend.labels = {
+    ...(cfg.options.plugins.legend.labels || {}),
+    font: { size: 16 }
+  };
+  cfg.options.scales = cfg.options.scales || {};
+  ['x','y'].forEach(axis => {
+    cfg.options.scales[axis] = cfg.options.scales[axis] || {};
+    cfg.options.scales[axis].ticks = {
+      ...(cfg.options.scales[axis].ticks || {}),
+      font: { size: 13 }
+    };
+    cfg.options.scales[axis].title = {
+      ...(cfg.options.scales[axis].title || {}),
+      font: { size: 14 }
+    };
+  });
+
+  const ctx = offscreen.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  const hiResChart = new Chart(offscreen, cfg);
+
+  setTimeout(() => {
+    const a = document.createElement('a');
+    a.download = filename + '.png';
+    a.href = offscreen.toDataURL('image/png', 1.0);
+    a.click();
+    hiResChart.destroy();
+  }, 300);
+}
+
 // ── Charts ───────────────────────────────────────────────────────────
 function parseCSV(txt){
   const lines = txt.trim().split(/\r?\n/);
@@ -182,7 +243,7 @@ function parseCSV(txt){
     epochs.push(v[0]);
     train.push(isNaN(+v[1]) ? null : +v[1]);
     val.push(isNaN(+v[2]) ? null : +v[2]);
-    miou.push(isNaN(+v[6]) ? null : +(+v[6]*100).toFixed(3));
+    miou.push(isNaN(+v[5]) ? null : +(+v[5]*100).toFixed(3));
   });
   return { epochs, train, val, miou };
 }
@@ -197,11 +258,9 @@ function buildLossChart(id, data){
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{font:{size:13,weight:'bold'},boxWidth:14}}},
-      scales:{
-        x:{ticks:{maxTicksLimit:15,font:{size:12,weight:'bold'}},title:{display:true,text:'Época',font:{size:13,weight:'bold'}}},
-        y:{ticks:{font:{size:12,weight:'bold'}},title:{display:true,text:'Pérdida',font:{size:13,weight:'bold'}}}
-      }}
+      plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},
+      scales:{x:{ticks:{maxTicksLimit:15,font:{size:10}},title:{display:true,text:'Época',font:{size:10}}},
+              y:{title:{display:true,text:'Pérdida',font:{size:10}}}}}
   });
 }
 
@@ -210,64 +269,14 @@ function buildIoUChart(id, data){
   iouChart = new Chart(document.getElementById(id), {
     type:'line',
     data:{ labels:data.epochs, datasets:[
-      {label:'mIoU (%)', data:data.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:2},
+      {label:'IoU Sargazo val (%)', data:data.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:2},
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{font:{size:13,weight:'bold'},boxWidth:14}}},
-      scales:{
-        x:{ticks:{maxTicksLimit:15,font:{size:12,weight:'bold'}},title:{display:true,text:'Época',font:{size:13,weight:'bold'}}},
-        y:{beginAtZero:true,ticks:{font:{size:12,weight:'bold'}},title:{display:true,text:'mIoU (%)',font:{size:13,weight:'bold'}}}
-      }}
+      plugins:{legend:{labels:{font:{size:11},boxWidth:12}}},
+      scales:{x:{ticks:{maxTicksLimit:15,font:{size:10}},title:{display:true,text:'Época',font:{size:10}}},
+              y:{beginAtZero:true,title:{display:true,text:'IoU Sargazo (%)',font:{size:10}}}}}
   });
-}
-
-// ── Descarga de gráfica alta resolución para el paper ────────────────
-function downloadChart(canvasId, filename){
-  const originalCanvas = document.getElementById(canvasId);
-  if(!originalCanvas) return;
-  const W = 1400, H = 600;
-  const offscreen = document.createElement('canvas');
-  offscreen.width = W; offscreen.height = H;
-  const originalChart = Chart.getChart(canvasId);
-  if(!originalChart){
-    const a = document.createElement('a');
-    a.download = filename+'.png';
-    a.href = originalCanvas.toDataURL('image/png',1.0);
-    a.click(); return;
-  }
-  const cfg = JSON.parse(JSON.stringify(originalChart.config));
-  cfg.options = cfg.options || {};
-  cfg.options.animation = false;
-  cfg.options.plugins = cfg.options.plugins || {};
-  cfg.options.plugins.legend = cfg.options.plugins.legend || {};
-  cfg.options.plugins.legend.labels = {
-    ...(cfg.options.plugins.legend.labels || {}),
-    font: { size: 20, weight: 'bold' }
-  };
-  cfg.options.scales = cfg.options.scales || {};
-  ['x','y'].forEach(axis => {
-    cfg.options.scales[axis] = cfg.options.scales[axis] || {};
-    cfg.options.scales[axis].ticks = {
-      ...(cfg.options.scales[axis].ticks || {}),
-      font: { size: 17, weight: 'bold' }
-    };
-    cfg.options.scales[axis].title = {
-      ...(cfg.options.scales[axis].title || {}),
-      font: { size: 18, weight: 'bold' }
-    };
-  });
-  const ctx = offscreen.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, W, H);
-  const hiResChart = new Chart(offscreen, cfg);
-  setTimeout(() => {
-    const a = document.createElement('a');
-    a.download = filename+'.png';
-    a.href = offscreen.toDataURL('image/png',1.0);
-    a.click();
-    hiResChart.destroy();
-  }, 300);
 }
 
 // ── Carga experimento ────────────────────────────────────────────────
@@ -290,7 +299,7 @@ async function loadExperiment(name){
       <h2>Curvas de pérdida</h2>
       <button class="dl-btn" onclick="downloadChart('lossC','perdida_${safeName}')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar</button>
       <div class="chart-wrap"><canvas id="lossC"></canvas></div>
-      <h2>Evolución mIoU en validación</h2>
+      <h2>Evolución IoU Sargazo en validación</h2>
       <button class="dl-btn" onclick="downloadChart('iouC','miou_${safeName}')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar</button>
       <div class="chart-wrap"><canvas id="iouC"></canvas></div>
     `;
