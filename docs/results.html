@@ -277,12 +277,12 @@ function barChart(canvasId, labels, datasets){
     options:{
       responsive:true, maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{font:{size:17,weight:'bold'},boxWidth:14}}},
+      plugins:{legend:{labels:{font:{size:19,weight:'bold'},boxWidth:14}}},
       scales:{
-        x:{ticks:{font:{size:14,weight:'bold'},maxRotation:45}},
+        x:{ticks:{font:{size:17,weight:'bold'},maxRotation:45}},
         y:{beginAtZero:true, max:1,
-           ticks:{callback:v=>(v*100).toFixed(0)+'%',font:{size:15,weight:'bold'}},
-           title:{display:true,text:'Valor',font:{size:17,weight:'bold'}}}
+           ticks:{callback:v=>(v*100).toFixed(0)+'%',font:{size:17,weight:'bold'}},
+           title:{display:true,text:'Valor',font:{size:19,weight:'bold'}}}
       }
     }
   });
