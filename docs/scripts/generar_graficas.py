@@ -232,10 +232,10 @@ def plot_inference(metrics: dict, title: str, out_path: Path) -> None:
 
 # ── Gráfica comparativa multi-modelo ────────────────────────────────
 
-def plot_comparativa(models_data: dict, title: str, out_path: Path) -> None:
+def plot_comparativa_simple(models_data: dict, title: str, out_path: Path) -> None:
     """
-    Barras agrupadas para múltiples modelos.
-    models_data: {nombre_modelo: {recall, precision, f1, iou}}
+    Barras agrupadas con nombres completos en eje X.
+    Usada para Comparativa_originales y Comparativa_reentrenados.
     """
     nombres  = list(models_data.keys())
     n        = len(nombres)
@@ -253,7 +253,6 @@ def plot_comparativa(models_data: dict, title: str, out_path: Path) -> None:
         ax.bar(x + offset[i], vals, width, label=lbl,
                color=col, edgecolor=edge, linewidth=0.8, zorder=3)
 
-    # Etiquetas eje X — nombres cortos
     short = [n[:22] + '…' if len(n) > 24 else n for n in nombres]
     ax.set_xticks(x)
     ax.set_xticklabels(short, rotation=25, ha='right', fontsize=11, fontweight='bold')
@@ -265,6 +264,47 @@ def plot_comparativa(models_data: dict, title: str, out_path: Path) -> None:
     ax.legend(fontsize=11, framealpha=0.9)
     ax.grid(axis='y', zorder=0)
     plt.tight_layout()
+    fig.savefig(out_path, format='pdf', bbox_inches='tight')
+    plt.close(fig)
+
+
+def plot_comparativa(models_data: dict, title: str, out_path: Path) -> None:
+    """
+    Barras agrupadas para múltiples modelos.
+    Nombres completos en eje X rotados, figura cuadrada para que se vea bien en Overleaf.
+    """
+    nombres  = list(models_data.keys())
+    n        = len(nombres)
+    metricas = ['recall', 'precision', 'f1', 'iou']
+    n_met    = len(metricas)
+
+    x      = np.arange(n)
+    width  = 0.18
+    offset = np.linspace(-(n_met-1)/2 * width, (n_met-1)/2 * width, n_met)
+
+    # Figura más alta para que los nombres del eje X tengan espacio
+    fig, ax = plt.subplots(figsize=(max(12, n * 1.4), 8))
+
+    for i, (met, lbl, col, edge) in enumerate(zip(metricas, BAR_LABELS, BAR_COLORS, BAR_EDGEC)):
+        vals = [models_data[m].get(met) or 0 for m in nombres]
+        ax.bar(x + offset[i], vals, width, label=lbl,
+               color=col, edgecolor=edge, linewidth=0.8, zorder=3)
+
+    # Nombres completos en eje X rotados 40 grados
+    ax.set_xticks(x)
+    ax.set_xticklabels(nombres, rotation=40, ha='right',
+                       fontsize=18, fontweight='bold')
+    ax.set_ylabel('Valor', fontsize=20, fontweight='bold')
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda v, _: f'{v*100:.0f}%'))
+    ax.set_ylim(0, 1.15)
+    ax.tick_params(axis='y', labelsize=18)
+    ax.set_title(title, fontsize=18, pad=14)
+    ax.legend(fontsize=16, framealpha=0.9, loc='upper right',
+              prop={'weight': 'bold', 'size': 16})
+    ax.grid(axis='y', zorder=0)
+
+    # Margen inferior extra para que los nombres no se corten
+    plt.subplots_adjust(bottom=0.35)
     fig.savefig(out_path, format='pdf', bbox_inches='tight')
     plt.close(fig)
 
@@ -397,7 +437,7 @@ def main():
                 titulo_comp = ('Comparativa con Echevarría — datos originales'
                                if sufijo == 'echevarria'
                                else 'Comparativa con Echevarría — reentrenado MADOS')
-                plot_comparativa(models, titulo_comp, comp_dir / f'{fname}.pdf')
+                plot_comparativa_simple(models, titulo_comp, comp_dir / f'{fname}.pdf')
                 print(f'  OK — {fname}.pdf ({len(models)} modelos)')
             except Exception as e:
                 print(f'  ERROR {fname}: {e}')
