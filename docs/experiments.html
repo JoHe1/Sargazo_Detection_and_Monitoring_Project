@@ -56,7 +56,7 @@ h2{font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase
 .tec.off{border-color:#ddd;color:#bbb;text-decoration:line-through}
 
 /* Charts */
-.chart-wrap{position:relative;height:500px;width:100%;margin-bottom:3rem}
+.chart-wrap{position:relative;height:280;width:100%;margin-bottom:3rem}
 
 /* Download button */
 .dl-btn{display:inline-flex;align-items:center;gap:.35rem;font-family:'Source Code Pro',monospace;font-size:.68rem;padding:.3rem .7rem;border:1px solid #ccc;border-radius:2px;background:#fff;color:#555;cursor:pointer;transition:border-color .15s,color .15s;margin-bottom:.6rem}
@@ -207,15 +207,15 @@ function buildLossChart(id, data){
   lossChart = new Chart(document.getElementById(id), {
     type:'line',
     data:{ labels:data.epochs, datasets:[
-      {label:'Train Loss', data:data.train, borderColor:'rgba(52,152,219,0.9)', tension:.3, pointRadius:0, borderWidth:3, spanGaps:true},
-      {label:'Val Loss',   data:data.val,   borderColor:'rgba(231,76,60,0.9)',  tension:.3, pointRadius:0, borderWidth:3, spanGaps:true},
+      {label:'Train Loss', data:data.train, borderColor:'rgba(52,152,219,0.9)', tension:.3, pointRadius:0, borderWidth:5, spanGaps:true},
+      {label:'Val Loss',   data:data.val,   borderColor:'rgba(231,76,60,0.9)',  tension:.3, pointRadius:0, borderWidth:5, spanGaps:true},
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{font:{size:18,weight:'bold'},boxWidth:16}}},
+      plugins:{legend:{labels:{font:{size:32,weight:'bold'},boxWidth:24}}},
       scales:{
-        x:{ticks:{maxTicksLimit:15,font:{size:15,weight:'bold'}},title:{display:true,text:'Época',font:{size:17,weight:'bold'}}},
-        y:{ticks:{font:{size:15,weight:'bold'}},title:{display:true,text:'Pérdida',font:{size:17,weight:'bold'}}}
+        x:{ticks:{maxTicksLimit:15,font:{size:28,weight:'bold'}},title:{display:true,text:'Época',font:{size:30,weight:'bold'}}},
+        y:{ticks:{font:{size:28,weight:'bold'}},title:{display:true,text:'Pérdida',font:{size:30,weight:'bold'}}}
       }
     }
   });
@@ -226,14 +226,14 @@ function buildIoUChart(id, data){
   iouChart = new Chart(document.getElementById(id), {
     type:'line',
     data:{ labels:data.epochs, datasets:[
-      {label:'mIoU (%)', data:data.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:3},
+      {label:'mIoU (%)', data:data.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:5},
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{font:{size:18,weight:'bold'},boxWidth:16}}},
+      plugins:{legend:{labels:{font:{size:32,weight:'bold'},boxWidth:24}}},
       scales:{
-        x:{ticks:{maxTicksLimit:15,font:{size:15,weight:'bold'}},title:{display:true,text:'Época',font:{size:17,weight:'bold'}}},
-        y:{ticks:{font:{size:15,weight:'bold'}},title:{display:true,text:'mIoU Sargazo (%)',font:{size:17,weight:'bold'}}}
+        x:{ticks:{maxTicksLimit:15,font:{size:28,weight:'bold'}},title:{display:true,text:'Época',font:{size:30,weight:'bold'}}},
+        y:{ticks:{font:{size:28,weight:'bold'}},title:{display:true,text:'mIoU Sargazo (%)',font:{size:30,weight:'bold'}}}
       }
     }
   });
