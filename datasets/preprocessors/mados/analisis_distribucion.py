@@ -458,54 +458,68 @@ def fig_pixeles_por_clase(conteo: np.ndarray, split: str, out_dir: str) -> None:
         print(f"  [AVISO] Sin clases minoritarias en {split}. Saltando.")
         return
 
-    fig, ax_zoom = plt.subplots(1, 1, figsize=(14, 7))
+    fig, ax_zoom = plt.subplots(1, 1, figsize=(14, 9))
     fig.suptitle(
         f"Clases minoritarias — {split.upper()} "
         f"(excluye Non-annotated y Marine Water)\n"
         f"Total píxeles del split: {int(total):,}",
-        fontweight="bold", fontsize=14
+        fontweight="bold", fontsize=18
     )
 
     y_zoom = [porcs[c] for c in clases_zoom]
     col_z  = [CLASES[c][1] for c in clases_zoom]
     bord_z = ["#145a32" if c in CLASES_SARG else "#888888" for c in clases_zoom]
     gros_z = [1.5 if c in CLASES_SARG else 0.5 for c in clases_zoom]
+    etq_z  = [f"Cl.{c}: {CLASES[c][0]}" for c in clases_zoom]
 
-    barras_z = ax_zoom.bar(
-    range(len(clases_zoom)), y_zoom,
-    color=col_z, edgecolor=bord_z, linewidth=gros_z,
-    width=0.6
+    # Barras horizontales igual que fig_desequilibrio
+    barras_z = ax_zoom.barh(
+        range(len(clases_zoom)), y_zoom,
+        color=col_z, edgecolor=bord_z, linewidth=gros_z,
+        height=0.75
     )
 
     for bar, p, c in zip(barras_z, y_zoom, clases_zoom):
+        fmt_p = f"{p:.2f}%" if round(p, 2) > 0 else f"{p:.4f}%"
+        # Primero el porcentaje, justo al final de la barra
         ax_zoom.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + max(y_zoom) * 0.015,
-            f"{p:.3f}%\n({int(conteo[c]):,} px)",
-            ha="center", va="bottom",
-            fontsize=10, fontweight="bold",
+            bar.get_width() + max(y_zoom) * 0.02,
+            bar.get_y() + bar.get_height() / 2,
+            fmt_p,
+            ha="left", va="center",
+            fontsize=17, fontweight="bold",
             color="#145a32" if c in CLASES_SARG else "#333333",
         )
+        # Luego los píxeles con bastante separación
+        ax_zoom.text(
+            bar.get_width() + max(y_zoom) * 0.38,
+            bar.get_y() + bar.get_height() / 2,
+            f"({int(conteo[c]):,} px)",
+            ha="left", va="center",
+            fontsize=17, fontweight="bold",
+            color="#145a32" if c in CLASES_SARG else "#555555",
+        )
 
-    ax_zoom.set_xticks(range(len(clases_zoom)))
-    ax_zoom.set_xticklabels(
-        [f"Cl.{c}: {CLASES[c][0]}" for c in clases_zoom],
-        rotation=45, ha="right", fontsize=14, fontweight="bold"
-    )
-    ax_zoom.set_ylabel("Porcentaje de píxeles (%)", fontsize=12)
+    ax_zoom.set_yticks(range(len(clases_zoom)))
+    ax_zoom.set_yticklabels(etq_z, fontsize=17, fontweight="bold")
+    ax_zoom.tick_params(axis="y", labelsize=17, pad=6)
+    ax_zoom.tick_params(axis="x", labelsize=15)
+    for label in ax_zoom.get_xticklabels():
+        label.set_fontweight("bold")
+    ax_zoom.set_xlabel("Porcentaje de píxeles (%)", fontsize=16, fontweight="bold")
     ax_zoom.set_title(
         "Zoom — clases minoritarias (excluye Non-annotated y Marine Water)",
-        fontsize=13, fontweight="bold"
+        fontsize=17, fontweight="bold"
     )
-    ax_zoom.grid(axis="y")
+    ax_zoom.invert_yaxis()
+    ax_zoom.set_xlim(0, max(y_zoom) * 2.60)
+    ax_zoom.grid(axis="x")
     ax_zoom.legend(handles=[
         mpatches.Patch(color=CLASES[2][1], edgecolor="#145a32", linewidth=1.5,
                        label="Cl. 2 — Dense Sargassum (★)"),
         mpatches.Patch(color=CLASES[3][1], edgecolor="#145a32", linewidth=1.5,
                        label="Cl. 3 — Sparse Floating Algae (★)"),
-    ], loc="upper right", framealpha=0.9, fontsize=11)
-
-    ax_zoom.set_ylim(0, max(y_zoom) * 1.45)
+    ], loc="lower right", framealpha=0.9, fontsize=14)
 
     plt.tight_layout(rect=[0, 0.02, 1, 1])
     ruta = os.path.join(out_dir, f"2_distribucion_pixeles_por_clase_{split}.pdf")
@@ -536,33 +550,36 @@ def fig_desequilibrio(conteo: np.ndarray, split: str, out_dir: str) -> None:
     fig.suptitle(
         f"Desequilibrio de clases — {split.upper()}\n"
         f"Total: {int(total):,} píxeles",
-        fontweight="bold", fontsize=14
+        fontweight="bold", fontsize=18
     )
 
     barras_h = ax_bar.barh(
         range(len(ids_ord)), vals_ord,
         color=col_ord, edgecolor=bord_ord,
-        linewidth=gros_ord, height=0.65
+        linewidth=gros_ord, height=0.75
     )
     ax_bar.set_xscale("log")
     ax_bar.set_yticks(range(len(ids_ord)))
-    ax_bar.set_yticklabels(etq_ord, fontsize=11, fontweight="bold")
-    ax_bar.tick_params(axis="y", labelsize=11, pad=4)
-    ax_bar.set_xlabel("Número de píxeles (escala logarítmica)", fontsize=11)
+    ax_bar.set_yticklabels(etq_ord, fontsize=17, fontweight="bold")
+    ax_bar.tick_params(axis="y", labelsize=17, pad=6)
+    ax_bar.tick_params(axis="x", labelsize=15)
+    for label in ax_bar.get_xticklabels():
+        label.set_fontweight("bold")
+    ax_bar.set_xlabel("Número de píxeles (escala logarítmica)", fontsize=16, fontweight="bold")
     ax_bar.set_title(
         "Píxeles por clase (escala log)\nOrdenado de mayor a menor",
-        fontsize=14, fontweight="bold"
+        fontsize=17, fontweight="bold"
     )
     ax_bar.grid(axis="x")
     ax_bar.invert_yaxis()
 
-    # Ampliar el eje X a la derecha para que los valores no se salgan
-    ax_bar.set_xlim(right=max(vals_ord) * 8)
+    # Ampliar el eje X a la derecha — siempre mayor que el valor de Cl.0
+    ax_bar.set_xlim(right=max(vals_ord) * 12)
 
     for bar, v, c in zip(barras_h, vals_ord, ids_ord):
         ax_bar.text(
             v * 1.05, bar.get_y() + bar.get_height() / 2,
-            f"{int(v):,}", va="center", fontsize=11,
+            f"{int(v):,}", va="center", fontsize=17,
             color="#145a32" if c in CLASES_SARG else "#333333",
             fontweight="bold"
         )
@@ -574,9 +591,9 @@ def fig_desequilibrio(conteo: np.ndarray, split: str, out_dir: str) -> None:
         0.99, 0.01,
         f"Sargazo total (cl.2+3): {px_sarg:,} px = {porc_sarg:.4f}%",
         transform=ax_bar.transAxes,
-        ha="right", va="bottom", fontsize=10,
+        ha="right", va="bottom", fontsize=15,
         color="#1a7a3c", fontweight="bold",
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="#f0faf5",
+        bbox=dict(boxstyle="round,pad=0.5", facecolor="#f0faf5",
                   edgecolor="#1a7a3c", alpha=0.9)
     )
 
