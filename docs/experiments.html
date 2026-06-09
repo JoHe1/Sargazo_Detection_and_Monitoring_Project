@@ -197,7 +197,7 @@ function parseCSV(txt){
     epochs.push(v[0]);
     train.push(isNaN(+v[1]) ? null : +v[1]);
     val.push(isNaN(+v[2]) ? null : +v[2]);
-    miou.push(isNaN(+v[5]) ? null : +(+v[5]*100).toFixed(3));
+    miou.push(isNaN(+v[6]) ? null : +(+v[6]*100).toFixed(3));
   });
   return { epochs, train, val, miou };
 }
@@ -226,14 +226,14 @@ function buildIoUChart(id, data){
   iouChart = new Chart(document.getElementById(id), {
     type:'line',
     data:{ labels:data.epochs, datasets:[
-      {label:'IoU Sargazo val (%)', data:data.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:2.5},
+        {label:'mIoU (%)', data:data.miou, borderColor:'rgba(39,174,96,0.9)', backgroundColor:'rgba(39,174,96,0.08)', fill:true, tension:.3, pointRadius:0, borderWidth:2},
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{legend:{labels:{font:{size:15,weight:'bold'},boxWidth:14}}},
       scales:{
         x:{ticks:{maxTicksLimit:15,font:{size:13,weight:'bold'}},title:{display:true,text:'Época',font:{size:15,weight:'bold'}}},
-        y:{beginAtZero:true,ticks:{font:{size:13,weight:'bold'}},title:{display:true,text:'IoU Sargazo (%)',font:{size:15,weight:'bold'}}}
+        y:{ticks:{font:{size:13,weight:'bold'}},title:{display:true,text:'mIoU Sargazo (%)',font:{size:15,weight:'bold'}}}
       }
     }
   });
@@ -259,7 +259,7 @@ async function loadExperiment(name){
       <h2>Curvas de pérdida</h2>
       <button class="dl-btn" onclick="downloadChart('lossC','perdida_${safeName}')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar</button>
       <div class="chart-wrap"><canvas id="lossC"></canvas></div>
-      <h2>Evolución IoU Sargazo en validación</h2>
+      <h2>Evolución mIoU</h2>
       <button class="dl-btn" onclick="downloadChart('iouC','miou_${safeName}')"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Descargar</button>
       <div class="chart-wrap"><canvas id="iouC"></canvas></div>
     `;
