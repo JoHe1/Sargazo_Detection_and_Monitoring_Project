@@ -76,3 +76,4 @@ web/streamlit_app/land_mask
 web/streamlit_app/model/weights.pth
 web/streamlit_app/data/input
 web/streamlit_app/acolite
+graficas_pdf/
