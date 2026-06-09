@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,300;1,8..60,400&family=Source+Code+Pro:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{font-size:16px;scroll-behavior:smooth}
@@ -181,10 +182,15 @@ function renderMeta(meta, runName){
 function downloadChart(canvasId, filename){
   const canvas = document.getElementById(canvasId);
   if(!canvas) return;
-  const a = document.createElement('a');
-  a.download = filename + '.png';
-  a.href = canvas.toDataURL('image/png', 1.0);
-  a.click();
+  const { jsPDF } = window.jspdf;
+  const imgData = canvas.toDataURL('image/png', 1.0);
+  const pdf = new jsPDF({
+    orientation: 'landscape',
+    unit: 'px',
+    format: [canvas.width, canvas.height]
+  });
+  pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+  pdf.save(filename + '.pdf');
 }
 
 // ── Charts ───────────────────────────────────────────────────────────
