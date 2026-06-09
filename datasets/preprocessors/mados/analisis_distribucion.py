@@ -490,7 +490,7 @@ def fig_pixeles_por_clase(conteo: np.ndarray, split: str, out_dir: str) -> None:
     ax_zoom.set_xticks(range(len(clases_zoom)))
     ax_zoom.set_xticklabels(
         [f"Cl.{c}: {CLASES[c][0]}" for c in clases_zoom],
-        rotation=45, ha="right", fontsize=11, fontweight="bold"
+        rotation=45, ha="right", fontsize=14, fontweight="bold"
     )
     ax_zoom.set_ylabel("Porcentaje de píxeles (%)", fontsize=12)
     ax_zoom.set_title(
