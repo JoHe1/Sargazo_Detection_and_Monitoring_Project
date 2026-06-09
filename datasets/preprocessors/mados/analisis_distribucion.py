@@ -451,76 +451,63 @@ def fig_pixeles_por_clase(conteo: np.ndarray, split: str, out_dir: str) -> None:
     porcs  = 100 * conteo / total
     clases_presentes = [c for c in range(NUM_CLASSES) if conteo[c] > 0]
 
-    fig, axes = plt.subplots(2, 1, figsize=(14, 11))
+    # Solo gráfica de zoom — clases minoritarias
+    clases_zoom = [c for c in clases_presentes if c not in {0, 7} and conteo[c] > 0]
+
+    if not clases_zoom:
+        print(f"  [AVISO] Sin clases minoritarias en {split}. Saltando.")
+        return
+
+    fig, ax_zoom = plt.subplots(1, 1, figsize=(14, 7))
     fig.suptitle(
-        f"Distribución de píxeles por clase — {split.upper()}\n"
-        f"Total: {int(total):,} píxeles en {len(clases_presentes)} clases presentes",
+        f"Clases minoritarias — {split.upper()} "
+        f"(excluye Non-annotated y Marine Water)\n"
+        f"Total píxeles del split: {int(total):,}",
         fontweight="bold", fontsize=14
     )
 
-    ax_all = axes[0]
-    colores_barras, bordes, grosores = [], [], []
-    for c in clases_presentes:
-        colores_barras.append("#cccccc" if c == 0 else CLASES[c][1])
-        if c in CLASES_SARG:
-            bordes.append("#145a32"); grosores.append(1.5)
-        else:
-            bordes.append("#888888"); grosores.append(0.5)
+    y_zoom = [porcs[c] for c in clases_zoom]
+    col_z  = [CLASES[c][1] for c in clases_zoom]
+    bord_z = ["#145a32" if c in CLASES_SARG else "#888888" for c in clases_zoom]
+    gros_z = [1.5 if c in CLASES_SARG else 0.5 for c in clases_zoom]
 
-    y_vals = [porcs[c] for c in clases_presentes]
-    barras = ax_all.bar(range(len(clases_presentes)), y_vals,
-                        color=colores_barras, edgecolor=bordes, linewidth=grosores)
+    barras_z = ax_zoom.bar(
+    range(len(clases_zoom)), y_zoom,
+    color=col_z, edgecolor=bord_z, linewidth=gros_z,
+    width=0.6
+    )
 
-    for bar, p, c in zip(barras, y_vals, clases_presentes):
-        if p > 0.05:
-            ax_all.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.3,
-                        f"{p:.2f}%", ha="center", va="bottom", fontsize=7.5,
-                        color="#145a32" if c in CLASES_SARG else "#333333",
-                        fontweight="bold" if c in CLASES_SARG else "normal")
+    for bar, p, c in zip(barras_z, y_zoom, clases_zoom):
+        ax_zoom.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height() + max(y_zoom) * 0.015,
+            f"{p:.3f}%\n({int(conteo[c]):,} px)",
+            ha="center", va="bottom",
+            fontsize=10, fontweight="bold",
+            color="#145a32" if c in CLASES_SARG else "#333333",
+        )
 
-    ax_all.set_xticks(range(len(clases_presentes)))
-    ax_all.set_xticklabels(
-        [f"{c}: {CLASES[c][0]}" for c in clases_presentes],
-        rotation=35, ha="right", fontsize=8.5)
-    ax_all.set_ylabel("Porcentaje de píxeles (%)")
-    ax_all.set_title("Todas las clases", fontsize=11)
-    ax_all.grid(axis="y")
-    ax_all.legend(handles=[
+    ax_zoom.set_xticks(range(len(clases_zoom)))
+    ax_zoom.set_xticklabels(
+        [f"Cl.{c}: {CLASES[c][0]}" for c in clases_zoom],
+        rotation=45, ha="right", fontsize=11, fontweight="bold"
+    )
+    ax_zoom.set_ylabel("Porcentaje de píxeles (%)", fontsize=12)
+    ax_zoom.set_title(
+        "Zoom — clases minoritarias (excluye Non-annotated y Marine Water)",
+        fontsize=13, fontweight="bold"
+    )
+    ax_zoom.grid(axis="y")
+    ax_zoom.legend(handles=[
         mpatches.Patch(color=CLASES[2][1], edgecolor="#145a32", linewidth=1.5,
                        label="Cl. 2 — Dense Sargassum (★)"),
         mpatches.Patch(color=CLASES[3][1], edgecolor="#145a32", linewidth=1.5,
                        label="Cl. 3 — Sparse Floating Algae (★)"),
-    ], loc="upper right", framealpha=0.9)
+    ], loc="upper right", framealpha=0.9, fontsize=11)
 
-    ax_zoom = axes[1]
-    clases_zoom = [c for c in clases_presentes if c not in {0, 7} and conteo[c] > 0]
-    if clases_zoom:
-        y_zoom  = [porcs[c] for c in clases_zoom]
-        col_z   = [CLASES[c][1] for c in clases_zoom]
-        bord_z  = ["#145a32" if c in CLASES_SARG else "#888888" for c in clases_zoom]
-        gros_z  = [1.5 if c in CLASES_SARG else 0.5 for c in clases_zoom]
+    ax_zoom.set_ylim(0, max(y_zoom) * 1.45)
 
-        barras_z = ax_zoom.bar(range(len(clases_zoom)), y_zoom,
-                               color=col_z, edgecolor=bord_z, linewidth=gros_z)
-        for bar, p, c in zip(barras_z, y_zoom, clases_zoom):
-            ax_zoom.text(bar.get_x() + bar.get_width() / 2,
-                         bar.get_height() + max(y_zoom) * 0.01,
-                         f"{p:.3f}%\n({int(conteo[c]):,} px)",
-                         ha="center", va="bottom", fontsize=7.5,
-                         color="#145a32" if c in CLASES_SARG else "#333333",
-                         fontweight="bold" if c in CLASES_SARG else "normal")
-
-        ax_zoom.set_xticks(range(len(clases_zoom)))
-        ax_zoom.set_xticklabels(
-            [f"{c}: {CLASES[c][0]}" for c in clases_zoom],
-            rotation=35, ha="right", fontsize=8.5)
-        ax_zoom.set_ylabel("Porcentaje de píxeles (%)")
-        ax_zoom.set_title(
-            "Zoom — clases minoritarias (excluye Non-annotated y Marine Water)",
-            fontsize=11)
-        ax_zoom.grid(axis="y")
-
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0.02, 1, 1])
     ruta = os.path.join(out_dir, f"2_distribucion_pixeles_por_clase_{split}.png")
     plt.savefig(ruta, dpi=150, bbox_inches="tight", facecolor="white")
     print(f"  [OK] {ruta}")
@@ -533,42 +520,8 @@ def fig_pixeles_por_clase(conteo: np.ndarray, split: str, out_dir: str) -> None:
 
 def fig_desequilibrio(conteo: np.ndarray, split: str, out_dir: str) -> None:
     total    = conteo.sum()
-    px_sarg  = int(conteo[2] + conteo[3])
-    px_agua  = int(conteo[7])
-    px_no_an = int(conteo[0])
-    px_resto = int(total - px_sarg - px_agua - px_no_an)
+    porcs    = 100 * conteo / total
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6))
-    fig.suptitle(
-        f"Desequilibrio de clases — {split.upper()}\n"
-        f"Total: {int(total):,} píxeles",
-        fontweight="bold", fontsize=14
-    )
-
-    # Pie
-    ax_pie = axes[0]
-    vals_pie = [px_sarg, px_agua, px_no_an, px_resto]
-    etq_pie  = ["Sargazo\n(cl. 2+3)", "Marine Water\n(cl. 7)",
-                "Non-annotated\n(cl. 0)", "Resto de clases\n(cl. 1,4-6,8-15)"]
-    col_pie  = ["#1a7a3c", "#2980b9", "#cccccc", "#e67e22"]
-
-    wedges, texts, autotexts = ax_pie.pie(
-        vals_pie, labels=etq_pie, colors=col_pie,
-        autopct=lambda p: f"{p:.2f}%" if p > 0.3 else "",
-        startangle=140, explode=[0.06, 0, 0, 0],
-        wedgeprops={"edgecolor": "white", "linewidth": 1.2},
-        textprops={"fontsize": 10},
-    )
-    for at in autotexts:
-        at.set_fontsize(9); at.set_fontweight("bold")
-    ax_pie.set_title("Proporción de píxeles por categorías agrupadas", fontsize=11)
-    porc_sarg = 100 * px_sarg / total
-    ax_pie.text(0, -1.4,
-                f"Sargazo: {int(px_sarg):,} px = {porc_sarg:.4f}% del total",
-                ha="center", fontsize=10, color="#1a7a3c", fontweight="bold")
-
-    # Barras log
-    ax_bar = axes[1]
     clases_pres = [(c, conteo[c]) for c in range(NUM_CLASSES) if conteo[c] > 0]
     clases_pres.sort(key=lambda x: x[1], reverse=True)
 
@@ -579,22 +532,53 @@ def fig_desequilibrio(conteo: np.ndarray, split: str, out_dir: str) -> None:
     gros_ord = [1.8 if c in CLASES_SARG else 0.5 for c in ids_ord]
     etq_ord  = [f"Cl.{c}: {CLASES[c][0][:20]}" for c in ids_ord]
 
-    barras_h = ax_bar.barh(range(len(ids_ord)), vals_ord,
-                           color=col_ord, edgecolor=bord_ord,
-                           linewidth=gros_ord, height=0.65)
+    fig, ax_bar = plt.subplots(1, 1, figsize=(14, 8))
+    fig.suptitle(
+        f"Desequilibrio de clases — {split.upper()}\n"
+        f"Total: {int(total):,} píxeles",
+        fontweight="bold", fontsize=14
+    )
+
+    barras_h = ax_bar.barh(
+        range(len(ids_ord)), vals_ord,
+        color=col_ord, edgecolor=bord_ord,
+        linewidth=gros_ord, height=0.65
+    )
     ax_bar.set_xscale("log")
     ax_bar.set_yticks(range(len(ids_ord)))
-    ax_bar.set_yticklabels(etq_ord, fontsize=8.5)
-    ax_bar.set_xlabel("Número de píxeles (escala logarítmica)")
-    ax_bar.set_title("Píxeles por clase (escala log)\nOrdenado de mayor a menor", fontsize=11)
+    ax_bar.set_yticklabels(etq_ord, fontsize=11, fontweight="bold")
+    ax_bar.tick_params(axis="y", labelsize=11, pad=4)
+    ax_bar.set_xlabel("Número de píxeles (escala logarítmica)", fontsize=11)
+    ax_bar.set_title(
+        "Píxeles por clase (escala log)\nOrdenado de mayor a menor",
+        fontsize=14, fontweight="bold"
+    )
     ax_bar.grid(axis="x")
     ax_bar.invert_yaxis()
 
+    # Ampliar el eje X a la derecha para que los valores no se salgan
+    ax_bar.set_xlim(right=max(vals_ord) * 8)
+
     for bar, v, c in zip(barras_h, vals_ord, ids_ord):
-        ax_bar.text(v * 1.05, bar.get_y() + bar.get_height() / 2,
-                    f"{int(v):,}", va="center", fontsize=7.5,
-                    color="#145a32" if c in CLASES_SARG else "#333333",
-                    fontweight="bold" if c in CLASES_SARG else "normal")
+        ax_bar.text(
+            v * 1.05, bar.get_y() + bar.get_height() / 2,
+            f"{int(v):,}", va="center", fontsize=11,
+            color="#145a32" if c in CLASES_SARG else "#333333",
+            fontweight="bold"
+        )
+
+    # Anotación destacada del sargazo
+    px_sarg   = int(conteo[2] + conteo[3])
+    porc_sarg = 100 * px_sarg / total
+    ax_bar.text(
+        0.99, 0.01,
+        f"Sargazo total (cl.2+3): {px_sarg:,} px = {porc_sarg:.4f}%",
+        transform=ax_bar.transAxes,
+        ha="right", va="bottom", fontsize=10,
+        color="#1a7a3c", fontweight="bold",
+        bbox=dict(boxstyle="round,pad=0.3", facecolor="#f0faf5",
+                  edgecolor="#1a7a3c", alpha=0.9)
+    )
 
     plt.tight_layout()
     ruta = os.path.join(out_dir, f"3_desequilibrio_clases_{split}.png")
