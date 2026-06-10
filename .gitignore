@@ -77,3 +77,5 @@ web/streamlit_app/model/weights.pth
 web/streamlit_app/data/input
 web/streamlit_app/acolite
 graficas_pdf/
+inference copy.py
+**/visualizaciones_tiles/

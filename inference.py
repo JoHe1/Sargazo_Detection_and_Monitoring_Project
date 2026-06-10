@@ -339,7 +339,7 @@ def visualizar(
     prob_sarg_filtrada:np.ndarray,
     prob_sarg_suave:   np.ndarray,
     mascara_limpia:    np.ndarray,
-    mascara_swin_pura: np.ndarray,   # <--- AÑADIR ESTA LÍNEA
+    mascara_swin_pura: np.ndarray,
     mapa_fai:          np.ndarray,
     nombre:            str,
     umbral:            float,
@@ -347,106 +347,151 @@ def visualizar(
     sigma:             float,
     metricas:          dict,
     save_dir:          Path | None = None,
+    save_tiles_dir:    Path | None = None,   # si no es None, guarda paneles sueltos aquí
 ) -> None:
-    """6 paneles: RGB | GT | FAI | P(sargazo) | Máscara final | TP/FP/FN"""
+    """
+    6 paneles:
+        1. RGB               — imagen original en color natural
+        2. NIR (falso color) — canal NIR en rojo
+        3. FAI (solo visual) — mapa FAI con contorno al umbral_fai indicado
+        4. Predicción cruda  — salida directa del modelo sin postprocesar
+        5. Predicción final  — máscara postprocesada con TP/FP/FN
+        6. Ground Truth      — anotación MADOS con todas las clases
+
+    Si save_tiles_dir no es None (modo --tiles), también guarda cada panel
+    como imagen individual nombrada por escena dentro de save_tiles_dir.
+    """
     rgb   = img_norm[:, :, :3]
+    nir   = img_norm[:, :, 3]
     shape = rgb.shape[:2]
 
+    # NIR en falso color rojo
+    nir_rgb = np.zeros((*shape, 3), dtype=np.float32)
+    nir_rgb[:, :, 0] = nir
+
+    # Recortar GT al tamaño TARGET
     TARGET = 224
     h, w   = mascara_gt.shape
     y0 = (h - TARGET) // 2
     x0 = (w - TARGET) // 2
     mascara_gt_crop = mascara_gt[y0:y0 + TARGET, x0:x0 + TARGET]
 
-    overlay_gt = crear_overlay(mascara_gt_crop, shape, CLASES_MOSTRAR)
-    gt_sarg    = np.isin(mascara_gt_crop, list(CLASES_SARGASSUM))
-    pred_sarg  = mascara_limpia.astype(bool)
+    gt_sarg   = np.isin(mascara_gt_crop, list(CLASES_SARGASSUM))
+    pred_sarg = mascara_limpia.astype(bool)
 
+    # GT overlay con todas las clases MADOS
+    overlay_gt = crear_overlay(mascara_gt_crop, shape, CLASES_MOSTRAR)
+
+    # Mapa TP/FP/FN
     comp = np.zeros((*shape, 4), dtype=np.float32)
-    comp[gt_sarg  & pred_sarg]  = [0.0, 1.0, 0.0, 0.75]
-    comp[~gt_sarg & pred_sarg]  = [1.0, 0.0, 0.0, 0.60]
-    comp[gt_sarg  & ~pred_sarg] = [1.0, 1.0, 0.0, 0.75]
+    comp[gt_sarg  &  pred_sarg] = [0.0, 1.0, 0.0, 0.75]   # TP verde
+    comp[~gt_sarg &  pred_sarg] = [1.0, 0.0, 0.0, 0.60]   # FP rojo
+    comp[gt_sarg  & ~pred_sarg] = [1.0, 1.0, 0.0, 0.75]   # FN amarillo
+
+    tp = int(( pred_sarg &  gt_sarg).sum())
+    fp = int(( pred_sarg & ~gt_sarg).sum())
+    fn = int((~pred_sarg &  gt_sarg).sum())
+    prec = tp / (tp + fp) if (tp + fp) > 0 else float("nan")
+    rec  = tp / (tp + fn) if (tp + fn) > 0 else float("nan")
+    prec_str = f"{prec:.2f}" if not np.isnan(prec) else "n/a"
+    rec_str  = f"{rec:.2f}"  if not np.isnan(rec)  else "n/a"
 
     iou2 = metricas.get(2, float("nan"))
     iou3 = metricas.get(3, float("nan"))
-    
-    # Pre-calculamos los textos 
     iou2_str = f"{iou2:.4f}" if not np.isnan(iou2) else "n/a"
     iou3_str = f"{iou3:.4f}" if not np.isnan(iou3) else "n/a"
 
-    # EL ÚNICO PRINT QUE DEBE HABER (Asegúrate de que no haya otro debajo)
-    print(f"  P_max: {prob_sarg_raw.max()*100:.1f}%  |  "
-          f"IoU Denso: {iou2_str}  |  "
-          f"IoU Escaso: {iou3_str}  |  "
-          f"Px: {mascara_limpia.sum()}")
+    escena = nombre.replace(".npy", "")
 
-    fig, axes = plt.subplots(1, 6, figsize=(32, 5.5))
+    # ── Figura conjunta con 6 paneles ─────────────────────────────────
+    fig, axes = plt.subplots(1, 6, figsize=(34, 5.5))
     fig.suptitle(
         f"{nombre}  |  IoU Denso: {iou2_str}  IoU Escaso: {iou3_str}  |  "
         f"Umbral: {umbral:.0%}  Sigma: {sigma}  P_max: {prob_sarg_raw.max()*100:.1f}%",
         fontsize=9, fontweight="bold"
     )
 
+    # ── Panel 1: RGB ──────────────────────────────────────────────────
     axes[0].imshow(rgb)
-    axes[0].set_title("RGB", fontsize=9)
+    axes[0].set_title("RGB\n(Imagen original)", fontsize=9)
     axes[0].axis("off")
 
-    axes[1].imshow(rgb)
-    axes[1].imshow(overlay_gt, interpolation="nearest")
-    axes[1].set_title("Ground Truth (MADOS)", fontsize=9)
+    # ── Panel 2: NIR falso color ──────────────────────────────────────
+    axes[1].imshow(nir_rgb, vmin=0, vmax=1)
+    axes[1].set_title("Canal NIR\n(Falso color — rojo)", fontsize=9)
     axes[1].axis("off")
-    ley_gt = parches_leyenda(mascara_gt_crop)
-    if ley_gt:
-        axes[1].legend(handles=ley_gt, fontsize=5.5, loc="lower right",
-                       framealpha=0.85, title="Clases GT", title_fontsize=5.5)
 
+    # ── Panel 3: FAI solo visual ──────────────────────────────────────
     vmax_fai = max(abs(mapa_fai.min()), abs(mapa_fai.max()), 0.001)
-    im3 = axes[2].imshow(mapa_fai, cmap="RdYlGn", vmin=-vmax_fai, vmax=vmax_fai)
-    if umbral_fai > 0:
-        axes[2].contour((mapa_fai >= umbral_fai).astype(float),
-                        levels=[0.5], colors="white", linewidths=0.8)
-    axes[2].set_title(f"FAI = NIR - Rojo\nBlanco: FAI>={umbral_fai:.3f}", fontsize=8)
+    im_fai = axes[2].imshow(mapa_fai, cmap="RdYlGn", vmin=-vmax_fai, vmax=vmax_fai)
+    axes[2].contour(
+        (mapa_fai >= umbral_fai).astype(float),
+        levels=[0.5], colors="white", linewidths=0.8
+    )
+    axes[2].set_title(
+        f"FAI = NIR − Rojo (solo visual)\nContorno blanco: FAI ≥ {umbral_fai:.2f}",
+        fontsize=8
+    )
     axes[2].axis("off")
-    fig.colorbar(im3, ax=axes[2], fraction=0.046, pad=0.04)
+    fig.colorbar(im_fai, ax=axes[2], fraction=0.046, pad=0.04)
 
-# Cambiamos el panel de calor por la Visión Pura de la IA
-    mascara_pura_rgba = np.zeros((*shape, 4), dtype=np.float32)
-    mascara_pura_rgba[mascara_swin_pura == 1] = [1.0, 0.0, 0.0, 0.7] # Rojo translúcido
+    # ── Panel 4: Predicción cruda (sin postprocesar) ──────────────────
+    mascara_cruda_rgba = np.zeros((*shape, 4), dtype=np.float32)
+    mascara_cruda_rgba[mascara_swin_pura == 1] = [1.0, 0.4, 0.0, 0.75]
     axes[3].imshow(rgb)
-    axes[3].imshow(mascara_pura_rgba, interpolation="nearest")
-    axes[3].set_title(f"Swin Puro (>{umbral:.0%})\n¡Ignorando el FAI!", fontsize=8)
+    axes[3].imshow(mascara_cruda_rgba, interpolation="nearest")
+    axes[3].set_title(
+        f"Predicción cruda (sin postprocesar)\nUmbral: {umbral:.0%}  "
+        f"Px: {int(mascara_swin_pura.sum())}",
+        fontsize=8
+    )
     axes[3].axis("off")
 
-    mascara_rgba = np.zeros((*shape, 4), dtype=np.float32)
-    mascara_rgba[mascara_limpia == 1] = [0.12, 0.52, 0.29, 0.82]
+    # ── Panel 5: Predicción final + TP/FP/FN ─────────────────────────
     axes[4].imshow(rgb)
-    axes[4].imshow(mascara_rgba, interpolation="nearest")
-    axes[4].set_title(f"Detección final\n{int(mascara_limpia.sum())} px sargazo", fontsize=8)
+    axes[4].imshow(comp, interpolation="nearest")
+    axes[4].set_title(
+        f"Predicción final (postprocesada)\nPrec: {prec_str}  Rec: {rec_str}  "
+        f"Px: {int(mascara_limpia.sum())}",
+        fontsize=8
+    )
     axes[4].axis("off")
+    axes[4].legend(
+        handles=[
+            mpatches.Patch(color=[0, 1, 0], label=f"TP = {tp}"),
+            mpatches.Patch(color=[1, 0, 0], label=f"FP = {fp}"),
+            mpatches.Patch(color=[1, 1, 0], label=f"FN = {fn}"),
+        ],
+        fontsize=7, loc="lower right", framealpha=0.85,
+        title="Píxeles", title_fontsize=6
+    )
 
+    # ── Panel 6: Ground Truth MADOS ──────────────────────────────────
     axes[5].imshow(rgb)
-    axes[5].imshow(comp, interpolation="nearest")
-    tp = int((gt_sarg  &  pred_sarg).sum())
-    fp = int((~gt_sarg &  pred_sarg).sum())
-    fn = int((gt_sarg  & ~pred_sarg).sum())
-    prec = tp / (tp + fp) if (tp + fp) > 0 else float("nan")
-    rec  = tp / (tp + fn) if (tp + fn) > 0 else float("nan")
-    prec_str = f"{prec:.2f}" if not np.isnan(prec) else "n/a"
-    rec_str  = f"{rec:.2f}"  if not np.isnan(rec)  else "n/a"
-    axes[5].set_title(f"TP/FP/FN  Prec:{prec_str} Rec:{rec_str}", fontsize=8)
+    axes[5].imshow(overlay_gt, interpolation="nearest")
+    axes[5].set_title("Ground Truth (MADOS)", fontsize=9)
     axes[5].axis("off")
-    axes[5].legend(handles=[
-        mpatches.Patch(color=[0, 1, 0], label=f"TP={tp}"),
-        mpatches.Patch(color=[1, 0, 0], label=f"FP={fp}"),
-        mpatches.Patch(color=[1, 1, 0], label=f"FN={fn}"),
-    ], fontsize=7, loc="lower right", framealpha=0.85,
-       title="Píxeles", title_fontsize=6)
+    ley_gt = parches_leyenda(mascara_gt_crop)
+    if ley_gt:
+        axes[5].legend(
+            handles=ley_gt, fontsize=5.5, loc="lower right",
+            framealpha=0.85, title="Clases GT", title_fontsize=5.5
+        )
 
     plt.tight_layout()
-    out_dir  = save_dir or RESULTS_DIR
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out_path = out_dir / f"inferencia_{nombre.replace('.npy', '')}.png"
-    plt.savefig(out_path, dpi=130, bbox_inches="tight")
+
+    # ── Guardar figura completa ───────────────────────────────────────
+    # Si estamos en modo --tiles: guardar en la carpeta del experimento
+    # Si no: guardar en RESULTS_DIR como siempre
+    if save_tiles_dir is not None:
+        save_tiles_dir.mkdir(parents=True, exist_ok=True)
+        out_path = save_tiles_dir / f"{escena}.png"
+    else:
+        out_dir = save_dir or RESULTS_DIR
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / f"inferencia_{escena}.png"
+
+    plt.savefig(out_path, dpi=150, bbox_inches="tight")
     print(f"  [OK] Guardado: {out_path}")
     plt.show()
     plt.close(fig)
@@ -467,12 +512,18 @@ def main() -> None:
     parser.add_argument("--min-pixels", type=int,   default=0,
                         help="Componentes minimos para limpieza (0=desactivado, antes 50)")
     parser.add_argument("--sin-tta",    action="store_true")
-    parser.add_argument("--umbral-fai", type=float, default=0.005)
+    parser.add_argument("--umbral-fai", type=float, default=0.02,
+                        help="Umbral FAI solo para visualización. NO afecta la predicción.")
+    parser.add_argument("--mostrar-fai", action="store_true", default=True,
+                        help="Calcular y mostrar el mapa FAI en el panel (sin influir en la predicción)")
     parser.add_argument("--dataset",    type=str,   default=str(SARGASSUM_READY))
     parser.add_argument("--modelo",     type=str,   default=None,
                         help="Carpeta del checkpoint (contiene weights.pth y metadata.json)")
     parser.add_argument("--evaluar",    action="store_true",
                         help="Modo evaluación: sin gráficas, genera JSON comparable con Echevarría")
+    parser.add_argument("--tiles",      nargs="+", default=None,
+                        help="Nombres exactos de tiles a procesar (ej: tile_001.npy tile_002.npy). "
+                             "Activa guardado de paneles sueltos en la carpeta del experimento.")
     args = parser.parse_args()
 
     usar_tta = not args.sin_tta
@@ -551,7 +602,10 @@ def main() -> None:
         print(f"[ERROR] No hay imágenes en: {img_dir}")
         return
 
-    if not args.todas:
+    if args.tiles is not None:
+        # Con --tiles el usuario decide qué procesar — no se filtra por sargazo
+        print(f"[inference] Modo --tiles: sin filtro de sargazo")
+    elif not args.todas:
         img_paths = [
             ip for ip in img_paths
             if np.isin(np.load(f"{mask_dir}/{Path(ip).name}"),
@@ -564,6 +618,22 @@ def main() -> None:
     if not img_paths:
         print("[AVISO] Sin imágenes. Usa --todas para ver todas.")
         return
+
+    # ── Filtrar por tiles específicos si se pasa --tiles ──────────────
+    usar_tiles = args.tiles is not None
+    if usar_tiles:
+        tiles_set = set(args.tiles)
+        img_paths = [ip for ip in img_paths if Path(ip).name in tiles_set]
+        tiles_no_encontrados = tiles_set - {Path(ip).name for ip in img_paths}
+        if tiles_no_encontrados:
+            print(f"[AVISO] Tiles no encontrados en {args.split}: {tiles_no_encontrados}")
+        print(f"[inference] Procesando {len(img_paths)} tiles específicos")
+        # Carpeta de paneles sueltos dentro del experimento
+        save_tiles_dir = checkpoint_dir / "visualizaciones_tiles"
+        save_tiles_dir.mkdir(parents=True, exist_ok=True)
+        print(f"[inference] Paneles sueltos → {save_tiles_dir}")
+    else:
+        save_tiles_dir = None
 
     if args.n:
         img_paths = random.sample(img_paths, min(args.n, len(img_paths)))
@@ -585,13 +655,9 @@ def main() -> None:
         clase_pred, prob_sarg_raw, _ = inferir(model, tensor, usar_tta=usar_tta)
         mascara_swin_pura = (prob_sarg_raw >= args.umbral).astype(np.float32)
 
-        if args.umbral_fai > 0:
-            mascara_fai, mapa_fai = calcular_fai_mask(ip, umbral_fai=args.umbral_fai)
-            prob_sarg_filtrada    = prob_sarg_raw * mascara_fai.astype(np.float32)
-        else:
-            mascara_fai        = np.ones_like(prob_sarg_raw, dtype=bool)
-            prob_sarg_filtrada = prob_sarg_raw
-            mapa_fai           = np.zeros_like(prob_sarg_raw)
+        # FAI: SOLO para visualización — nunca modifica prob_sarg_raw
+        mascara_fai, mapa_fai = calcular_fai_mask(ip, umbral_fai=args.umbral_fai)
+        prob_sarg_filtrada = prob_sarg_raw   # la predicción nunca se filtra por FAI
 
         prob_sarg_suave, mascara_limpia = postprocesar(
             prob_sarg_filtrada,
@@ -639,6 +705,7 @@ def main() -> None:
                 prob_sarg_raw, prob_sarg_filtrada, prob_sarg_suave,
                 mascara_limpia, mascara_swin_pura, mapa_fai,
                 nombre, args.umbral, args.umbral_fai, args.sigma, metricas,
+                save_tiles_dir=save_tiles_dir,
             )
 
     # ── Resumen ────────────────────────────────────────────────────────
@@ -662,6 +729,77 @@ def main() -> None:
     if iou3_global:
         print(f"  IoU medio Sparse Algae : {np.mean(iou3_global):.4f}")
     print("=" * 55)
+
+    # ── Tabla resumen matplotlib ───────────────────────────────────────
+    if not args.evaluar:
+        iou2_mean = f"{np.mean(iou2_global):.4f}" if iou2_global else "n/a"
+        iou3_mean = f"{np.mean(iou3_global):.4f}" if iou3_global else "n/a"
+
+        filas = [
+            ["Imágenes procesadas",     str(len(img_paths))],
+            ["Precision",               f"{prec_g:.4f}"],
+            ["Recall",                  f"{rec_g:.4f}"],
+            ["F1",                      f"{f1_g:.4f}"],
+            ["IoU sargazo global",      f"{iou_g:.4f}"],
+            ["IoU sargazo medio",       f"{iou_medio:.4f}"],
+            ["IoU medio Sargazo Denso", iou2_mean],
+            ["IoU medio Sargazo Escaso",iou3_mean],
+            ["TP total (píxeles)",      str(tp_total)],
+            ["FP total (píxeles)",      str(fp_total)],
+            ["FN total (píxeles)",      str(fn_total)],
+        ]
+
+        fig_res, ax_res = plt.subplots(figsize=(6, len(filas) * 0.55 + 1.2))
+        ax_res.axis("off")
+
+        tabla = ax_res.table(
+            cellText=filas,
+            colLabels=["Métrica", "Valor"],
+            cellLoc="center",
+            loc="center",
+        )
+        tabla.auto_set_font_size(False)
+        tabla.set_fontsize(11)
+        tabla.scale(1, 1.6)
+
+        # Estilo cabecera
+        for col in range(2):
+            tabla[(0, col)].set_facecolor("#2c3e50")
+            tabla[(0, col)].set_text_props(color="white", fontweight="bold")
+
+        # Filas alternadas + colores especiales
+        # Fila 4=F1, 5=IoU global en verde, 9=TP azul, 10=FP rojo, 11=FN amarillo
+        for row in range(1, len(filas) + 1):
+            color_bg = "#eaf4fb" if row % 2 == 0 else "white"
+            if row in {4, 5}:
+                color_bg = "#d5f5e3"   # verde — F1 e IoU global
+            elif row == 9:
+                color_bg = "#d5f5e3"   # verde — TP
+            elif row == 10:
+                color_bg = "#fadbd8"   # rojo — FP
+            elif row == 11:
+                color_bg = "#fef9e7"   # amarillo — FN
+            for col in range(2):
+                tabla[(row, col)].set_facecolor(color_bg)
+
+        modelo_label = checkpoint_dir.name
+        fig_res.suptitle(
+            f"Resumen — {modelo_label}\n"
+            f"Split: {args.split}  |  Umbral: {args.umbral:.0%}  |  "
+            f"TTA: {'ON' if usar_tta else 'OFF'}",
+            fontsize=10, fontweight="bold", y=0.98
+        )
+
+        plt.tight_layout()
+
+        # Guardar solo en modo --tiles
+        if save_tiles_dir is not None:
+            out_tabla = save_tiles_dir / "resumen.png"
+            fig_res.savefig(out_tabla, dpi=150, bbox_inches="tight")
+            print(f"  [OK] Tabla resumen guardada: {out_tabla}")
+
+        plt.show()
+        plt.close(fig_res)
 
     if args.evaluar:
         from datetime import datetime
