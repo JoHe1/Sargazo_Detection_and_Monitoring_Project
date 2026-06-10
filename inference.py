@@ -347,7 +347,8 @@ def visualizar(
     sigma:             float,
     metricas:          dict,
     save_dir:          Path | None = None,
-    save_tiles_dir:    Path | None = None,   # si no es None, guarda paneles sueltos aquí
+    save_tiles_dir:    Path | None = None,
+    skip_show:         bool = False,
 ) -> None:
     """
     6 paneles:
@@ -403,97 +404,87 @@ def visualizar(
 
     escena = nombre.replace(".npy", "")
 
-    # ── Figura conjunta con 6 paneles ─────────────────────────────────
-    fig, axes = plt.subplots(1, 6, figsize=(34, 5.5))
+    # ── Figura conjunta 2×3 ───────────────────────────────────────────
+    fig, axes = plt.subplots(2, 3, figsize=(48, 32))
     fig.suptitle(
-        f"{nombre}  |  IoU Denso: {iou2_str}  IoU Escaso: {iou3_str}  |  "
-        f"Umbral: {umbral:.0%}  Sigma: {sigma}  P_max: {prob_sarg_raw.max()*100:.1f}%",
-        fontsize=9, fontweight="bold"
+        f"{nombre}  |  IoU Denso: {iou2_str}  IoU Escaso: {iou3_str}  |  Umbral: {umbral:.0%}",
+        fontsize=68, fontweight="bold", y=0.96
     )
 
+    # Aplanar para indexar igual que antes
+    ax = axes.flatten()
+
     # ── Panel 1: RGB ──────────────────────────────────────────────────
-    axes[0].imshow(rgb)
-    axes[0].set_title("RGB\n(Imagen original)", fontsize=9)
-    axes[0].axis("off")
+    ax[0].imshow(rgb)
+    ax[0].set_title("RGB\n(Imagen original)", fontsize=56, fontweight="bold", pad=22)
+    ax[0].axis("off")
 
     # ── Panel 2: NIR falso color ──────────────────────────────────────
-    axes[1].imshow(nir_rgb, vmin=0, vmax=1)
-    axes[1].set_title("Canal NIR\n(Falso color — rojo)", fontsize=9)
-    axes[1].axis("off")
+    ax[1].imshow(nir_rgb, vmin=0, vmax=1)
+    ax[1].set_title("Canal NIR\n(Falso color — rojo)", fontsize=56, fontweight="bold", pad=22)
+    ax[1].axis("off")
 
     # ── Panel 3: FAI solo visual ──────────────────────────────────────
     vmax_fai = max(abs(mapa_fai.min()), abs(mapa_fai.max()), 0.001)
-    im_fai = axes[2].imshow(mapa_fai, cmap="RdYlGn", vmin=-vmax_fai, vmax=vmax_fai)
-    axes[2].contour(
+    im_fai = ax[2].imshow(mapa_fai, cmap="RdYlGn", vmin=-vmax_fai, vmax=vmax_fai)
+    ax[2].contour(
         (mapa_fai >= umbral_fai).astype(float),
-        levels=[0.5], colors="white", linewidths=0.8
+        levels=[0.5], colors="white", linewidths=1.5
     )
-    axes[2].set_title(
+    ax[2].set_title(
         f"FAI = NIR − Rojo (solo visual)\nContorno blanco: FAI ≥ {umbral_fai:.2f}",
-        fontsize=8
+        fontsize=56, fontweight="bold", pad=22
     )
-    axes[2].axis("off")
-    fig.colorbar(im_fai, ax=axes[2], fraction=0.046, pad=0.04)
+    ax[2].axis("off")
+    fig.colorbar(im_fai, ax=ax[2], fraction=0.046, pad=0.04)
 
     # ── Panel 4: Predicción cruda (sin postprocesar) ──────────────────
     mascara_cruda_rgba = np.zeros((*shape, 4), dtype=np.float32)
     mascara_cruda_rgba[mascara_swin_pura == 1] = [1.0, 0.4, 0.0, 0.75]
-    axes[3].imshow(rgb)
-    axes[3].imshow(mascara_cruda_rgba, interpolation="nearest")
-    axes[3].set_title(
-        f"Predicción cruda (sin postprocesar)\nUmbral: {umbral:.0%}  "
-        f"Px: {int(mascara_swin_pura.sum())}",
-        fontsize=8
+    ax[3].imshow(rgb)
+    ax[3].imshow(mascara_cruda_rgba, interpolation="nearest")
+    ax[3].set_title(
+        f"Predicción cruda (sin postprocesar)\nUmbral: {umbral:.0%}  Px: {int(mascara_swin_pura.sum())}",
+        fontsize=56, fontweight="bold", pad=22
     )
-    axes[3].axis("off")
+    ax[3].axis("off")
 
-    # ── Panel 5: Predicción final + TP/FP/FN ─────────────────────────
-    axes[4].imshow(rgb)
-    axes[4].imshow(comp, interpolation="nearest")
-    axes[4].set_title(
-        f"Predicción final (postprocesada)\nPrec: {prec_str}  Rec: {rec_str}  "
-        f"Px: {int(mascara_limpia.sum())}",
-        fontsize=8
+    # ── Panel 5: Predicción final con TP/FP/FN en título ─────────────
+    ax[4].imshow(rgb)
+    ax[4].imshow(comp, interpolation="nearest")
+    ax[4].set_title(
+        f"Predicción final (postprocesada)\nPrec: {prec_str}  Rec: {rec_str}\nTP={tp}  FP={fp}  FN={fn}",
+        fontsize=56, fontweight="bold", pad=22
     )
-    axes[4].axis("off")
-    axes[4].legend(
-        handles=[
-            mpatches.Patch(color=[0, 1, 0], label=f"TP = {tp}"),
-            mpatches.Patch(color=[1, 0, 0], label=f"FP = {fp}"),
-            mpatches.Patch(color=[1, 1, 0], label=f"FN = {fn}"),
-        ],
-        fontsize=7, loc="lower right", framealpha=0.85,
-        title="Píxeles", title_fontsize=6
-    )
+    ax[4].axis("off")
 
     # ── Panel 6: Ground Truth MADOS ──────────────────────────────────
-    axes[5].imshow(rgb)
-    axes[5].imshow(overlay_gt, interpolation="nearest")
-    axes[5].set_title("Ground Truth (MADOS)", fontsize=9)
-    axes[5].axis("off")
+    ax[5].imshow(rgb)
+    ax[5].imshow(overlay_gt, interpolation="nearest")
+    ax[5].set_title("Ground Truth (MADOS)", fontsize=56, fontweight="bold", pad=22)
+    ax[5].axis("off")
     ley_gt = parches_leyenda(mascara_gt_crop)
     if ley_gt:
-        axes[5].legend(
-            handles=ley_gt, fontsize=5.5, loc="lower right",
-            framealpha=0.85, title="Clases GT", title_fontsize=5.5
+        ax[5].legend(
+            handles=ley_gt, fontsize=22, loc="lower right",
+            framealpha=0.85, title="Clases GT", title_fontsize=22
         )
 
-    plt.tight_layout()
+    plt.subplots_adjust(hspace=0.42, wspace=0.05, top=0.88, bottom=0.02, left=0.02, right=0.98)
 
     # ── Guardar figura completa ───────────────────────────────────────
-    # Si estamos en modo --tiles: guardar en la carpeta del experimento
-    # Si no: guardar en RESULTS_DIR como siempre
     if save_tiles_dir is not None:
         save_tiles_dir.mkdir(parents=True, exist_ok=True)
-        out_path = save_tiles_dir / f"{escena}.png"
+        out_path = save_tiles_dir / f"{escena}.pdf"
     else:
         out_dir = save_dir or RESULTS_DIR
         out_dir.mkdir(parents=True, exist_ok=True)
-        out_path = out_dir / f"inferencia_{escena}.png"
+        out_path = out_dir / f"inferencia_{escena}.pdf"
 
-    plt.savefig(out_path, dpi=150, bbox_inches="tight")
+    plt.savefig(out_path, format="pdf", bbox_inches=None)
     print(f"  [OK] Guardado: {out_path}")
-    plt.show()
+    if not skip_show:
+        plt.show()
     plt.close(fig)
 
 
@@ -524,6 +515,8 @@ def main() -> None:
     parser.add_argument("--tiles",      nargs="+", default=None,
                         help="Nombres exactos de tiles a procesar (ej: tile_001.npy tile_002.npy). "
                              "Activa guardado de paneles sueltos en la carpeta del experimento.")
+    parser.add_argument("--skip",       action="store_true",
+                        help="Guardar imágenes sin mostrarlas en pantalla (más rápido)")
     args = parser.parse_args()
 
     usar_tta = not args.sin_tta
@@ -706,6 +699,7 @@ def main() -> None:
                 mascara_limpia, mascara_swin_pura, mapa_fai,
                 nombre, args.umbral, args.umbral_fai, args.sigma, metricas,
                 save_tiles_dir=save_tiles_dir,
+                skip_show=args.skip,
             )
 
     # ── Resumen ────────────────────────────────────────────────────────
@@ -798,7 +792,8 @@ def main() -> None:
             fig_res.savefig(out_tabla, dpi=150, bbox_inches="tight")
             print(f"  [OK] Tabla resumen guardada: {out_tabla}")
 
-        plt.show()
+        if not args.skip:
+            plt.show()
         plt.close(fig_res)
 
     if args.evaluar:

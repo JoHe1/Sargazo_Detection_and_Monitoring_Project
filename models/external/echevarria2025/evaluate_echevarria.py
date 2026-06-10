@@ -37,12 +37,17 @@ from pathlib import Path
 import numpy as np
 from joblib import load
 from sklearn.metrics import precision_score, recall_score, f1_score
+import matplotlib
+matplotlib.use('Agg')   # backend no interactivo — evita errores tkinter en bucles largos
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 
 from core.config.paths import SARGASSUM_READY
 
 # ── Rutas ─────────────────────────────────────────────────────────────
 SCRIPT_DIR   = Path(__file__).parent
-MODELS_DIR   = SCRIPT_DIR / "models_4bands"   # sobreescrito desde main() via --modelos-dir
+MODELS_DIR   = SCRIPT_DIR / "models_4bands"
+RESULTS_DIR  = SCRIPT_DIR / "resultados"   # carpeta de salida para tablas y JSON
 
 # Clases de sargazo en MADOS
 CLASES_SARGASSUM = {2, 3}   # Dense Sargassum + Sparse Floating Algae
@@ -142,6 +147,9 @@ def extraer_pixeles(img_path: Path, mask_path: Path) -> tuple[np.ndarray, np.nda
     if img_raw.max() > 10.0:
         img_raw = img_raw / 10000.0
 
+    # Limpiar NaN/Inf — píxeles de nube o borde sin datos
+    img_raw = np.nan_to_num(img_raw, nan=0.0, posinf=1.0, neginf=0.0)
+
     # Center crop 224x224
     h, w = img_raw.shape[:2]
     y0   = (h - TARGET) // 2
@@ -181,6 +189,8 @@ def predecir(modelo_info: dict, X: np.ndarray) -> np.ndarray:
     tipo     = modelo_info["tipo"]
 
     X_scaled = scaler.transform(X)
+    # Limpiar NaN residuales tras el escalado (por si el scaler los introduce)
+    X_scaled = np.nan_to_num(X_scaled, nan=0.0, posinf=0.0, neginf=0.0)
 
     if tipo == "sklearn":
         y_pred = model.predict(X_scaled)
@@ -250,10 +260,230 @@ def agregar_metricas(resultados_tiles: list[dict]) -> dict:
 
 
 # ══════════════════════════════════════════════════════════════════════
+# VISUALIZACIÓN DE TILES
+# ══════════════════════════════════════════════════════════════════════
+
+def visualizar_tile(
+    img_path:      Path,
+    mask_path:     Path,
+    modelos:       dict,
+    etiqueta:      str,
+    save_dir:      Path,
+    skip_show:     bool = False,
+) -> None:
+    """
+    Genera una figura con un panel por modelo + GT.
+    Paneles: pred_modelo1 | pred_modelo2 | ... | GT
+    Guardada en save_dir/{escena}_{etiqueta}.png
+
+    Si skip_show=True guarda la figura sin mostrarla en pantalla.
+    """
+    TARGET = 224
+
+    # ── Cargar imagen ────────────────────────────────────────────────
+    img_raw  = np.load(img_path).astype(np.float32)
+    mask_raw = np.load(mask_path).astype(np.int32)
+
+    if img_raw.max() > 10.0:
+        img_raw = img_raw / 10000.0
+    img_raw = np.nan_to_num(img_raw, nan=0.0, posinf=1.0, neginf=0.0)
+    img_raw = np.clip(img_raw * 5.0, 0.0, 1.0)
+
+    h, w = img_raw.shape[:2]
+    y0   = (h - TARGET) // 2
+    x0   = (w - TARGET) // 2
+    img  = img_raw[y0:y0+TARGET, x0:x0+TARGET, :]
+
+    mh, mw = mask_raw.shape
+    my0    = (mh - TARGET) // 2
+    mx0    = (mw - TARGET) // 2
+    mask   = mask_raw[my0:my0+TARGET, mx0:mx0+TARGET]
+
+    rgb     = img[:, :, [2, 1, 0]]
+    gt_sarg = np.isin(mask, list(CLASES_SARGASSUM))
+
+    # ── Predicciones ──────────────────────────────────────────────────
+    img_norm_raw = np.load(img_path).astype(np.float32)
+    if img_norm_raw.max() > 10.0:
+        img_norm_raw = img_norm_raw / 10000.0
+    img_norm_raw = np.nan_to_num(img_norm_raw, nan=0.0, posinf=1.0, neginf=0.0)
+    img_crop_raw = img_norm_raw[y0:y0+TARGET, x0:x0+TARGET, :]
+    X = img_crop_raw.reshape(-1, 4)[:, BAND_INDICES]
+
+    predicciones = {}
+    for nombre_modelo, modelo_info in modelos.items():
+        BATCH = 10000
+        pred_flat = np.zeros(TARGET * TARGET, dtype=bool)
+        for b in range(0, len(X), BATCH):
+            pred_flat[b:b+BATCH] = predecir(modelo_info, X[b:b+BATCH])
+        predicciones[nombre_modelo] = pred_flat.reshape(TARGET, TARGET)
+
+    # ── Layout: pred×N | GT ───────────────────────────────────────────
+    n_modelos = len(modelos)
+    n_paneles = n_modelos + 1   # modelos + GT
+    escena    = img_path.stem
+
+    fig, axes = plt.subplots(1, n_paneles, figsize=(6 * n_paneles, 6))
+    fig.suptitle(
+        f"{escena}  —  Modelos Echevarría et al. ({etiqueta})",
+        fontsize=14, fontweight="bold"
+    )
+
+    # Paneles de predicción por modelo
+    for idx, (nombre_modelo, pred_mapa) in enumerate(predicciones.items()):
+        ax   = axes[idx]
+        tp   = int(( pred_mapa &  gt_sarg).sum())
+        fp   = int(( pred_mapa & ~gt_sarg).sum())
+        fn   = int((~pred_mapa &  gt_sarg).sum())
+        prec = tp / (tp + fp) if (tp + fp) > 0 else float("nan")
+        rec  = tp / (tp + fn) if (tp + fn) > 0 else float("nan")
+        f1   = 2*prec*rec/(prec+rec) if not (np.isnan(prec) or np.isnan(rec)) and (prec+rec) > 0 else float("nan")
+        prec_str = f"{prec:.2f}" if not np.isnan(prec) else "n/a"
+        rec_str  = f"{rec:.2f}"  if not np.isnan(rec)  else "n/a"
+        f1_str   = f"{f1:.2f}"   if not np.isnan(f1)   else "n/a"
+
+        comp = np.zeros((TARGET, TARGET, 4), dtype=np.float32)
+        comp[ pred_mapa &  gt_sarg] = [0.0, 1.0, 0.0, 0.75]
+        comp[ pred_mapa & ~gt_sarg] = [1.0, 0.0, 0.0, 0.60]
+        comp[~pred_mapa &  gt_sarg] = [1.0, 1.0, 0.0, 0.75]
+
+        ax.imshow(rgb)
+        ax.imshow(comp, interpolation="nearest")
+        ax.set_title(
+            f"{nombre_modelo}\nPrec: {prec_str}  Rec: {rec_str}  F1: {f1_str}",
+            fontsize=13, fontweight="bold"
+        )
+        ax.axis("off")
+        ax.legend(
+            handles=[
+                mpatches.Patch(color=[0,1,0], label=f"TP = {tp}"),
+                mpatches.Patch(color=[1,0,0], label=f"FP = {fp}"),
+                mpatches.Patch(color=[1,1,0], label=f"FN = {fn}"),
+            ],
+            fontsize=9, loc="lower right", framealpha=0.85
+        )
+
+    # Último panel: Ground Truth
+    ax_gt = axes[-1]
+    gt_overlay = np.zeros((TARGET, TARGET, 4), dtype=np.float32)
+    gt_overlay[gt_sarg] = [0.0, 0.8, 0.2, 0.75]
+    ax_gt.imshow(rgb)
+    ax_gt.imshow(gt_overlay, interpolation="nearest")
+    ax_gt.set_title("Ground Truth\n(Sargazo MADOS)", fontsize=13, fontweight="bold")
+    ax_gt.axis("off")
+    ax_gt.legend(
+        handles=[mpatches.Patch(color=[0, 0.8, 0.2], label="Sargazo GT")],
+        fontsize=9, loc="lower right", framealpha=0.85
+    )
+
+    plt.tight_layout()
+    save_dir.mkdir(parents=True, exist_ok=True)
+    out_path = save_dir / f"{escena}_{etiqueta}.png"
+    plt.savefig(out_path, dpi=150, bbox_inches="tight")
+    print(f"  [OK] Imagen guardada: {out_path}")
+    if not skip_show:
+        plt.show()
+    plt.close(fig)
+
+
+
+
+def generar_tabla_matplotlib(
+    resultados_globales: dict,
+    split: str,
+    etiqueta: str,
+    sufijo: str = "",
+) -> None:
+    """
+    Genera y guarda una tabla matplotlib con los resultados de todos
+    los modelos evaluados, lista para incluir en Overleaf.
+    Guardada en RESULTS_DIR/tabla_{split}_{etiqueta}{sufijo}.png
+    """
+    if not resultados_globales:
+        return
+
+    modelos  = list(resultados_globales.keys())
+    metricas = ["Precision", "Recall", "F1", "IoU Sargazo Global",
+                "IoU Sargazo Medio", "TP Total", "FP Total", "FN Total"]
+
+    # Construir filas: una fila por métrica, una columna por modelo
+    claves = ["precision", "recall", "f1", "iou_sargazo_global",
+              "iou_sargazo_medio", "tp_total", "fp_total", "fn_total"]
+
+    filas = []
+    for clave, metrica in zip(claves, metricas):
+        fila = [metrica]
+        for modelo in modelos:
+            val = resultados_globales[modelo].get(clave, "n/a")
+            if isinstance(val, float):
+                fila.append(f"{val:.4f}")
+            else:
+                fila.append(str(val))
+        filas.append(fila)
+
+    col_labels = ["Métrica"] + modelos
+    n_filas    = len(filas)
+    n_cols     = len(col_labels)
+
+    fig, ax = plt.subplots(figsize=(3 + 2.5 * len(modelos), n_filas * 0.55 + 1.5))
+    ax.axis("off")
+
+    tabla = ax.table(
+        cellText   = filas,
+        colLabels  = col_labels,
+        cellLoc    = "center",
+        loc        = "center",
+    )
+    tabla.auto_set_font_size(False)
+    tabla.set_fontsize(10)
+    tabla.scale(1, 1.6)
+
+    # Estilo cabecera
+    for col in range(n_cols):
+        tabla[(0, col)].set_facecolor("#2c3e50")
+        tabla[(0, col)].set_text_props(color="white", fontweight="bold")
+
+    # Filas alternadas + destacar F1 e IoU global en verde
+    destacadas = {3, 4}   # F1 (fila 3) e IoU global (fila 4) base-1
+    for row in range(1, n_filas + 1):
+        color_bg = "#eaf4fb" if row % 2 == 0 else "white"
+        if row in destacadas:
+            color_bg = "#d5f5e3"
+        elif row in {6}:   # TP
+            color_bg = "#d5f5e3"
+        elif row in {7}:   # FP
+            color_bg = "#fadbd8"
+        elif row in {8}:   # FN
+            color_bg = "#fef9e7"
+        for col in range(n_cols):
+            tabla[(row, col)].set_facecolor(color_bg)
+
+    titulo = (
+        f"Evaluación modelos Echevarría et al. — {etiqueta}\n"
+        f"Split: {split}  |  Dataset: MADOS (Sentinel-2, 10m)"
+    )
+    fig.suptitle(titulo, fontsize=11, fontweight="bold", y=0.98)
+
+    plt.tight_layout()
+
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = RESULTS_DIR / f"tabla_{split}_{etiqueta}{sufijo}.png"
+    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    print(f"  [OK] Tabla guardada: {out_path}")
+    plt.close(fig)
+
+
+# ══════════════════════════════════════════════════════════════════════
 # EVALUACIÓN PRINCIPAL
 # ══════════════════════════════════════════════════════════════════════
 
-def evaluar(split: str = "test", n: int | None = None, solo_sargassum: bool = True) -> None:
+def evaluar(
+    split:          str = "test",
+    n:              int | None = None,
+    solo_sargassum: bool = True,
+    tiles_fijos:    list[str] | None = None,
+    skip_show:      bool = False,
+) -> None:
     img_dir  = SARGASSUM_READY / split / "images"
     mask_dir = SARGASSUM_READY / split / "masks"
 
@@ -261,32 +491,42 @@ def evaluar(split: str = "test", n: int | None = None, solo_sargassum: bool = Tr
         print(f"[ERROR] No existe: {img_dir}")
         return
 
-    # Seleccionar tiles
-    todos = sorted(img_dir.glob("*.npy"))
-    if solo_sargassum:
+    etiqueta = "mados" if "mados" in MODELS_DIR.name else "echevarria"
+
+    # ── Seleccionar tiles ─────────────────────────────────────────────
+    if tiles_fijos is not None:
+        # Modo --tiles: usar exactamente los tiles indicados, sin filtro sargazo
         tiles = []
+        for nombre in tiles_fijos:
+            p = img_dir / nombre
+            if p.exists():
+                tiles.append(p)
+            else:
+                print(f"[AVISO] Tile no encontrado: {nombre}")
+        print(f"[Evaluación] Modo --tiles: {len(tiles)} tiles específicos")
+    elif solo_sargassum:
+        todos  = sorted(img_dir.glob("*.npy"))
+        tiles  = []
         for p in todos:
             mp = mask_dir / p.name
             if mp.exists() and np.isin(np.load(mp), list(CLASES_SARGASSUM)).any():
                 tiles.append(p)
     else:
+        todos = sorted(img_dir.glob("*.npy"))
         tiles = [p for p in todos if (mask_dir / p.name).exists()]
 
-    if n:
+    if n and tiles_fijos is None:
         tiles = random.sample(tiles, min(n, len(tiles)))
 
-    # Etiqueta para identificar qué modelos se están evaluando
-    etiqueta = "mados" if "mados" in MODELS_DIR.name else "echevarria"
-    print(f"\n[Evaluación] split={split}  tiles={len(tiles)}  "
-          f"solo_sargazo={solo_sargassum}  modelos={etiqueta}")
+    print(f"\n[Evaluación] split={split}  tiles={len(tiles)}  modelos={etiqueta}")
 
-    # Cargar modelos
+    # ── Cargar modelos ────────────────────────────────────────────────
     print("\n[Cargando modelos...]")
     modelos = cargar_modelos()
     if not modelos:
         return
 
-    # Evaluar cada modelo
+    # ── Evaluar cada modelo ───────────────────────────────────────────
     resultados_globales = {}
 
     for nombre_modelo, modelo_info in modelos.items():
@@ -298,7 +538,6 @@ def evaluar(split: str = "test", n: int | None = None, solo_sargassum: bool = Tr
             try:
                 X, y_gt, _ = extraer_pixeles(img_path, mask_path)
 
-                # Predecir en lotes para no saturar memoria
                 BATCH = 10000
                 pred_sarg = np.zeros(len(X), dtype=bool)
                 for b in range(0, len(X), BATCH):
@@ -326,7 +565,7 @@ def evaluar(split: str = "test", n: int | None = None, solo_sargassum: bool = Tr
             print(f"    F1        : {resumen['f1']:.4f}")
             print(f"    IoU sarg. : {resumen['iou_sargazo_global']:.4f}")
 
-    # Tabla comparativa final
+    # ── Tabla comparativa en consola ──────────────────────────────────
     print("\n" + "═" * 65)
     print(f"  COMPARATIVA FINAL — split={split}  modelos={etiqueta}")
     print("═" * 65)
@@ -337,11 +576,30 @@ def evaluar(split: str = "test", n: int | None = None, solo_sargassum: bool = Tr
               f"{res['f1']:>8.4f} {res['iou_sargazo_global']:>10.4f}")
     print("═" * 65)
 
-    # Guardar JSON con nombre que identifica los modelos usados
-    out_path = SCRIPT_DIR / f"evaluacion_{split}_{etiqueta}.json"
+    # ── Tabla matplotlib + JSON ───────────────────────────────────────
+    sufijo = "" if tiles_fijos is not None else "_all"
+    generar_tabla_matplotlib(resultados_globales, split, etiqueta, sufijo=sufijo)
+
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    sufijo = "" if tiles_fijos is not None else "_all"
+    out_path = RESULTS_DIR / f"evaluacion_{split}_{etiqueta}{sufijo}.json"
     with open(out_path, "w") as f:
         json.dump(resultados_globales, f, indent=2)
     print(f"\n[Guardado] {out_path}")
+
+    # ── Imágenes por tile (solo en modo --tiles) ──────────────────────
+    if tiles_fijos is not None:
+        print(f"\n[Generando imágenes por tile...]")
+        vis_dir = RESULTS_DIR / f"visualizaciones_{etiqueta}"
+        for img_path in tiles:
+            mask_path = mask_dir / img_path.name
+            if mask_path.exists():
+                visualizar_tile(
+                    img_path, mask_path, modelos,
+                    etiqueta, vis_dir,
+                    skip_show=skip_show,
+                )
+        print(f"[OK] Imágenes guardadas en: {vis_dir}")
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -358,6 +616,12 @@ def main() -> None:
                         help="Número de tiles aleatorios (default: todos con sargazo)")
     parser.add_argument("--todas",  action="store_true",
                         help="Evaluar también tiles sin sargazo")
+    parser.add_argument("--tiles",  nargs="+", default=None,
+                        help="Nombres exactos de tiles a procesar y visualizar. "
+                             "Ej: Scene_135_10.npy Scene_141_22.npy. "
+                             "Activa generación de imágenes por tile.")
+    parser.add_argument("--skip",   action="store_true",
+                        help="Guardar imágenes sin mostrarlas en pantalla (más rápido)")
     parser.add_argument(
         "--modelos-dir", type=Path, default=None,
         help=(
@@ -368,7 +632,6 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # Sobreescribir MODELS_DIR si se especifica
     global MODELS_DIR
     if args.modelos_dir is not None:
         MODELS_DIR = args.modelos_dir
@@ -378,6 +641,8 @@ def main() -> None:
         split          = args.split,
         n              = args.n,
         solo_sargassum = not args.todas,
+        tiles_fijos    = args.tiles,
+        skip_show      = args.skip,
     )
 
 

@@ -79,3 +79,4 @@ web/streamlit_app/acolite
 graficas_pdf/
 inference copy.py
 **/visualizaciones_tiles/
+models/external/echevarria2025/resultados/
